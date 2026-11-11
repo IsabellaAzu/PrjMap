@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markmap Offline</title>
+    <!-- autoloader による CDN 読み込みを無効化 -->
+    <script>
+        window.markmap = window.markmap || {};
+        window.markmap.autoLoader = { baseJs: [], baseCss: [] };
+    </script>
+    <!-- vendor の依存を順に読み込む -->
+    <script src="vendor/d3@7.min.js"></script>
+    <script src="vendor/markmap-lib@0.18.5.js"></script>
+    <script src="vendor/markmap-view@0.18.5.js"></script>
+    <script src="vendor/markmap-autoloader@0.18.5.js"></script>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: sans-serif;
+        }
+        .markmap {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <!-- markmap-autoloader は指定したコードブロックを自動変換する -->
+    <div class="markmap">
+<script type="text/markdown">
+# マインドマップ
+## ルート1
+- 子要素 A
+- 子要素 B
+  - 孫要素 1
+  - 孫要素 2
+## ルート2
+- 子要素 C
+- 子要素 D
+</script>
+    </div>
+</body>
+</html>
