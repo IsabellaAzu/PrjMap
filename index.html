@@ -1,48 +1,1368 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Markmap Offline</title>
-    <!-- autoloader による CDN 読み込みを無効化 -->
-    <script>
-        window.markmap = window.markmap || {};
-        window.markmap.autoLoader = { baseJs: [], baseCss: [] };
-    </script>
-    <!-- vendor の依存を順に読み込む -->
-    <script src="vendor/d3@7.min.js"></script>
-    <script src="vendor/markmap-lib@0.18.5.js"></script>
-    <script src="vendor/markmap-view@0.18.5.js"></script>
-    <script src="vendor/markmap-autoloader@0.18.5.js"></script>
-    <style>
-        body, html {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            font-family: sans-serif;
-        }
-        .markmap {
-            width: 100%;
-            height: 100%;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PrjMap - マインドマップ</title>
+  <script>
+    window.markmap = window.markmap || {};
+    window.markmap.autoLoader = { baseJs: [], baseCss: [] };
+  </script>
+  <script src="vendor/d3@7.min.js"></script>
+  <script src="vendor/markmap-lib@0.18.5.js"></script>
+  <script src="vendor/markmap-view@0.18.5.js"></script>
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
+
+    body,
+    html {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0f1117;
+      color: #e1e4e8;
+    }
+
+    /* ===== Layout ===== */
+    #app {
+      display: flex;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* ===== Sidebar ===== */
+    #sidebar {
+      width: 320px;
+      min-width: 220px;
+      max-width: 500px;
+      background: #161b22;
+      border-right: 1px solid #30363d;
+      display: flex;
+      flex-direction: column;
+      transition: width 0.2s;
+      position: relative;
+      z-index: 10;
+    }
+
+    #sidebar.collapsed {
+      width: 40px;
+      min-width: 40px;
+      overflow: hidden;
+    }
+
+    #sidebar-header {
+      padding: 12px 14px;
+      border-bottom: 1px solid #30363d;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    #sidebar-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #c9d1d9;
+      flex: 1;
+      white-space: nowrap;
+    }
+
+    #toggle-sidebar {
+      background: none;
+      border: none;
+      color: #8b949e;
+      cursor: pointer;
+      font-size: 16px;
+      padding: 2px 4px;
+      border-radius: 4px;
+      flex-shrink: 0;
+    }
+
+    #toggle-sidebar:hover {
+      background: #21262d;
+      color: #c9d1d9;
+    }
+
+    #sidebar-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    #sidebar.collapsed #sidebar-body {
+      display: none;
+    }
+
+    #sidebar.collapsed #sidebar-title {
+      display: none;
+    }
+
+    /* Tabs */
+    #tabs {
+      display: flex;
+      border-bottom: 1px solid #30363d;
+      flex-shrink: 0;
+    }
+
+    .tab {
+      flex: 1;
+      padding: 8px 4px;
+      font-size: 12px;
+      text-align: center;
+      cursor: pointer;
+      color: #8b949e;
+      border-bottom: 2px solid transparent;
+      transition: color 0.15s, border-color 0.15s;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .tab.active {
+      color: #58a6ff;
+      border-bottom-color: #58a6ff;
+    }
+
+    .tab:hover:not(.active) {
+      color: #c9d1d9;
+    }
+
+    .tab-panel {
+      display: none;
+      flex: 1;
+      overflow: hidden;
+      flex-direction: column;
+    }
+
+    .tab-panel.active {
+      display: flex;
+    }
+
+    /* Tree panel */
+    #tree-panel {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px 0;
+    }
+
+    .tree-node {
+      position: relative;
+    }
+
+    .tree-node-row {
+      display: flex;
+      align-items: center;
+      padding: 3px 8px 3px 0;
+      cursor: pointer;
+      border-radius: 4px;
+      margin: 1px 6px;
+      gap: 2px;
+      transition: background 0.1s;
+    }
+
+    .tree-node-row:hover {
+      background: #21262d;
+    }
+
+    .tree-node-row.selected {
+      background: #1f3a5f;
+    }
+
+    .node-toggle {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      color: #8b949e;
+      cursor: pointer;
+      border-radius: 3px;
+      transition: transform 0.15s;
+    }
+
+    .node-toggle.open {
+      transform: rotate(90deg);
+    }
+
+    .node-toggle.leaf {
+      color: transparent;
+      cursor: default;
+    }
+
+    .node-label {
+      flex: 1;
+      font-size: 12px;
+      color: #e6edf3;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      line-height: 1.4;
+    }
+
+    .node-depth-0 .node-label {
+      font-weight: 700;
+      color: #e6edf3;
+    }
+
+    .node-depth-1 .node-label {
+      font-weight: 600;
+      color: #cae8ff;
+    }
+
+    .node-actions {
+      display: none;
+      gap: 2px;
+      flex-shrink: 0;
+    }
+
+    .tree-node-row:hover .node-actions,
+    .tree-node-row.selected .node-actions {
+      display: flex;
+    }
+
+    .node-btn {
+      background: none;
+      border: none;
+      color: #8b949e;
+      cursor: pointer;
+      font-size: 11px;
+      padding: 2px 4px;
+      border-radius: 3px;
+      line-height: 1;
+    }
+
+    .node-btn:hover {
+      background: #30363d;
+      color: #c9d1d9;
+    }
+
+    .node-btn.del:hover {
+      background: #3d1414;
+      color: #f85149;
+    }
+
+    .node-children {
+      padding-left: 16px;
+    }
+
+    /* Markdown editor */
+    #md-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 8px;
+    }
+
+    #md-editor {
+      flex: 1;
+      resize: none;
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      color: #c9d1d9;
+      font-family: 'SFMono-Regular', Consolas, monospace;
+      font-size: 12px;
+      line-height: 1.6;
+      padding: 10px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    #md-editor:focus {
+      border-color: #58a6ff;
+    }
+
+    #md-actions {
+      display: flex;
+      gap: 6px;
+      margin-top: 8px;
+      flex-shrink: 0;
+    }
+
+    /* Buttons */
+    .btn {
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: none;
+      font-size: 12px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: background 0.15s, opacity 0.15s;
+    }
+
+    .btn-primary {
+      background: #238636;
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background: #2ea043;
+    }
+
+    .btn-secondary {
+      background: #21262d;
+      color: #c9d1d9;
+      border: 1px solid #30363d;
+    }
+
+    .btn-secondary:hover {
+      background: #30363d;
+    }
+
+    .btn-danger {
+      background: #21262d;
+      color: #f85149;
+      border: 1px solid #30363d;
+    }
+
+    .btn-danger:hover {
+      background: #3d1414;
+    }
+
+    /* Sidebar Footer / Controls */
+    #sidebar-footer {
+      border-top: 1px solid #30363d;
+      padding: 10px;
+      background: #161b22;
+      flex-shrink: 0;
+    }
+
+    .footer-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: #8b949e;
+      margin-bottom: 6px;
+    }
+
+    .footer-btn-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+
+    .footer-btn {
+      padding: 6px 8px;
+      border-radius: 6px;
+      border: 1px solid #30363d;
+      background: #21262d;
+      color: #c9d1d9;
+      font-size: 11px;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      transition: background 0.15s, border-color 0.15s;
+      white-space: nowrap;
+    }
+
+    .footer-btn:hover {
+      background: #30363d;
+      border-color: #8b949e;
+      color: #f0f6fc;
+    }
+
+    /* Map container */
+    #map-area {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #map-svg {
+      width: 100%;
+      height: 100%;
+      background: #0f1117;
+    }
+
+    /* Modal */
+    #modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #modal-overlay.show {
+      display: flex;
+    }
+
+    #modal {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 10px;
+      padding: 20px;
+      min-width: 320px;
+      max-width: 480px;
+      width: 90%;
+    }
+
+    #modal h3 {
+      margin: 0 0 14px;
+      font-size: 14px;
+      color: #e6edf3;
+    }
+
+    #modal-input {
+      width: 100%;
+      padding: 8px 10px;
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      color: #c9d1d9;
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    #modal-input:focus {
+      border-color: #58a6ff;
+    }
+
+    #modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    /* Toast */
+    #toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #238636;
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 12px;
+      opacity: 0;
+      transition: opacity 0.3s;
+      z-index: 200;
+      pointer-events: none;
+    }
+
+    #toast.show {
+      opacity: 1;
+    }
+
+    /* Resize handle */
+    #resize-handle {
+      width: 4px;
+      height: 100%;
+      cursor: col-resize;
+      background: transparent;
+      position: absolute;
+      right: 0;
+      top: 0;
+      transition: background 0.15s;
+    }
+
+    #resize-handle:hover,
+    #resize-handle.dragging {
+      background: #58a6ff44;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #30363d;
+      border-radius: 3px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #484f58;
+    }
+
+    /* Help text */
+    .help-text {
+      font-size: 11px;
+      color: #6e7681;
+      padding: 6px 10px;
+      flex-shrink: 0;
+    }
+
+    /* ===== Node floating editor ===== */
+    #node-popup {
+      position: fixed;
+      z-index: 300;
+      background: #1c2128;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), 0 0 0 1px #58a6ff44;
+      padding: 10px 12px 12px;
+      min-width: 280px;
+      max-width: 380px;
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+      animation: popupIn 0.15s ease;
+    }
+    #node-popup.show { display: flex; }
+    @keyframes popupIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    #popup-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding-bottom: 4px;
+      border-bottom: 1px solid #282e38;
+    }
+    #popup-title-area {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    #popup-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: #8b949e;
+      line-height: 1.2;
+    }
+    #popup-breadcrumb {
+      font-size: 10px;
+      color: #6e7681;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      line-height: 1.2;
+    }
+    #popup-breadcrumb span { color: #8b949e; }
+
+    #popup-close {
+      background: none;
+      border: none;
+      color: #8b949e;
+      font-size: 14px;
+      cursor: pointer;
+      border-radius: 4px;
+      padding: 2px 6px;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+    #popup-close:hover { background: #30363d; color: #f0f6fc; }
+
+    #popup-input-wrap {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: #0d1117;
+      border: 1px solid #388bfd;
+      border-radius: 6px;
+      padding: 2px 6px 2px 10px;
+    }
+    #popup-input {
+      flex: 1;
+      background: none;
+      border: none;
+      color: #e6edf3;
+      font-size: 13px;
+      font-weight: 600;
+      outline: none;
+      padding: 6px 0;
+      min-width: 0;
+    }
+    #popup-save {
+      flex-shrink: 0;
+      background: #238636;
+      border: none;
+      color: #fff;
+      border-radius: 5px;
+      padding: 5px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    #popup-save:hover { background: #2ea043; }
+
+    #popup-actions {
+      display: flex;
+      gap: 6px;
+    }
+    .popup-btn {
+      flex: 1;
+      padding: 5px 8px;
+      border-radius: 6px;
+      border: 1px solid #30363d;
+      background: #21262d;
+      color: #c9d1d9;
+      font-size: 11px;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+      white-space: nowrap;
+      text-align: center;
+    }
+    .popup-btn:hover { background: #30363d; color: #f0f6fc; }
+    .popup-btn.danger:hover { background: #3d1414; color: #f85149; border-color: #f8514944; }
+
+    /* Markmap node highlight overlay (SVG approach via CSS) */
+    #map-svg .markmap-node.mm-highlighted > circle {
+      stroke: #388bfd !important;
+      stroke-width: 3px !important;
+      filter: drop-shadow(0 0 6px #388bfd88);
+    }
+    #map-svg .markmap-node.mm-highlighted > foreignObject {
+      filter: drop-shadow(0 0 4px #388bfd66);
+    }
+
+    /* foreignObject labels are always clickable */
+    #map-svg .markmap-node > foreignObject {
+      pointer-events: all;
+      cursor: pointer;
+    }
+    #map-svg .markmap-node > foreignObject:hover div {
+      text-decoration: underline;
+      text-decoration-color: #58a6ff88;
+      text-decoration-style: dotted;
+    }
+  </style>
 </head>
-<body>
-    <!-- markmap-autoloader は指定したコードブロックを自動変換する -->
-    <div class="markmap">
-<script type="text/markdown">
-# マインドマップ
-## ルート1
-- 子要素 A
-- 子要素 B
-  - 孫要素 1
-  - 孫要素 2
-## ルート2
-- 子要素 C
-- 子要素 D
-</script>
+
+<body class="markmap-dark">
+  <div id="app">
+
+    <!-- Sidebar -->
+    <div id="sidebar">
+      <div id="sidebar-header">
+        <span id="sidebar-title">📋 PrjMap</span>
+        <button id="toggle-sidebar" title="サイドバー折りたたみ">◀</button>
+      </div>
+      <div id="sidebar-body">
+        <div id="tabs">
+          <div class="tab active" data-tab="tree">🌳 ツリー</div>
+          <div class="tab" data-tab="markdown">📝 Markdown</div>
+        </div>
+
+        <!-- Tree tab -->
+        <div id="tree-tab" class="tab-panel active">
+          <div id="tree-panel"></div>
+          <div class="help-text">ノードをクリックして選択 / ダブルクリックで編集</div>
+        </div>
+
+        <!-- Markdown tab -->
+        <div id="markdown-tab" class="tab-panel">
+          <div id="md-panel">
+            <textarea id="md-editor" spellcheck="false" placeholder="# タイトル&#10;## セクション&#10;- アイテム"></textarea>
+            <div id="md-actions">
+              <button class="btn btn-primary" id="btn-apply" style="flex:1">✅ 適用</button>
+              <button class="btn btn-secondary" id="btn-reset">↩ リセット</button>
+            </div>
+            <div class="help-text" style="padding:4px 0 0;">Markdownを直接編集して「適用」で反映</div>
+          </div>
+        </div>
+
+        <!-- 操作メニュー -->
+        <div id="sidebar-footer">
+          <div class="footer-title">表示・出力操作</div>
+          <div class="footer-btn-grid">
+            <button class="footer-btn" id="btn-fit" title="画面サイズに合わせて全体を表示">⊡ 全体表示</button>
+            <button class="footer-btn" id="btn-expand" title="すべての階層を展開">＋ 全展開</button>
+            <button class="footer-btn" id="btn-collapse" title="直下の子ノードのみに折りたたむ">－ 全折込</button>
+            <button class="footer-btn" id="btn-export" title="Markdownをクリップボードにコピー">📋 MDコピー</button>
+          </div>
+        </div>
+      </div>
+      <div id="resize-handle"></div>
     </div>
+
+    <!-- Node floating editor -->
+    <div id="node-popup">
+      <div id="popup-header">
+        <div id="popup-title-area">
+          <div id="popup-title">ノードを編集</div>
+          <div id="popup-breadcrumb"></div>
+        </div>
+        <button id="popup-close" title="閉じる">✕</button>
+      </div>
+      <div id="popup-input-wrap">
+        <input id="popup-input" type="text" autocomplete="off" spellcheck="false" />
+        <button id="popup-save">保存</button>
+      </div>
+      <div id="popup-actions">
+        <button class="popup-btn" id="popup-add-child">＋ 子を追加</button>
+        <button class="popup-btn" id="popup-add-sibling">＋ 兄弟を追加</button>
+        <button class="popup-btn danger" id="popup-delete">🗑 削除</button>
+      </div>
+    </div>
+
+    <!-- Map area -->
+    <div id="map-area">
+      <svg id="map-svg"></svg>
+    </div>
+
+  </div>
+
+  <!-- Modal -->
+  <div id="modal-overlay">
+    <div id="modal">
+      <h3 id="modal-title">ノードを編集</h3>
+      <input id="modal-input" type="text" />
+      <div id="modal-actions">
+        <button class="btn btn-secondary" id="modal-cancel">キャンセル</button>
+        <button class="btn btn-primary" id="modal-ok">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast"></div>
+
+  <script>
+    // ===== Data Model =====
+    // Tree node: { id, text, children: [] }
+
+    let _id = 0;
+    function mkId() { return ++_id; }
+
+    function mkNode(text, children = []) {
+      return { id: mkId(), text, children };
+    }
+
+    // Default data
+    let root = mkNode('マインドマップ', [
+      mkNode('ルート1', [
+        mkNode('子要素 A'),
+        mkNode('子要素 B', [
+          mkNode('孫要素 1'),
+          mkNode('孫要素 2'),
+        ]),
+      ]),
+      mkNode('ルート2', [
+        mkNode('子要素 C'),
+        mkNode('子要素 D'),
+      ]),
+    ]);
+
+    // ===== State =====
+    let mm = null;           // Markmap instance
+    let selectedId = null;
+    let expandedIds = new Set(); // expanded node ids in tree panel
+
+    // ===== Markdown conversion =====
+    function treeToMd(node, depth = 0) {
+      const prefix = depth === 0 ? '#' : '#'.repeat(Math.min(depth + 1, 6));
+      // depth 0 → #, 1 → ##, 2 → ###, but deep nodes use - list
+      let line;
+      if (depth <= 1) {
+        line = prefix + ' ' + node.text;
+      } else {
+        line = '  '.repeat(depth - 2) + '- ' + node.text;
+      }
+      const childLines = node.children.map(c => treeToMd(c, depth + 1)).join('\n');
+      return childLines ? line + '\n' + childLines : line;
+    }
+
+    function mdToTree(md) {
+      const lines = md.split('\n').filter(l => l.trim());
+      if (!lines.length) return mkNode('マインドマップ');
+
+      // Parse line → {depth, text}
+      function parseLine(line) {
+        const hMatch = line.match(/^(#{1,6})\s+(.*)/);
+        if (hMatch) return { depth: hMatch[1].length - 1, text: hMatch[2].trim() };
+        const liMatch = line.match(/^(\s*)[-*+]\s+(.*)/);
+        if (liMatch) return { depth: 2 + Math.floor(liMatch[1].length / 2), text: liMatch[2].trim() };
+        return null;
+      }
+
+      const parsed = lines.map(parseLine).filter(Boolean);
+      if (!parsed.length) return mkNode('マインドマップ');
+
+      // Build tree using a stack
+      const rootNode = mkNode(parsed[0].text);
+      const stack = [{ node: rootNode, depth: parsed[0].depth }];
+
+      for (let i = 1; i < parsed.length; i++) {
+        const { depth, text } = parsed[i];
+        const node = mkNode(text);
+
+        // Pop stack until we find a parent
+        while (stack.length > 1 && stack[stack.length - 1].depth >= depth) {
+          stack.pop();
+        }
+        stack[stack.length - 1].node.children.push(node);
+        stack.push({ node, depth });
+      }
+
+      return rootNode;
+    }
+
+    // ===== Markmap render =====
+    const { Transformer } = window.markmap;
+    const transformer = new Transformer();
+
+    // Map SVG node text → our tree node id (rebuilt each render)
+    let svgTextToNodeId = new Map();
+
+    function buildTextIndex(node) {
+      svgTextToNodeId.set(node.text, node.id);
+      node.children.forEach(buildTextIndex);
+    }
+
+    function renderMap() {
+      const md = treeToMd(root);
+      const { root: data } = transformer.transform(md);
+
+      if (!mm) {
+        const { Markmap } = window.markmap;
+        mm = Markmap.create('#map-svg', {
+          colorFreezeLevel: 2,
+          duration: 300,
+          maxWidth: 300,
+          paddingX: 16,
+          zoom: true,
+          pan: true,
+        }, data);
+      } else {
+        mm.setData(data);
+        mm.fit();
+      }
+
+      // Re-attach after transition ends
+      svgTextToNodeId.clear();
+      buildTextIndex(root);
+      setTimeout(attachMapNodeListeners, 350);
+    }
+
+    // ===== Map node click handlers =====
+    function attachMapNodeListeners() {
+      const svg = document.getElementById('map-svg');
+      // foreignObject holds the rendered label HTML
+      svg.querySelectorAll('.markmap-node foreignObject').forEach(fo => {
+        // avoid double-binding
+        if (fo.dataset.mmBound) return;
+        fo.dataset.mmBound = '1';
+        fo.style.cursor = 'pointer';
+
+        fo.addEventListener('click', e => {
+          e.stopPropagation();
+          // Extract plain text from foreignObject
+          const text = fo.textContent.trim();
+          const nodeId = svgTextToNodeId.get(text);
+          if (nodeId == null) return;
+          const node = findNode(root, nodeId);
+          if (!node) return;
+          openNodePopup(node, fo, e.clientX, e.clientY);
+          highlightMapNode(fo);
+          selectTreeNode(nodeId);
+          highlightMdLine(node.text);
+        });
+      });
+    }
+
+    // Highlight the clicked SVG node
+    function highlightMapNode(fo) {
+      document.querySelectorAll('#map-svg .markmap-node').forEach(g => g.classList.remove('mm-highlighted'));
+      const g = fo.closest('.markmap-node');
+      if (g) g.classList.add('mm-highlighted');
+    }
+
+    // Select node in tree panel
+    function selectTreeNode(nodeId) {
+      selectedId = nodeId;
+      buildTreePanel();
+      // Scroll tree row into view
+      const row = document.querySelector(`[data-id="${nodeId}"] .tree-node-row`);
+      if (row) row.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+
+    // Highlight the matching line in Markdown editor
+    function highlightMdLine(nodeText) {
+      const textarea = document.getElementById('md-editor');
+      const lines = textarea.value.split('\n');
+      const idx = lines.findIndex(l => l.includes(nodeText));
+      if (idx < 0) return;
+
+      // Scroll textarea to that line by setting selectionStart/End
+      let charPos = lines.slice(0, idx).join('\n').length + (idx > 0 ? 1 : 0);
+      const lineEnd = charPos + lines[idx].length;
+      textarea.focus({ preventScroll: true });
+      textarea.setSelectionRange(charPos, lineEnd);
+
+      // Scroll the textarea so the line is visible
+      const lineHeight = parseFloat(getComputedStyle(textarea).lineHeight) || 19.2;
+      textarea.scrollTop = Math.max(0, (idx - 3) * lineHeight);
+    }
+
+    // ===== Tree panel render =====
+    function buildTreePanel() {
+      const panel = document.getElementById('tree-panel');
+      panel.innerHTML = '';
+      panel.appendChild(renderTreeNode(root, 0));
+    }
+
+    function renderTreeNode(node, depth) {
+      const wrapper = document.createElement('div');
+      wrapper.className = `tree-node node-depth-${depth}`;
+      wrapper.dataset.id = node.id;
+
+      const hasChildren = node.children.length > 0;
+      const isExpanded = expandedIds.has(node.id) || depth === 0;
+      if (depth === 0) expandedIds.add(node.id);
+
+      const row = document.createElement('div');
+      row.className = 'tree-node-row' + (selectedId === node.id ? ' selected' : '');
+      row.style.paddingLeft = (8 + depth * 16) + 'px';
+
+      // Toggle
+      const toggle = document.createElement('span');
+      toggle.className = 'node-toggle' + (hasChildren ? (isExpanded ? ' open' : '') : ' leaf');
+      toggle.textContent = hasChildren ? '▶' : '·';
+      toggle.addEventListener('click', e => {
+        e.stopPropagation();
+        if (!hasChildren) return;
+        if (expandedIds.has(node.id)) expandedIds.delete(node.id);
+        else expandedIds.add(node.id);
+        buildTreePanel();
+      });
+
+      // Label
+      const label = document.createElement('span');
+      label.className = 'node-label';
+      label.textContent = node.text;
+
+      // Double-click to edit
+      row.addEventListener('dblclick', e => {
+        e.stopPropagation();
+        openModal('ノードを編集', node.text, text => {
+          node.text = text;
+          sync();
+        });
+      });
+
+      // Single-click to select
+      row.addEventListener('click', () => {
+        selectedId = node.id;
+        buildTreePanel();
+      });
+
+      // Actions
+      const actions = document.createElement('div');
+      actions.className = 'node-actions';
+
+      // Add child
+      const btnAdd = document.createElement('button');
+      btnAdd.className = 'node-btn';
+      btnAdd.title = '子ノード追加';
+      btnAdd.textContent = '＋';
+      btnAdd.addEventListener('click', e => {
+        e.stopPropagation();
+        openModal('子ノードを追加', '', text => {
+          node.children.push(mkNode(text));
+          expandedIds.add(node.id);
+          sync();
+        });
+      });
+
+      // Edit
+      const btnEdit = document.createElement('button');
+      btnEdit.className = 'node-btn';
+      btnEdit.title = '編集';
+      btnEdit.textContent = '✏';
+      btnEdit.addEventListener('click', e => {
+        e.stopPropagation();
+        openModal('ノードを編集', node.text, text => {
+          node.text = text;
+          sync();
+        });
+      });
+
+      // Delete (not root)
+      if (depth > 0) {
+        const btnDel = document.createElement('button');
+        btnDel.className = 'node-btn del';
+        btnDel.title = '削除';
+        btnDel.textContent = '🗑';
+        btnDel.addEventListener('click', e => {
+          e.stopPropagation();
+          if (!confirm(`「${node.text}」を削除しますか？`)) return;
+          removeNode(root, node.id);
+          if (selectedId === node.id) selectedId = null;
+          sync();
+        });
+        actions.appendChild(btnDel);
+      }
+
+      actions.prepend(btnEdit);
+      actions.prepend(btnAdd);
+
+      row.appendChild(toggle);
+      row.appendChild(label);
+      row.appendChild(actions);
+      wrapper.appendChild(row);
+
+      if (hasChildren && isExpanded) {
+        const childContainer = document.createElement('div');
+        childContainer.className = 'node-children';
+        node.children.forEach(child => {
+          childContainer.appendChild(renderTreeNode(child, depth + 1));
+        });
+        wrapper.appendChild(childContainer);
+      }
+
+      return wrapper;
+    }
+
+    function removeNode(parent, id) {
+      parent.children = parent.children.filter(c => {
+        if (c.id === id) return false;
+        removeNode(c, id);
+        return true;
+      });
+    }
+
+    function findNode(node, id) {
+      if (node.id === id) return node;
+      for (const c of node.children) {
+        const r = findNode(c, id);
+        if (r) return r;
+      }
+      return null;
+    }
+
+    // ===== Sync all views =====
+    function sync() {
+      renderMap();
+      buildTreePanel();
+      updateMdEditor();
+    }
+
+    function updateMdEditor() {
+      document.getElementById('md-editor').value = treeToMd(root);
+    }
+
+    // ===== Node popup =====
+    let popupNode = null;
+
+    function findParent(parent, targetId) {
+      for (const c of parent.children) {
+        if (c.id === targetId) return parent;
+        const r = findParent(c, targetId);
+        if (r) return r;
+      }
+      return null;
+    }
+
+    function nodePath(node) {
+      const path = [];
+      function walk(n) {
+        if (n.id === node.id) { path.push(n.text); return true; }
+        for (const c of n.children) {
+          if (walk(c)) { path.unshift(n.text); return true; }
+        }
+        return false;
+      }
+      walk(root);
+      return path;
+    }
+
+    function escHtml(s) {
+      return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    function openNodePopup(node, targetEl, clientX, clientY) {
+      popupNode = node;
+      const popup = document.getElementById('node-popup');
+      const isRoot = node.id === root.id;
+
+      const path = nodePath(node);
+      const bc = document.getElementById('popup-breadcrumb');
+      if (path.length > 1) {
+        bc.innerHTML = path.slice(0, -1).map(t =>
+          `<span>${escHtml(t)}</span>`
+        ).join(' <span style="color:#484f58">›</span> ');
+        bc.style.display = 'block';
+      } else {
+        bc.style.display = 'none';
+      }
+
+      document.getElementById('popup-input').value = node.text;
+      document.getElementById('popup-delete').style.display = isRoot ? 'none' : '';
+      document.getElementById('popup-add-sibling').style.display = isRoot ? 'none' : '';
+
+      popup.classList.add('show');
+      // Position after show so offsetWidth is correct
+      requestAnimationFrame(() => {
+        const pw = popup.offsetWidth || 300;
+        const ph = popup.offsetHeight || 140;
+        const vw = window.innerWidth, vh = window.innerHeight;
+
+        let x, y;
+        if (targetEl && targetEl.getBoundingClientRect) {
+          const rect = targetEl.getBoundingClientRect();
+          x = rect.left;
+          y = rect.bottom + 8; // ノードの直下に配置
+          // 画面下に収まらない場合はノードの上に配置
+          if (y + ph > vh - 16) {
+            y = rect.top - ph - 8;
+          }
+        } else {
+          x = (clientX || 100) + 14;
+          y = (clientY || 100) + 14;
+          if (y + ph > vh - 16) y = vh - ph - 16;
+        }
+
+        // 画面外はみ出し防止
+        if (x + pw > vw - 16) x = vw - pw - 16;
+        if (x < 16) x = 16;
+        if (y < 16) y = 16;
+
+        popup.style.left = x + 'px';
+        popup.style.top  = y + 'px';
+      });
+
+      setTimeout(() => document.getElementById('popup-input').focus(), 40);
+    }
+
+    function closeNodePopup() {
+      document.getElementById('node-popup').classList.remove('show');
+      document.querySelectorAll('#map-svg .markmap-node').forEach(g => g.classList.remove('mm-highlighted'));
+      popupNode = null;
+    }
+
+    function savePopupEdit() {
+      if (!popupNode) return;
+      const val = document.getElementById('popup-input').value.trim();
+      if (!val) return;
+      popupNode.text = val;
+      closeNodePopup();
+      sync();
+      showToast('保存しました ✓');
+    }
+
+    document.getElementById('popup-save').addEventListener('click', savePopupEdit);
+    document.getElementById('popup-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter') savePopupEdit();
+      if (e.key === 'Escape') closeNodePopup();
+    });
+    document.getElementById('popup-close').addEventListener('click', closeNodePopup);
+
+    document.getElementById('popup-add-child').addEventListener('click', () => {
+      if (!popupNode) return;
+      const parent = popupNode;
+      closeNodePopup();
+      openModal('子ノードを追加', '', text => {
+        parent.children.push(mkNode(text));
+        expandedIds.add(parent.id);
+        sync();
+        showToast('子ノードを追加しました ✓');
+      });
+    });
+
+    document.getElementById('popup-add-sibling').addEventListener('click', () => {
+      if (!popupNode) return;
+      const parentNode = findParent(root, popupNode.id);
+      const refNode = popupNode;
+      closeNodePopup();
+      openModal('兄弟ノードを追加', '', text => {
+        if (!parentNode) return;
+        const idx = parentNode.children.findIndex(c => c.id === refNode.id);
+        parentNode.children.splice(idx + 1, 0, mkNode(text));
+        sync();
+        showToast('兄弟ノードを追加しました ✓');
+      });
+    });
+
+    document.getElementById('popup-delete').addEventListener('click', () => {
+      if (!popupNode) return;
+      if (!confirm(`「${popupNode.text}」を削除しますか？`)) return;
+      const id = popupNode.id;
+      closeNodePopup();
+      removeNode(root, id);
+      if (selectedId === id) selectedId = null;
+      sync();
+      showToast('削除しました', '#6e7681');
+    });
+
+    document.addEventListener('mousedown', e => {
+      const popup = document.getElementById('node-popup');
+      if (popup.classList.contains('show') && !popup.contains(e.target)) {
+        const fo = e.target.closest('foreignObject');
+        if (!fo) closeNodePopup();
+      }
+    });
+
+    // ===== Modal =====
+    let modalCallback = null;
+
+    function openModal(title, defaultVal, callback) {
+      modalCallback = callback;
+      document.getElementById('modal-title').textContent = title;
+      const input = document.getElementById('modal-input');
+      input.value = defaultVal;
+      document.getElementById('modal-overlay').classList.add('show');
+      setTimeout(() => { input.focus(); input.select(); }, 50);
+    }
+
+    function closeModal(submit) {
+      document.getElementById('modal-overlay').classList.remove('show');
+      if (submit && modalCallback) {
+        const val = document.getElementById('modal-input').value.trim();
+        if (val) modalCallback(val);
+      }
+      modalCallback = null;
+    }
+
+    document.getElementById('modal-ok').addEventListener('click', () => closeModal(true));
+    document.getElementById('modal-cancel').addEventListener('click', () => closeModal(false));
+    document.getElementById('modal-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter') closeModal(true);
+      if (e.key === 'Escape') closeModal(false);
+    });
+    document.getElementById('modal-overlay').addEventListener('click', e => {
+      if (e.target === document.getElementById('modal-overlay')) closeModal(false);
+    });
+
+    // ===== Toast =====
+    function showToast(msg, color = '#238636') {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.style.background = color;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2000);
+    }
+
+    // ===== Tabs =====
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById(tab.dataset.tab + '-tab').classList.add('active');
+      });
+    });
+
+    // ===== Sidebar toggle =====
+    const sidebar = document.getElementById('sidebar');
+    document.getElementById('toggle-sidebar').addEventListener('click', () => {
+      sidebar.classList.toggle('collapsed');
+      document.getElementById('toggle-sidebar').textContent = sidebar.classList.contains('collapsed') ? '▶' : '◀';
+    });
+
+    // ===== Resize handle =====
+    const handle = document.getElementById('resize-handle');
+    let resizing = false;
+    handle.addEventListener('mousedown', e => {
+      resizing = true;
+      handle.classList.add('dragging');
+      e.preventDefault();
+    });
+    document.addEventListener('mousemove', e => {
+      if (!resizing) return;
+      const w = Math.min(500, Math.max(220, e.clientX));
+      sidebar.style.width = w + 'px';
+      sidebar.style.minWidth = w + 'px';
+    });
+    document.addEventListener('mouseup', () => {
+      resizing = false;
+      handle.classList.remove('dragging');
+    });
+
+    // ===== Markdown editor =====
+    document.getElementById('btn-apply').addEventListener('click', () => {
+      const md = document.getElementById('md-editor').value;
+      root = mdToTree(md);
+      renderMap();
+      buildTreePanel();
+      showToast('マップを更新しました');
+    });
+
+    document.getElementById('btn-reset').addEventListener('click', () => {
+      updateMdEditor();
+      showToast('リセットしました', '#6e7681');
+    });
+
+    // ===== Toolbar / Controls =====
+    document.getElementById('btn-fit').addEventListener('click', () => mm && mm.fit());
+
+    document.getElementById('btn-expand').addEventListener('click', () => {
+      if (!mm || !mm.state.data) return;
+      function walkMarkmap(node) {
+        if (node.payload) node.payload.fold = 0;
+        if (node.children) node.children.forEach(walkMarkmap);
+      }
+      walkMarkmap(mm.state.data);
+      mm.renderData().then(() => {
+        mm.fit();
+        setTimeout(attachMapNodeListeners, 350);
+      });
+
+      // 左ツリーパネルも全展開
+      function walkTreeIds(node) {
+        expandedIds.add(node.id);
+        if (node.children) node.children.forEach(walkTreeIds);
+      }
+      walkTreeIds(root);
+      buildTreePanel();
+      showToast('すべての階層を展開しました');
+    });
+
+    document.getElementById('btn-collapse').addEventListener('click', () => {
+      if (!mm || !mm.state.data) return;
+      // ルート直下の子ノード（第1階層）以降を折りたたむ
+      function walkMarkmap(node, depth = 0) {
+        if (depth >= 1) {
+          node.payload = { ...node.payload, fold: 1 };
+        } else {
+          if (node.payload) node.payload.fold = 0;
+        }
+        if (node.children) {
+          node.children.forEach(child => walkMarkmap(child, depth + 1));
+        }
+      }
+      walkMarkmap(mm.state.data, 0);
+      mm.renderData().then(() => {
+        mm.fit();
+        setTimeout(attachMapNodeListeners, 350);
+      });
+
+      // 左ツリーパネルも第1階層のみ展開に
+      expandedIds.clear();
+      expandedIds.add(root.id);
+      buildTreePanel();
+      showToast('第1階層に折りたたみました');
+    });
+
+    document.getElementById('btn-export').addEventListener('click', () => {
+      const md = treeToMd(root);
+      navigator.clipboard.writeText(md).then(() => showToast('Markdownをコピーしました 📋'));
+    });
+
+    // ===== Init =====
+    renderMap();
+    buildTreePanel();
+    updateMdEditor();
+  </script>
 </body>
+
 </html>
