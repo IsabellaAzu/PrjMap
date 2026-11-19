@@ -521,10 +521,21 @@
       gap: 8px;
       animation: popupIn 0.15s ease;
     }
-    #node-popup.show { display: flex; }
+
+    #node-popup.show {
+      display: flex;
+    }
+
     @keyframes popupIn {
-      from { opacity: 0; transform: translateY(4px); }
-      to   { opacity: 1; transform: translateY(0); }
+      from {
+        opacity: 0;
+        transform: translateY(4px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     #popup-header {
@@ -535,6 +546,7 @@
       padding-bottom: 4px;
       border-bottom: 1px solid #282e38;
     }
+
     #popup-title-area {
       flex: 1;
       min-width: 0;
@@ -542,12 +554,14 @@
       flex-direction: column;
       gap: 2px;
     }
+
     #popup-title {
       font-size: 11px;
       font-weight: 600;
       color: #8b949e;
       line-height: 1.2;
     }
+
     #popup-breadcrumb {
       font-size: 10px;
       color: #6e7681;
@@ -556,7 +570,10 @@
       text-overflow: ellipsis;
       line-height: 1.2;
     }
-    #popup-breadcrumb span { color: #8b949e; }
+
+    #popup-breadcrumb span {
+      color: #8b949e;
+    }
 
     #popup-close {
       background: none;
@@ -569,7 +586,11 @@
       line-height: 1;
       flex-shrink: 0;
     }
-    #popup-close:hover { background: #30363d; color: #f0f6fc; }
+
+    #popup-close:hover {
+      background: #30363d;
+      color: #f0f6fc;
+    }
 
     #popup-input-wrap {
       display: flex;
@@ -580,6 +601,7 @@
       border-radius: 6px;
       padding: 2px 6px 2px 10px;
     }
+
     #popup-input {
       flex: 1;
       background: none;
@@ -591,6 +613,7 @@
       padding: 6px 0;
       min-width: 0;
     }
+
     #popup-save {
       flex-shrink: 0;
       background: #238636;
@@ -603,12 +626,16 @@
       cursor: pointer;
       transition: background 0.15s;
     }
-    #popup-save:hover { background: #2ea043; }
+
+    #popup-save:hover {
+      background: #2ea043;
+    }
 
     #popup-actions {
       display: flex;
       gap: 6px;
     }
+
     .popup-btn {
       flex: 1;
       padding: 5px 8px;
@@ -622,25 +649,36 @@
       white-space: nowrap;
       text-align: center;
     }
-    .popup-btn:hover { background: #30363d; color: #f0f6fc; }
-    .popup-btn.danger:hover { background: #3d1414; color: #f85149; border-color: #f8514944; }
+
+    .popup-btn:hover {
+      background: #30363d;
+      color: #f0f6fc;
+    }
+
+    .popup-btn.danger:hover {
+      background: #3d1414;
+      color: #f85149;
+      border-color: #f8514944;
+    }
 
     /* Markmap node highlight overlay (SVG approach via CSS) */
-    #map-svg .markmap-node.mm-highlighted > circle {
+    #map-svg .markmap-node.mm-highlighted>circle {
       stroke: #388bfd !important;
       stroke-width: 3px !important;
       filter: drop-shadow(0 0 6px #388bfd88);
     }
-    #map-svg .markmap-node.mm-highlighted > foreignObject {
+
+    #map-svg .markmap-node.mm-highlighted>foreignObject {
       filter: drop-shadow(0 0 4px #388bfd66);
     }
 
     /* foreignObject labels are always clickable */
-    #map-svg .markmap-node > foreignObject {
+    #map-svg .markmap-node>foreignObject {
       pointer-events: all;
       cursor: pointer;
     }
-    #map-svg .markmap-node > foreignObject:hover div {
+
+    #map-svg .markmap-node>foreignObject:hover div {
       text-decoration: underline;
       text-decoration-color: #58a6ff88;
       text-decoration-style: dotted;
@@ -1087,7 +1125,7 @@
     }
 
     function escHtml(s) {
-      return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     }
 
     function openNodePopup(node, targetEl, clientX, clientY) {
@@ -1138,7 +1176,7 @@
         if (y < 16) y = 16;
 
         popup.style.left = x + 'px';
-        popup.style.top  = y + 'px';
+        popup.style.top = y + 'px';
       });
 
       setTimeout(() => document.getElementById('popup-input').focus(), 40);

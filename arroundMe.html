@@ -1,0 +1,2362 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CanvasFlow - 完全オフライン図形・マインドマップ作成ツール</title>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      user-select: none;
+    }
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif;
+      background-color: #f8fafc;
+      color: #1e293b;
+      -webkit-font-smoothing: antialiased;
+    }
+    body {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      width: 100vw;
+    }
+    button, input, select, textarea {
+      font-family: inherit;
+    }
+    button {
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      padding: 0;
+      color: inherit;
+    }
+    .hidden {
+      display: none !important;
+    }
+
+    /* ヘッダー */
+    .app-header {
+      height: 56px;
+      background-color: #ffffff;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 0 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      z-index: 40;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+      flex-shrink: 0;
+    }
+    .header-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .brand-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .brand-logo {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background-color: #2563eb;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      box-shadow: 0 1px 2px rgba(37, 99, 235, 0.25);
+      flex-shrink: 0;
+    }
+    .brand-info {
+      display: none;
+    }
+    @media (min-width: 768px) {
+      .app-header {
+        padding: 0 16px;
+      }
+      .header-group {
+        gap: 10px;
+      }
+      .brand-info {
+        display: block;
+      }
+    }
+    .brand-title {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 700;
+      color: #1e293b;
+      line-height: 1.2;
+    }
+    .brand-subtitle {
+      margin: 0;
+      font-size: 11px;
+      color: #94a3b8;
+      line-height: 1.2;
+    }
+    .v-divider {
+      height: 24px;
+      width: 1px;
+      background-color: #e2e8f0;
+      margin: 0 2px;
+      flex-shrink: 0;
+    }
+    .v-divider-sm {
+      height: 16px;
+      width: 1px;
+      background-color: #e2e8f0;
+      flex-shrink: 0;
+    }
+
+    /* ボタンスタイル */
+    .btn-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 500;
+      color: #334155;
+      background-color: #f1f5f9;
+      border-radius: 8px;
+      transition: background-color 0.15s, color 0.15s;
+    }
+    .btn-secondary:hover {
+      background-color: #e2e8f0;
+    }
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 500;
+      color: #ffffff;
+      background-color: #2563eb;
+      border-radius: 8px;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+      transition: background-color 0.15s;
+    }
+    .btn-primary:hover {
+      background-color: #1d4ed8;
+    }
+    .btn-ghost {
+      display: none;
+      align-items: center;
+      gap: 4px;
+      padding: 6px 8px;
+      font-size: 12px;
+      font-weight: 500;
+      color: #64748b;
+      border-radius: 8px;
+      transition: background-color 0.15s, color 0.15s;
+    }
+    .btn-ghost:hover {
+      color: #334155;
+      background-color: #f1f5f9;
+    }
+    @media (min-width: 640px) {
+      .btn-ghost {
+        display: inline-flex;
+      }
+      .hide-xs {
+        display: inline;
+      }
+    }
+    @media (max-width: 639px) {
+      .hide-xs {
+        display: none;
+      }
+    }
+    .btn-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px;
+      color: #475569;
+      border-radius: 8px;
+      transition: background-color 0.15s, opacity 0.15s;
+    }
+    .btn-icon:hover:not(:disabled) {
+      background-color: #f1f5f9;
+    }
+    .btn-icon:disabled {
+      opacity: 0.35;
+      pointer-events: none;
+    }
+    .icon-sm {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+    }
+    .icon-md {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+    }
+
+    /* 検索ボックス */
+    .search-wrapper {
+      position: relative;
+      flex: 1;
+      max-width: 440px;
+      margin: 0 6px;
+    }
+    .search-input-box {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .search-icon {
+      position: absolute;
+      left: 10px;
+      width: 16px;
+      height: 16px;
+      color: #94a3b8;
+      pointer-events: none;
+    }
+    .search-input {
+      width: 100%;
+      padding: 6px 64px 6px 34px;
+      font-size: 13px;
+      background-color: #f1f5f9;
+      border: 1.5px solid transparent;
+      border-radius: 8px;
+      outline: none;
+      color: #1e293b;
+      transition: border-color 0.15s, background-color 0.15s;
+      user-select: text;
+    }
+    .search-input:focus {
+      border-color: #2563eb;
+      background-color: #ffffff;
+    }
+    .search-counter {
+      position: absolute;
+      right: 8px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      font-weight: 500;
+      color: #64748b;
+      background-color: #ffffff;
+      padding: 2px 6px;
+      border-radius: 4px;
+      border: 1px solid #e2e8f0;
+    }
+    .search-next-btn {
+      padding: 0 2px;
+      font-size: 10px;
+      color: #64748b;
+    }
+    .search-next-btn:hover {
+      color: #2563eb;
+    }
+    .search-dropdown {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: calc(100% + 6px);
+      background-color: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      box-shadow: 0 12px 24px -4px rgba(15, 23, 42, 0.12);
+      max-height: 240px;
+      overflow-y: auto;
+      z-index: 50;
+    }
+    .search-dropdown-item {
+      width: 100%;
+      text-align: left;
+      padding: 8px 12px;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      border-bottom: 1px solid #f1f5f9;
+      transition: background-color 0.12s;
+    }
+    .search-dropdown-item:last-child {
+      border-bottom: none;
+    }
+    .search-dropdown-item:hover {
+      background-color: #eff6ff;
+    }
+    .search-item-text {
+      font-weight: 500;
+      color: #334155;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .search-item-hint {
+      font-size: 10px;
+      color: #2563eb;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+    .search-empty {
+      padding: 10px 12px;
+      font-size: 12px;
+      color: #94a3b8;
+      text-align: center;
+    }
+    .zoom-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #475569;
+      width: 44px;
+      text-align: center;
+      user-select: none;
+    }
+
+    /* メインワークスペース */
+    .workspace {
+      position: relative;
+      flex: 1;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    /* 左側フローティングツールバー */
+    .left-toolbar {
+      position: absolute;
+      left: 12px;
+      top: 12px;
+      z-index: 30;
+      background-color: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(6px);
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      box-shadow: 0 8px 20px -4px rgba(15, 23, 42, 0.1);
+      padding: 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .toolbar-heading {
+      font-size: 10px;
+      font-weight: 700;
+      color: #94a3b8;
+      text-align: center;
+      padding-top: 2px;
+    }
+    .tool-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #334155;
+      transition: background-color 0.15s, color 0.15s;
+    }
+    .tool-btn:hover {
+      background-color: #eff6ff;
+      color: #2563eb;
+    }
+    .tool-btn-sticky {
+      color: #d97706;
+    }
+    .tool-btn-sticky:hover {
+      background-color: #fffbeb;
+      color: #b45309;
+    }
+
+    /* 上部中央プロパティバー */
+    .property-bar {
+      position: absolute;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 30;
+      background-color: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(6px);
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      box-shadow: 0 8px 20px -4px rgba(15, 23, 42, 0.12);
+      padding: 8px 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      max-width: 92vw;
+    }
+    .prop-section {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .prop-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #64748b;
+    }
+    .palette-row {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .swatch-btn {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      transition: transform 0.12s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      color: #64748b;
+    }
+    .swatch-btn:hover {
+      transform: scale(1.15);
+    }
+    .prop-select {
+      font-size: 12px;
+      background-color: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 4px 8px;
+      color: #334155;
+      outline: none;
+    }
+    .prop-checkbox-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      color: #475569;
+      cursor: pointer;
+      margin-left: 4px;
+    }
+    .btn-delete {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 8px;
+      font-size: 12px;
+      font-weight: 500;
+      color: #e11d48;
+      border-radius: 8px;
+      transition: background-color 0.15s;
+    }
+    .btn-delete:hover {
+      background-color: #fff1f2;
+    }
+
+    /* ドットグリッド背景＆無限キャンバス */
+    #canvas-viewport {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      overflow: hidden;
+      background-color: #f8fafc;
+      background-image: radial-gradient(#cbd5e1 1.25px, transparent 1.25px);
+      background-size: 24px 24px;
+      cursor: grab;
+      touch-action: none;
+    }
+    #canvas-viewport.panning {
+      cursor: grabbing;
+    }
+    #canvas-world {
+      transform-origin: 0 0;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 0;
+      height: 0;
+    }
+
+    /* ノード共通スタイル */
+    .diagram-node {
+      position: absolute;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      cursor: move;
+      transition: box-shadow 0.15s ease;
+    }
+    .diagram-node.selected {
+      outline: 2px solid #2563eb;
+      outline-offset: 3px;
+      z-index: 20 !important;
+    }
+    .diagram-node.search-match {
+      outline: 3px solid #f59e0b;
+      outline-offset: 4px;
+      box-shadow: 0 0 0 8px rgba(245, 158, 11, 0.22);
+    }
+
+    /* ひし形用SVG背景 */
+    .diamond-bg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* テキスト表示・編集エリア */
+    .node-content {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      height: 100%;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      word-break: break-word;
+      overflow: hidden;
+      font-size: 14px;
+      line-height: 1.45;
+    }
+    .node-text-display {
+      width: 100%;
+      white-space: pre-wrap;
+      pointer-events: none;
+      font-weight: 500;
+      color: #1e293b;
+    }
+    .node-textarea {
+      width: 100%;
+      height: 100%;
+      resize: none;
+      border: none;
+      outline: none;
+      background: rgba(255, 255, 255, 0.94);
+      color: #0f172a;
+      font-family: inherit;
+      font-size: 14px;
+      line-height: 1.45;
+      text-align: center;
+      border-radius: 6px;
+      padding: 4px;
+      user-select: text;
+      cursor: text;
+    }
+
+    /* URLリンクバッジ（誤クリック防止・安全遷移） */
+    .node-links {
+      position: relative;
+      z-index: 3;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      justify-content: center;
+      margin-top: 6px;
+      max-width: 100%;
+    }
+    .url-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      font-weight: 500;
+      padding: 2px 7px;
+      border-radius: 9999px;
+      background-color: rgba(255, 255, 255, 0.94);
+      color: #1d4ed8;
+      border: 1px solid #bfdbfe;
+      text-decoration: none;
+      max-width: 165px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      cursor: pointer;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+      transition: background-color 0.15s, color 0.15s, border-color 0.15s;
+    }
+    .url-badge:hover {
+      background-color: #2563eb;
+      color: #ffffff;
+      border-color: #2563eb;
+    }
+    .url-badge svg {
+      width: 12px;
+      height: 12px;
+      flex-shrink: 0;
+    }
+
+    /* 接続ハンドル（上下左右アンカー） */
+    .anchor-handle {
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      background-color: #ffffff;
+      border: 2.5px solid #2563eb;
+      border-radius: 50%;
+      z-index: 30;
+      opacity: 0;
+      transform: scale(0.8);
+      transition: opacity 0.15s, transform 0.15s, background-color 0.15s;
+      cursor: crosshair;
+    }
+    .diagram-node:hover .anchor-handle,
+    .diagram-node.selected .anchor-handle,
+    .connecting-mode .anchor-handle {
+      opacity: 1;
+      transform: scale(1);
+    }
+    .anchor-handle:hover {
+      background-color: #2563eb;
+      transform: scale(1.25);
+    }
+    .anchor-top    { top: -6px; left: calc(50% - 6px); }
+    .anchor-right  { right: -6px; top: calc(50% - 6px); }
+    .anchor-bottom { bottom: -6px; left: calc(50% - 6px); }
+    .anchor-left   { left: -6px; top: calc(50% - 6px); }
+
+    /* リサイズハンドル（右下） */
+    .resize-handle {
+      position: absolute;
+      right: -5px;
+      bottom: -5px;
+      width: 12px;
+      height: 12px;
+      background-color: #2563eb;
+      border: 2px solid #ffffff;
+      border-radius: 3px;
+      cursor: nwse-resize;
+      z-index: 31;
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+    .diagram-node.selected .resize-handle,
+    .diagram-node:hover .resize-handle {
+      opacity: 1;
+    }
+
+    /* SVGエッジレイヤー */
+    #edges-svg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      overflow: visible;
+      pointer-events: none;
+      z-index: 1;
+    }
+    .edge-hit-area {
+      fill: none;
+      stroke: transparent;
+      stroke-width: 16px;
+      pointer-events: stroke;
+      cursor: pointer;
+    }
+    .edge-visible-path {
+      fill: none;
+      stroke-linecap: round;
+      transition: stroke 0.15s, stroke-width 0.15s;
+      pointer-events: none;
+    }
+    .edge-group:hover .edge-visible-path {
+      stroke: #3b82f6 !important;
+      stroke-width: 3px !important;
+    }
+    .edge-group.selected .edge-visible-path {
+      stroke: #2563eb !important;
+      stroke-width: 3.5px !important;
+    }
+
+    /* 左下操作ガイド */
+    .guide-chip {
+      position: absolute;
+      left: 12px;
+      bottom: 12px;
+      z-index: 20;
+      background-color: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(6px);
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 8px 12px;
+      font-size: 11px;
+      color: #64748b;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+      pointer-events: none;
+      display: none;
+    }
+    @media (min-width: 640px) {
+      .guide-chip {
+        display: block;
+      }
+    }
+    .guide-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px 12px;
+    }
+    .guide-list strong {
+      color: #334155;
+    }
+
+    /* 右下ミニマップ */
+    .minimap-box {
+      position: absolute;
+      right: 12px;
+      bottom: 12px;
+      z-index: 30;
+      background-color: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(6px);
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px -4px rgba(15, 23, 42, 0.1);
+      padding: 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .minimap-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 4px;
+    }
+    .minimap-title {
+      font-size: 10px;
+      font-weight: 700;
+      color: #64748b;
+    }
+    .minimap-count {
+      font-size: 10px;
+      color: #94a3b8;
+    }
+    #minimap-canvas {
+      border-radius: 8px;
+      background-color: #f8fafc;
+      border: 1px solid #e2e8f0;
+      cursor: pointer;
+      display: block;
+    }
+
+    /* トースト通知 */
+    .toast-box {
+      position: fixed;
+      bottom: 64px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 50;
+      background-color: #1e293b;
+      color: #ffffff;
+      font-size: 12px;
+      font-weight: 500;
+      padding: 10px 16px;
+      border-radius: 9999px;
+      box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.25);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+    .toast-box.visible {
+      opacity: 1;
+    }
+
+    /* スクロールバー */
+    .custom-scroll::-webkit-scrollbar {
+      width: 6px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background-color: #cbd5e1;
+      border-radius: 3px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- トップヘッダー：ファイル操作・履歴・検索・俯瞰コントロール -->
+  <header class="app-header">
+    <!-- 左側：ロゴ＆ローカルファイル保存/読込＆Undo/Redo -->
+    <div class="header-group">
+      <div class="brand-wrap">
+        <div class="brand-logo" aria-hidden="true">
+          <svg class="icon-md" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <rect x="3" y="3" width="7" height="7" rx="1.5"/>
+            <rect x="14" y="14" width="7" height="7" rx="1.5"/>
+            <path d="M10 6.5h4a2 2 0 0 1 2 2v5.5"/>
+          </svg>
+        </div>
+        <div class="brand-info">
+          <h1 class="brand-title">CanvasFlow</h1>
+          <p class="brand-subtitle" id="file-status-label">完全オフライン・自動保存済</p>
+        </div>
+      </div>
+
+      <div class="v-divider"></div>
+
+      <!-- ローカルJSON保存／読込ボタン -->
+      <div class="btn-group">
+        <button id="btn-open-file" title="PC上のJSONファイルを開く" class="btn-secondary">
+          <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+          </svg>
+          <span>開く</span>
+        </button>
+        <button id="btn-save-file" title="JSONファイルとしてPCに保存（上書きまたは新規保存）" class="btn-primary">
+          <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
+          </svg>
+          <span>保存</span>
+        </button>
+        <button id="btn-reset-sample" title="サンプルデータにリセット" class="btn-ghost">
+          <span>サンプル復元</span>
+        </button>
+        <input type="file" id="hidden-file-input" accept=".json,application/json" class="hidden" />
+      </div>
+
+      <div class="v-divider"></div>
+
+      <!-- 元に戻す / やり直すボタン -->
+      <div class="btn-group">
+        <button id="btn-undo" title="元に戻す (Cmd+Z / Ctrl+Z)" disabled class="btn-icon">
+          <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a5 5 0 0 1 5 5v2M3 10l5-5m-5 5l5 5"/>
+          </svg>
+        </button>
+        <button id="btn-redo" title="やり直す (Cmd+Shift+Z / Ctrl+Y)" disabled class="btn-icon">
+          <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 10H11a5 5 0 0 0-5 5v2m15-7l-5-5m5 5l-5 5"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- 中央：検索＆カメラ移動ボックス -->
+    <div class="search-wrapper">
+      <div class="search-input-box">
+        <svg class="search-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <circle cx="11" cy="11" r="8"/><path stroke-linecap="round" d="M21 21l-4.35-4.35"/>
+        </svg>
+        <input id="search-input" type="text" placeholder="図形・テキスト・URLを検索して移動 (Enter)..." class="search-input" />
+        <div id="search-counter" class="search-counter hidden">
+          <span id="search-count-text">0/0</span>
+          <button id="btn-search-next" title="次の一致へ移動" class="search-next-btn">▼</button>
+        </div>
+      </div>
+      <!-- 検索結果ドロップダウン -->
+      <div id="search-dropdown" class="search-dropdown custom-scroll hidden"></div>
+    </div>
+
+    <!-- 右側：ズーム・全体俯瞰ボタン -->
+    <div class="btn-group">
+      <button id="btn-zoom-out" title="縮小 (-)" class="btn-icon">
+        <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M20 12H4"/></svg>
+      </button>
+      <span id="zoom-level-label" class="zoom-label">100%</span>
+      <button id="btn-zoom-in" title="拡大 (+)" class="btn-icon">
+        <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M12 4v16m8-8H4"/></svg>
+      </button>
+      <button id="btn-fit-view" title="プロジェクト全体を俯瞰表示" class="btn-secondary">
+        <svg class="icon-sm" style="color: #2563eb;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/>
+        </svg>
+        <span class="hide-xs">全体俯瞰</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- メイン作業領域 -->
+  <div class="workspace">
+
+    <!-- 左側フローティングツールバー：図形・テキスト追加 -->
+    <aside class="left-toolbar">
+      <div class="toolbar-heading">追加</div>
+
+      <button data-add-shape="rect" title="四角形を追加" class="tool-btn">
+        <svg class="icon-md" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <rect x="3" y="5" width="18" height="14"/>
+        </svg>
+      </button>
+
+      <button data-add-shape="roundRect" title="角丸四角形を追加" class="tool-btn">
+        <svg class="icon-md" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <rect x="3" y="5" width="18" height="14" rx="4"/>
+        </svg>
+      </button>
+
+      <button data-add-shape="ellipse" title="円・楕円を追加" class="tool-btn">
+        <svg class="icon-md" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <ellipse cx="12" cy="12" rx="9" ry="7"/>
+        </svg>
+      </button>
+
+      <button data-add-shape="diamond" title="ひし形（条件分岐）を追加" class="tool-btn">
+        <svg class="icon-md" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <polygon points="12 3 21 12 12 21 3 12 12 3"/>
+        </svg>
+      </button>
+
+      <button data-add-shape="sticky" title="付箋メモを追加" class="tool-btn tool-btn-sticky">
+        <svg class="icon-md" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path d="M15.5 3H5a2 2 0 0 0-2 2v14c0 1.1.9 2 2 2h14a2 2 0 0 0 2-2V8.5L15.5 3Z"/>
+          <path d="M15 3v6h6"/>
+        </svg>
+      </button>
+
+      <button data-add-shape="text" title="自由テキストを追加（キャンバスダブルクリックでも作成可）" class="tool-btn">
+        <svg class="icon-md" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 7V4h16v3M9 20h6M12 4v16"/>
+        </svg>
+      </button>
+    </aside>
+
+    <!-- 上部中央フローティングプロパティバー（選択中の図形／線のスタイル編集） -->
+    <div id="property-bar" class="property-bar hidden">
+      <!-- 図形用プロパティ -->
+      <div id="node-props" class="prop-section">
+        <span class="prop-label">塗り:</span>
+        <div class="palette-row" id="fill-color-palette">
+          <button data-fill="#ffffff" class="swatch-btn" style="background:#ffffff; border:1px solid #cbd5e1;" title="白"></button>
+          <button data-fill="#eff6ff" class="swatch-btn" style="background:#eff6ff; border:1px solid #93c5fd;" title="ライトブルー"></button>
+          <button data-fill="#f0fdf4" class="swatch-btn" style="background:#f0fdf4; border:1px solid #6ee7b7;" title="ミントグリーン"></button>
+          <button data-fill="#fef9c3" class="swatch-btn" style="background:#fef9c3; border:1px solid #fcd34d;" title="イエロー"></button>
+          <button data-fill="#fef2f2" class="swatch-btn" style="background:#fef2f2; border:1px solid #fda4af;" title="ライトピンク"></button>
+          <button data-fill="#f3e8ff" class="swatch-btn" style="background:#f3e8ff; border:1px solid #d8b4fe;" title="ラベンダー"></button>
+          <button data-fill="transparent" class="swatch-btn" style="background:#f1f5f9; border:1px solid #cbd5e1;" title="透明">無</button>
+        </div>
+
+        <div class="v-divider-sm"></div>
+
+        <span class="prop-label">枠線:</span>
+        <div class="palette-row" id="stroke-color-palette">
+          <button data-stroke="#64748b" class="swatch-btn" style="background:#64748b;" title="スレート"></button>
+          <button data-stroke="#2563eb" class="swatch-btn" style="background:#2563eb;" title="ブルー"></button>
+          <button data-stroke="#059669" class="swatch-btn" style="background:#059669;" title="グリーン"></button>
+          <button data-stroke="#d97706" class="swatch-btn" style="background:#d97706;" title="アンバー"></button>
+          <button data-stroke="#e11d48" class="swatch-btn" style="background:#e11d48;" title="ローズ"></button>
+          <button data-stroke="transparent" class="swatch-btn" style="background:#f1f5f9; border:1px solid #cbd5e1;" title="枠なし">無</button>
+        </div>
+
+        <div class="v-divider-sm"></div>
+
+        <button id="btn-edit-text" class="btn-secondary" style="padding: 4px 8px;">
+          テキスト編集
+        </button>
+      </div>
+
+      <!-- 接続線用プロパティ -->
+      <div id="edge-props" class="prop-section hidden">
+        <span class="prop-label">線の種類:</span>
+        <select id="edge-style-select" class="prop-select">
+          <option value="bezier">滑らかな曲線（マインドマップ風）</option>
+          <option value="straight">直線</option>
+        </select>
+        <label class="prop-checkbox-label">
+          <input type="checkbox" id="edge-arrow-check" checked />
+          <span>矢印あり</span>
+        </label>
+      </div>
+
+      <div class="v-divider-sm"></div>
+
+      <!-- 削除ボタン -->
+      <button id="btn-delete-selected" title="選択中の要素を削除 (Delete)" class="btn-delete">
+        <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+        </svg>
+        <span>削除</span>
+      </button>
+    </div>
+
+    <!-- メイン無限キャンバス -->
+    <div id="canvas-viewport">
+      <div id="canvas-world">
+        <!-- 接続線SVGレイヤー -->
+        <svg id="edges-svg">
+          <defs>
+            <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+              <polygon points="0 0, 10 3.5, 0 7" fill="#64748b" />
+            </marker>
+            <marker id="arrowhead-selected" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+              <polygon points="0 0, 10 3.5, 0 7" fill="#2563eb" />
+            </marker>
+          </defs>
+          <g id="edges-container"></g>
+          <!-- ドラッグ中の仮接続線 -->
+          <path id="temp-edge-path" d="" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-dasharray="6,4" class="hidden" />
+        </svg>
+
+        <!-- 図形・ノードレイヤー -->
+        <div id="nodes-container"></div>
+      </div>
+    </div>
+
+    <!-- 左下操作ガイドチップ -->
+    <div class="guide-chip">
+      <div class="guide-list">
+        <span><strong>ドラッグ:</strong> キャンバス移動 / 図形移動</span>
+        <span><strong>ホイール:</strong> ズーム</span>
+        <span><strong>ダブルクリック:</strong> テキスト作成・編集</span>
+        <span><strong>青い丸(●):</strong> ドラッグで線を接続</span>
+        <span><strong>Cmd+Z:</strong> 元に戻す</span>
+      </div>
+    </div>
+
+    <!-- 右下ミニマップ（プロジェクト俯瞰ナビゲーター） -->
+    <div id="minimap-wrapper" class="minimap-box">
+      <div class="minimap-header">
+        <span class="minimap-title">俯瞰マップ</span>
+        <span class="minimap-count" id="node-count-label">0要素</span>
+      </div>
+      <canvas id="minimap-canvas" width="180" height="120"></canvas>
+    </div>
+
+    <!-- トースト通知メッセージボックス（alert不使用） -->
+    <div id="toast-box" class="toast-box"></div>
+
+  </div>
+
+  <script>
+    /**
+     * CanvasFlow - 完全オフライン完結型ダイアグラム＆マインドマップ作成ツール
+     * 外部CDNや外部ネットワーク通信を一切行わず、単体HTMLファイルのみで動作します。
+     */
+
+    const STORAGE_KEY = 'canvasflow_offline_diagram_v1';
+
+    // アプリケーション全体の状態
+    const state = {
+      nodes: [],
+      edges: [],
+      viewport: {
+        x: 120,
+        y: 100,
+        zoom: 1
+      },
+      selectedNodeId: null,
+      selectedEdgeId: null,
+      editingNodeId: null,
+      searchQuery: '',
+      searchMatches: [],
+      searchMatchIndex: 0,
+      fileHandle: null
+    };
+
+    // Undo / Redo 履歴スタック
+    const history = {
+      past: [],
+      future: [],
+      maxSize: 60
+    };
+
+    function createSnapshot() {
+      return JSON.stringify({
+        nodes: state.nodes,
+        edges: state.edges
+      });
+    }
+
+    function updateHistoryButtons() {
+      const btnUndo = document.getElementById('btn-undo');
+      const btnRedo = document.getElementById('btn-redo');
+      if (btnUndo) btnUndo.disabled = history.past.length === 0;
+      if (btnRedo) btnRedo.disabled = history.future.length === 0;
+    }
+
+    function pushHistory(snapshotStr = createSnapshot()) {
+      if (history.past.length > 0 && history.past[history.past.length - 1] === snapshotStr) {
+        return;
+      }
+      history.past.push(snapshotStr);
+      if (history.past.length > history.maxSize) {
+        history.past.shift();
+      }
+      history.future = [];
+      updateHistoryButtons();
+    }
+
+    function undo() {
+      if (state.editingNodeId || history.past.length === 0) return;
+      const currentSnapshot = createSnapshot();
+      const prevSnapshot = history.past.pop();
+      history.future.push(currentSnapshot);
+
+      const restored = JSON.parse(prevSnapshot);
+      state.nodes = restored.nodes;
+      state.edges = restored.edges;
+      state.selectedNodeId = null;
+      state.selectedEdgeId = null;
+
+      renderAll();
+      persistToLocalStorage();
+      updateHistoryButtons();
+      showToast('1つ前の状態に戻しました');
+    }
+
+    function redo() {
+      if (state.editingNodeId || history.future.length === 0) return;
+      const currentSnapshot = createSnapshot();
+      const nextSnapshot = history.future.pop();
+      history.past.push(currentSnapshot);
+
+      const restored = JSON.parse(nextSnapshot);
+      state.nodes = restored.nodes;
+      state.edges = restored.edges;
+      state.selectedNodeId = null;
+      state.selectedEdgeId = null;
+
+      renderAll();
+      persistToLocalStorage();
+      updateHistoryButtons();
+      showToast('操作をやり直しました');
+    }
+
+    // DOM参照
+    const viewportEl = document.getElementById('canvas-viewport');
+    const worldEl = document.getElementById('canvas-world');
+    const nodesContainer = document.getElementById('nodes-container');
+    const edgesContainer = document.getElementById('edges-container');
+    const tempEdgePath = document.getElementById('temp-edge-path');
+    const zoomLabel = document.getElementById('zoom-level-label');
+    const propertyBar = document.getElementById('property-bar');
+    const nodeProps = document.getElementById('node-props');
+    const edgeProps = document.getElementById('edge-props');
+    const minimapCanvas = document.getElementById('minimap-canvas');
+    const minimapCtx = minimapCanvas.getContext('2d');
+    const nodeCountLabel = document.getElementById('node-count-label');
+    const fileStatusLabel = document.getElementById('file-status-label');
+
+    // インタラクション状態
+    let interaction = {
+      mode: 'none',
+      startX: 0,
+      startY: 0,
+      origX: 0,
+      origY: 0,
+      origW: 0,
+      origH: 0,
+      targetNodeId: null,
+      sourceAnchor: null,
+      beforeSnapshot: null
+    };
+
+    // 初期サンプルデータ
+    function getSampleData() {
+      return {
+        viewport: { x: 80, y: 80, zoom: 0.92 },
+        nodes: [
+          {
+            id: 'node_1',
+            type: 'roundRect',
+            x: 360,
+            y: 40,
+            width: 240,
+            height: 92,
+            text: '新規Webサービス開発プロジェクト\n全体構成＆タスク俯瞰図',
+            fill: '#eff6ff',
+            stroke: '#2563eb'
+          },
+          {
+            id: 'node_2',
+            type: 'rect',
+            x: 60,
+            y: 220,
+            width: 220,
+            height: 110,
+            text: '1. 要件定義・UI設計\n画面ワイヤーフレーム作成\nhttps://example.com/design-spec',
+            fill: '#ffffff',
+            stroke: '#64748b'
+          },
+          {
+            id: 'node_3',
+            type: 'rect',
+            x: 370,
+            y: 220,
+            width: 220,
+            height: 110,
+            text: '2. フロントエンド実装\nオフライン対応＆ローカル保存\nhttps://github.com/example/app',
+            fill: '#f0fdf4',
+            stroke: '#059669'
+          },
+          {
+            id: 'node_4',
+            type: 'diamond',
+            x: 690,
+            y: 215,
+            width: 200,
+            height: 120,
+            text: 'セキュリティ\nレビュー完了？',
+            fill: '#fef9c3',
+            stroke: '#d97706'
+          },
+          {
+            id: 'node_5',
+            type: 'sticky',
+            x: 60,
+            y: 410,
+            width: 220,
+            height: 105,
+            text: '【メモ】共有ルール\nJSONファイルを共有フォルダへ格納してメンバーに展開する',
+            fill: '#fef9c3',
+            stroke: '#eab308'
+          },
+          {
+            id: 'node_6',
+            type: 'ellipse',
+            x: 380,
+            y: 415,
+            width: 200,
+            height: 95,
+            text: '本番リリース\nマニュアル公開\nhttps://example.com/docs',
+            fill: '#f3e8ff',
+            stroke: '#7c3aed'
+          },
+          {
+            id: 'node_7',
+            type: 'text',
+            x: 680,
+            y: 425,
+            width: 230,
+            height: 75,
+            text: '※図形をドラッグすると線も追随します。\n右上の検索窓からキーワード移動できます。',
+            fill: 'transparent',
+            stroke: 'transparent'
+          }
+        ],
+        edges: [
+          { id: 'edge_1', source: 'node_1', sourceAnchor: 'bottom', target: 'node_2', targetAnchor: 'top', style: 'bezier', arrow: true },
+          { id: 'edge_2', source: 'node_1', sourceAnchor: 'bottom', target: 'node_3', targetAnchor: 'top', style: 'bezier', arrow: true },
+          { id: 'edge_3', source: 'node_1', sourceAnchor: 'bottom', target: 'node_4', targetAnchor: 'top', style: 'bezier', arrow: true },
+          { id: 'edge_4', source: 'node_2', sourceAnchor: 'bottom', target: 'node_5', targetAnchor: 'top', style: 'straight', arrow: true },
+          { id: 'edge_5', source: 'node_3', sourceAnchor: 'bottom', target: 'node_6', targetAnchor: 'top', style: 'bezier', arrow: true },
+          { id: 'edge_6', source: 'node_4', sourceAnchor: 'bottom', target: 'node_6', targetAnchor: 'right', style: 'bezier', arrow: true }
+        ]
+      };
+    }
+
+    // トースト通知表示
+    let toastTimer = null;
+    function showToast(message) {
+      const toast = document.getElementById('toast-box');
+      toast.textContent = message;
+      toast.classList.add('visible');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.remove('visible');
+      }, 2400);
+    }
+
+    // localStorage 自動保存
+    function persistToLocalStorage() {
+      try {
+        const payload = {
+          nodes: state.nodes,
+          edges: state.edges,
+          viewport: state.viewport,
+          updatedAt: new Date().toISOString()
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+        const now = new Date();
+        const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+        fileStatusLabel.textContent = `ローカル自動保存 (${timeStr})`;
+      } catch (e) {
+        console.error('LocalStorage保存エラー:', e);
+      }
+    }
+
+    // localStorage からの復元
+    function loadFromLocalStorage() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed.nodes) && Array.isArray(parsed.edges)) {
+            state.nodes = parsed.nodes;
+            state.edges = parsed.edges;
+            if (parsed.viewport) {
+              state.viewport = parsed.viewport;
+            }
+            return true;
+          }
+        }
+      } catch (e) {
+        console.error('LocalStorage読み込みエラー:', e);
+      }
+      return false;
+    }
+
+    // URL抽出＆サニタイズ（http:// または https:// のみ安全に許可）
+    function extractSafeUrls(text) {
+      if (!text) return [];
+      const regex = /https?:\/\/[^\s<>"'()]+/gi;
+      const matches = text.match(regex) || [];
+      const validUrls = [];
+      for (const rawUrl of matches) {
+        try {
+          const parsed = new URL(rawUrl);
+          if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+            validUrls.push(parsed.href);
+          }
+        } catch (_) {
+          // 無効なURLは除外
+        }
+      }
+      return [...new Set(validUrls)];
+    }
+
+    // ビューポート変換の適用
+    function applyViewportTransform() {
+      const { x, y, zoom } = state.viewport;
+      worldEl.style.transform = `translate(${x}px, ${y}px) scale(${zoom})`;
+      const gridSize = 24 * zoom;
+      viewportEl.style.backgroundSize = `${gridSize}px ${gridSize}px`;
+      viewportEl.style.backgroundPosition = `${x}px ${y}px`;
+      zoomLabel.textContent = `${Math.round(zoom * 100)}%`;
+      renderMinimap();
+    }
+
+    // スクリーン座標 -> ワールド座標変換
+    function screenToWorld(clientX, clientY) {
+      const rect = viewportEl.getBoundingClientRect();
+      return {
+        x: (clientX - rect.left - state.viewport.x) / state.viewport.zoom,
+        y: (clientY - rect.top - state.viewport.y) / state.viewport.zoom
+      };
+    }
+
+    // アンカーポイント座標の計算
+    function getAnchorPoint(node, anchor = 'right') {
+      switch (anchor) {
+        case 'top':    return { x: node.x + node.width / 2, y: node.y };
+        case 'bottom': return { x: node.x + node.width / 2, y: node.y + node.height };
+        case 'left':   return { x: node.x, y: node.y + node.height / 2 };
+        case 'right':
+        default:       return { x: node.x + node.width, y: node.y + node.height / 2 };
+      }
+    }
+
+    // 2つのノード間で最も近いアンカーペアを自動判定
+    function findClosestAnchor(targetNode, worldX, worldY) {
+      const anchors = ['top', 'right', 'bottom', 'left'];
+      let bestAnchor = 'left';
+      let minDist = Infinity;
+      for (const a of anchors) {
+        const pt = getAnchorPoint(targetNode, a);
+        const dist = Math.hypot(pt.x - worldX, pt.y - worldY);
+        if (dist < minDist) {
+          minDist = dist;
+          bestAnchor = a;
+        }
+      }
+      return bestAnchor;
+    }
+
+    // 接続線パス文字列の生成
+    function buildEdgePath(p1, a1, p2, a2, style = 'bezier') {
+      if (style === 'straight') {
+        return `M ${p1.x} ${p1.y} L ${p2.x} ${p2.y}`;
+      }
+      const dist = Math.max(45, Math.hypot(p2.x - p1.x, p2.y - p1.y) * 0.4);
+      const offset = (anchor) => {
+        switch (anchor) {
+          case 'top':    return { dx: 0, dy: -dist };
+          case 'bottom': return { dx: 0, dy: dist };
+          case 'left':   return { dx: -dist, dy: 0 };
+          case 'right':  return { dx: dist, dy: 0 };
+          default:       return { dx: 0, dy: 0 };
+        }
+      };
+      const o1 = offset(a1);
+      const o2 = offset(a2);
+      return `M ${p1.x} ${p1.y} C ${p1.x + o1.dx} ${p1.y + o1.dy}, ${p2.x + o2.dx} ${p2.y + o2.dy}, ${p2.x} ${p2.y}`;
+    }
+
+    // すべての接続線を描画
+    function renderEdges() {
+      const nodeMap = new Map(state.nodes.map(n => [n.id, n]));
+      edgesContainer.innerHTML = '';
+
+      for (const edge of state.edges) {
+        const srcNode = nodeMap.get(edge.source);
+        const tgtNode = nodeMap.get(edge.target);
+        if (!srcNode || !tgtNode) continue;
+
+        const p1 = getAnchorPoint(srcNode, edge.sourceAnchor || 'right');
+        const p2 = getAnchorPoint(tgtNode, edge.targetAnchor || 'left');
+        const d = buildEdgePath(p1, edge.sourceAnchor, p2, edge.targetAnchor, edge.style || 'bezier');
+
+        const isSelected = state.selectedEdgeId === edge.id;
+        const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        g.setAttribute('class', `edge-group ${isSelected ? 'selected' : ''}`);
+
+        const hitPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        hitPath.setAttribute('d', d);
+        hitPath.setAttribute('class', 'edge-hit-area');
+        hitPath.addEventListener('pointerdown', (e) => {
+          e.stopPropagation();
+          selectEdge(edge.id);
+        });
+
+        const visPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        visPath.setAttribute('d', d);
+        visPath.setAttribute('class', 'edge-visible-path');
+        visPath.setAttribute('stroke', isSelected ? '#2563eb' : '#64748b');
+        visPath.setAttribute('stroke-width', isSelected ? '3' : '2');
+        if (edge.arrow !== false) {
+          visPath.setAttribute('marker-end', isSelected ? 'url(#arrowhead-selected)' : 'url(#arrowhead)');
+        }
+
+        g.appendChild(hitPath);
+        g.appendChild(visPath);
+        edgesContainer.appendChild(g);
+      }
+    }
+
+    // すべての図形・ノードを描画
+    function renderNodes() {
+      nodesContainer.innerHTML = '';
+      const matchedSet = new Set(state.searchMatches);
+
+      for (const node of state.nodes) {
+        const el = document.createElement('div');
+        el.dataset.nodeId = node.id;
+
+        const isSelected = state.selectedNodeId === node.id;
+        const isEditing = state.editingNodeId === node.id;
+        const isMatched = matchedSet.has(node.id);
+
+        el.className = `diagram-node ${isSelected ? 'selected' : ''} ${isMatched ? 'search-match' : ''}`;
+        el.style.left = `${node.x}px`;
+        el.style.top = `${node.y}px`;
+        el.style.width = `${node.width}px`;
+        el.style.height = `${node.height}px`;
+
+        if (node.type === 'diamond') {
+          el.style.backgroundColor = 'transparent';
+          const svgBg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+          svgBg.setAttribute('viewBox', '0 0 100 100');
+          svgBg.setAttribute('preserveAspectRatio', 'none');
+          svgBg.setAttribute('class', 'diamond-bg');
+          const poly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+          poly.setAttribute('points', '50,2 98,50 50,98 2,50');
+          poly.setAttribute('fill', node.fill === 'transparent' ? 'none' : (node.fill || '#ffffff'));
+          poly.setAttribute('stroke', node.stroke === 'transparent' ? 'none' : (node.stroke || '#64748b'));
+          poly.setAttribute('stroke-width', '2.5');
+          poly.setAttribute('vector-effect', 'non-scaling-stroke');
+          svgBg.appendChild(poly);
+          el.appendChild(svgBg);
+        } else {
+          el.style.backgroundColor = node.fill || '#ffffff';
+          if (node.stroke && node.stroke !== 'transparent') {
+            el.style.border = `2px solid ${node.stroke}`;
+          } else {
+            el.style.border = isSelected ? '1px dashed #94a3b8' : '2px solid transparent';
+          }
+
+          if (node.type === 'roundRect') {
+            el.style.borderRadius = '14px';
+            el.style.boxShadow = '0 4px 12px rgba(15, 23, 42, 0.06)';
+          } else if (node.type === 'ellipse') {
+            el.style.borderRadius = '50%';
+            el.style.boxShadow = '0 4px 12px rgba(15, 23, 42, 0.06)';
+          } else if (node.type === 'sticky') {
+            el.style.borderRadius = '4px 4px 16px 4px';
+            el.style.boxShadow = '0 6px 14px rgba(180, 83, 9, 0.12)';
+          } else if (node.type === 'text') {
+            el.style.borderRadius = '6px';
+          } else {
+            el.style.borderRadius = '4px';
+            el.style.boxShadow = '0 3px 10px rgba(15, 23, 42, 0.05)';
+          }
+        }
+
+        const content = document.createElement('div');
+        content.className = 'node-content';
+        if (node.type === 'diamond') {
+          content.style.padding = '16px 26px';
+        }
+
+        if (isEditing) {
+          const textarea = document.createElement('textarea');
+          textarea.className = 'node-textarea';
+          textarea.value = node.text || '';
+          textarea.placeholder = 'テキストやURLを入力...';
+          textarea.addEventListener('pointerdown', (e) => e.stopPropagation());
+          textarea.addEventListener('keydown', (e) => {
+            e.stopPropagation();
+            if (e.key === 'Escape' || (e.key === 'Enter' && (e.ctrlKey || e.metaKey))) {
+              finishEditingNode(node.id, textarea.value);
+            }
+          });
+          textarea.addEventListener('blur', () => {
+            finishEditingNode(node.id, textarea.value);
+          });
+          content.appendChild(textarea);
+          setTimeout(() => {
+            textarea.focus();
+            textarea.select();
+          }, 10);
+        } else {
+          const textDiv = document.createElement('div');
+          textDiv.className = 'node-text-display';
+          textDiv.textContent = node.text || '';
+          content.appendChild(textDiv);
+
+          const urls = extractSafeUrls(node.text);
+          if (urls.length > 0) {
+            const linksWrap = document.createElement('div');
+            linksWrap.className = 'node-links';
+            for (const url of urls) {
+              const a = document.createElement('a');
+              a.href = url;
+              a.target = '_blank';
+              a.rel = 'noopener noreferrer';
+              a.className = 'url-badge';
+              a.title = `新しいタブで開く: ${url}`;
+              const displayHost = url.replace(/^https?:\/\//, '');
+              a.innerHTML = `<svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg><span>${escapeHtml(displayHost)}</span>`;
+              a.addEventListener('pointerdown', (e) => e.stopPropagation());
+              a.addEventListener('click', (e) => e.stopPropagation());
+              linksWrap.appendChild(a);
+            }
+            content.appendChild(linksWrap);
+          }
+        }
+
+        el.appendChild(content);
+
+        ['top', 'right', 'bottom', 'left'].forEach(pos => {
+          const anchor = document.createElement('div');
+          anchor.className = `anchor-handle anchor-${pos}`;
+          anchor.title = 'ドラッグして別の図形に線を繋ぐ';
+          anchor.addEventListener('pointerdown', (e) => {
+            e.stopPropagation();
+            startConnecting(node.id, pos, e);
+          });
+          el.appendChild(anchor);
+        });
+
+        const resizer = document.createElement('div');
+        resizer.className = 'resize-handle';
+        resizer.title = 'ドラッグしてサイズ変更';
+        resizer.addEventListener('pointerdown', (e) => {
+          e.stopPropagation();
+          startResizingNode(node.id, e);
+        });
+        el.appendChild(resizer);
+
+        el.addEventListener('pointerdown', (e) => {
+          if (state.editingNodeId === node.id) return;
+          e.stopPropagation();
+          selectNode(node.id);
+          startDraggingNode(node.id, e);
+        });
+
+        el.addEventListener('dblclick', (e) => {
+          e.stopPropagation();
+          startEditingNode(node.id);
+        });
+
+        nodesContainer.appendChild(el);
+      }
+
+      nodeCountLabel.textContent = `${state.nodes.length}要素`;
+      renderMinimap();
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/[&<>"']/g, m => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[m]));
+    }
+
+    function renderAll() {
+      applyViewportTransform();
+      renderEdges();
+      renderNodes();
+      updatePropertyBar();
+    }
+
+    function updatePropertyBar() {
+      if (state.selectedNodeId) {
+        propertyBar.classList.remove('hidden');
+        nodeProps.classList.remove('hidden');
+        edgeProps.classList.add('hidden');
+      } else if (state.selectedEdgeId) {
+        const edge = state.edges.find(e => e.id === state.selectedEdgeId);
+        if (edge) {
+          propertyBar.classList.remove('hidden');
+          nodeProps.classList.add('hidden');
+          edgeProps.classList.remove('hidden');
+          document.getElementById('edge-style-select').value = edge.style || 'bezier';
+          document.getElementById('edge-arrow-check').checked = edge.arrow !== false;
+        }
+      } else {
+        propertyBar.classList.add('hidden');
+      }
+    }
+
+    function selectNode(nodeId) {
+      state.selectedNodeId = nodeId;
+      state.selectedEdgeId = null;
+      renderNodes();
+      renderEdges();
+      updatePropertyBar();
+    }
+
+    function selectEdge(edgeId) {
+      state.selectedEdgeId = edgeId;
+      state.selectedNodeId = null;
+      state.editingNodeId = null;
+      renderNodes();
+      renderEdges();
+      updatePropertyBar();
+    }
+
+    function clearSelection() {
+      if (state.editingNodeId) return;
+      state.selectedNodeId = null;
+      state.selectedEdgeId = null;
+      renderNodes();
+      renderEdges();
+      updatePropertyBar();
+    }
+
+    function startEditingNode(nodeId) {
+      state.editingNodeId = nodeId;
+      state.selectedNodeId = nodeId;
+      renderNodes();
+    }
+
+    function finishEditingNode(nodeId, newText) {
+      const node = state.nodes.find(n => n.id === nodeId);
+      if (node && node.text !== newText) {
+        pushHistory();
+        node.text = newText;
+      }
+      state.editingNodeId = null;
+      renderNodes();
+      persistToLocalStorage();
+    }
+
+    function addNode(type, customWorldPos = null) {
+      pushHistory();
+      const rect = viewportEl.getBoundingClientRect();
+      const centerWorld = customWorldPos || screenToWorld(rect.left + rect.width / 2, rect.top + rect.height / 2);
+
+      const presets = {
+        rect:      { w: 180, h: 90,  fill: '#ffffff', stroke: '#64748b', text: '新しい四角形' },
+        roundRect: { w: 190, h: 90,  fill: '#eff6ff', stroke: '#2563eb', text: '新しいステップ' },
+        ellipse:   { w: 170, h: 100, fill: '#f0fdf4', stroke: '#059669', text: '開始 / 終了' },
+        diamond:   { w: 170, h: 110, fill: '#fef9c3', stroke: '#d97706', text: '条件分岐？' },
+        sticky:    { w: 180, h: 110, fill: '#fef9c3', stroke: '#eab308', text: '付箋メモ' },
+        text:      { w: 200, h: 64,  fill: 'transparent', stroke: 'transparent', text: 'テキストを入力' }
+      };
+      const p = presets[type] || presets.rect;
+      const jitter = customWorldPos ? 0 : (state.nodes.length % 5) * 18;
+
+      const newNode = {
+        id: 'node_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+        type,
+        x: Math.round(centerWorld.x - p.w / 2 + jitter),
+        y: Math.round(centerWorld.y - p.h / 2 + jitter),
+        width: p.w,
+        height: p.h,
+        text: p.text,
+        fill: p.fill,
+        stroke: p.stroke
+      };
+
+      state.nodes.push(newNode);
+      state.selectedNodeId = newNode.id;
+      state.selectedEdgeId = null;
+      renderAll();
+      persistToLocalStorage();
+      if (type === 'text' && customWorldPos) {
+        startEditingNode(newNode.id);
+      }
+    }
+
+    function startDraggingNode(nodeId, e) {
+      const node = state.nodes.find(n => n.id === nodeId);
+      if (!node) return;
+      interaction = {
+        mode: 'drag-node',
+        startX: e.clientX,
+        startY: e.clientY,
+        origX: node.x,
+        origY: node.y,
+        targetNodeId: nodeId,
+        beforeSnapshot: createSnapshot()
+      };
+    }
+
+    function startResizingNode(nodeId, e) {
+      const node = state.nodes.find(n => n.id === nodeId);
+      if (!node) return;
+      interaction = {
+        mode: 'resize-node',
+        startX: e.clientX,
+        startY: e.clientY,
+        origW: node.width,
+        origH: node.height,
+        targetNodeId: nodeId,
+        beforeSnapshot: createSnapshot()
+      };
+    }
+
+    function startConnecting(sourceNodeId, sourceAnchor, e) {
+      const srcNode = state.nodes.find(n => n.id === sourceNodeId);
+      if (!srcNode) return;
+      interaction = {
+        mode: 'connect',
+        targetNodeId: sourceNodeId,
+        sourceAnchor
+      };
+      document.body.classList.add('connecting-mode');
+      const p1 = getAnchorPoint(srcNode, sourceAnchor);
+      tempEdgePath.setAttribute('d', `M ${p1.x} ${p1.y} L ${p1.x} ${p1.y}`);
+      tempEdgePath.classList.remove('hidden');
+    }
+
+    viewportEl.addEventListener('pointerdown', (e) => {
+      if (e.target !== viewportEl && e.target !== worldEl && e.target.id !== 'edges-svg') return;
+      clearSelection();
+      interaction = {
+        mode: 'pan',
+        startX: e.clientX,
+        startY: e.clientY,
+        origX: state.viewport.x,
+        origY: state.viewport.y
+      };
+      viewportEl.classList.add('panning');
+    });
+
+    viewportEl.addEventListener('dblclick', (e) => {
+      if (e.target !== viewportEl && e.target !== worldEl && e.target.id !== 'edges-svg') return;
+      const worldPos = screenToWorld(e.clientX, e.clientY);
+      addNode('text', worldPos);
+    });
+
+    window.addEventListener('pointermove', (e) => {
+      if (interaction.mode === 'none') return;
+
+      if (interaction.mode === 'pan') {
+        state.viewport.x = interaction.origX + (e.clientX - interaction.startX);
+        state.viewport.y = interaction.origY + (e.clientY - interaction.startY);
+        applyViewportTransform();
+      } else if (interaction.mode === 'drag-node') {
+        const node = state.nodes.find(n => n.id === interaction.targetNodeId);
+        if (!node) return;
+        const dx = (e.clientX - interaction.startX) / state.viewport.zoom;
+        const dy = (e.clientY - interaction.startY) / state.viewport.zoom;
+        node.x = Math.round(interaction.origX + dx);
+        node.y = Math.round(interaction.origY + dy);
+
+        const nodeEl = nodesContainer.querySelector(`[data-node-id="${node.id}"]`);
+        if (nodeEl) {
+          nodeEl.style.left = `${node.x}px`;
+          nodeEl.style.top = `${node.y}px`;
+        }
+        renderEdges();
+        renderMinimap();
+      } else if (interaction.mode === 'resize-node') {
+        const node = state.nodes.find(n => n.id === interaction.targetNodeId);
+        if (!node) return;
+        const dx = (e.clientX - interaction.startX) / state.viewport.zoom;
+        const dy = (e.clientY - interaction.startY) / state.viewport.zoom;
+        node.width = Math.max(80, Math.round(interaction.origW + dx));
+        node.height = Math.max(44, Math.round(interaction.origH + dy));
+
+        const nodeEl = nodesContainer.querySelector(`[data-node-id="${node.id}"]`);
+        if (nodeEl) {
+          nodeEl.style.width = `${node.width}px`;
+          nodeEl.style.height = `${node.height}px`;
+        }
+        renderEdges();
+        renderMinimap();
+      } else if (interaction.mode === 'connect') {
+        const srcNode = state.nodes.find(n => n.id === interaction.targetNodeId);
+        if (!srcNode) return;
+        const p1 = getAnchorPoint(srcNode, interaction.sourceAnchor);
+        const p2 = screenToWorld(e.clientX, e.clientY);
+        const d = buildEdgePath(p1, interaction.sourceAnchor, p2, 'left', 'bezier');
+        tempEdgePath.setAttribute('d', d);
+      }
+    });
+
+    window.addEventListener('pointerup', (e) => {
+      if (interaction.mode === 'none') return;
+
+      if (interaction.mode === 'pan') {
+        viewportEl.classList.remove('panning');
+        persistToLocalStorage();
+      } else if (interaction.mode === 'drag-node' || interaction.mode === 'resize-node') {
+        if (interaction.beforeSnapshot && interaction.beforeSnapshot !== createSnapshot()) {
+          pushHistory(interaction.beforeSnapshot);
+        }
+        persistToLocalStorage();
+      } else if (interaction.mode === 'connect') {
+        document.body.classList.remove('connecting-mode');
+        tempEdgePath.classList.add('hidden');
+
+        const elemBelow = document.elementFromPoint(e.clientX, e.clientY);
+        const targetNodeEl = elemBelow ? elemBelow.closest('.diagram-node') : null;
+        if (targetNodeEl) {
+          const targetId = targetNodeEl.dataset.nodeId;
+          if (targetId && targetId !== interaction.targetNodeId) {
+            pushHistory();
+            const targetNode = state.nodes.find(n => n.id === targetId);
+            const worldPt = screenToWorld(e.clientX, e.clientY);
+            const targetAnchor = findClosestAnchor(targetNode, worldPt.x, worldPt.y);
+
+            state.edges.push({
+              id: 'edge_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+              source: interaction.targetNodeId,
+              sourceAnchor: interaction.sourceAnchor,
+              target: targetId,
+              targetAnchor,
+              style: 'bezier',
+              arrow: true
+            });
+            renderEdges();
+            persistToLocalStorage();
+            showToast('図形同士を線で接続しました');
+          }
+        }
+      }
+
+      interaction = { mode: 'none' };
+    });
+
+    viewportEl.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const rect = viewportEl.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+
+      const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
+      const newZoom = Math.min(2.5, Math.max(0.2, state.viewport.zoom * zoomFactor));
+
+      state.viewport.x = mouseX - (mouseX - state.viewport.x) * (newZoom / state.viewport.zoom);
+      state.viewport.y = mouseY - (mouseY - state.viewport.y) * (newZoom / state.viewport.zoom);
+      state.viewport.zoom = newZoom;
+
+      applyViewportTransform();
+    }, { passive: false });
+
+    function animateViewportTo(targetX, targetY, targetZoom, duration = 420) {
+      const startX = state.viewport.x;
+      const startY = state.viewport.y;
+      const startZoom = state.viewport.zoom;
+      const startTime = performance.now();
+
+      function step(now) {
+        const elapsed = now - startTime;
+        const t = Math.min(1, elapsed / duration);
+        const ease = 1 - Math.pow(1 - t, 3);
+
+        state.viewport.x = startX + (targetX - startX) * ease;
+        state.viewport.y = startY + (targetY - startY) * ease;
+        state.viewport.zoom = startZoom + (targetZoom - startZoom) * ease;
+
+        applyViewportTransform();
+        if (t < 1) {
+          requestAnimationFrame(step);
+        } else {
+          persistToLocalStorage();
+        }
+      }
+      requestAnimationFrame(step);
+    }
+
+    function focusOnNode(nodeId) {
+      const node = state.nodes.find(n => n.id === nodeId);
+      if (!node) return;
+      const rect = viewportEl.getBoundingClientRect();
+      const targetZoom = Math.max(1, Math.min(1.25, state.viewport.zoom));
+      const nodeCenterX = node.x + node.width / 2;
+      const nodeCenterY = node.y + node.height / 2;
+
+      const targetX = rect.width / 2 - nodeCenterX * targetZoom;
+      const targetY = rect.height / 2 - nodeCenterY * targetZoom;
+
+      selectNode(nodeId);
+      animateViewportTo(targetX, targetY, targetZoom);
+    }
+
+    function fitToScreen() {
+      if (state.nodes.length === 0) {
+        animateViewportTo(100, 100, 1);
+        return;
+      }
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      for (const n of state.nodes) {
+        minX = Math.min(minX, n.x);
+        minY = Math.min(minY, n.y);
+        maxX = Math.max(maxX, n.x + n.width);
+        maxY = Math.max(maxY, n.y + n.height);
+      }
+      const padding = 80;
+      const contentW = Math.max(200, maxX - minX + padding * 2);
+      const contentH = Math.max(200, maxY - minY + padding * 2);
+
+      const rect = viewportEl.getBoundingClientRect();
+      const targetZoom = Math.min(1.2, Math.max(0.25, Math.min(rect.width / contentW, rect.height / contentH)));
+
+      const centerX = (minX + maxX) / 2;
+      const centerY = (minY + maxY) / 2;
+      const targetX = rect.width / 2 - centerX * targetZoom;
+      const targetY = rect.height / 2 - centerY * targetZoom;
+
+      animateViewportTo(targetX, targetY, targetZoom);
+    }
+
+    function renderMinimap() {
+      const cw = minimapCanvas.width;
+      const ch = minimapCanvas.height;
+      minimapCtx.clearRect(0, 0, cw, ch);
+
+      if (state.nodes.length === 0) return;
+
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      for (const n of state.nodes) {
+        minX = Math.min(minX, n.x);
+        minY = Math.min(minY, n.y);
+        maxX = Math.max(maxX, n.x + n.width);
+        maxY = Math.max(maxY, n.y + n.height);
+      }
+
+      const vpRect = viewportEl.getBoundingClientRect();
+      const vpWorldX = -state.viewport.x / state.viewport.zoom;
+      const vpWorldY = -state.viewport.y / state.viewport.zoom;
+      const vpWorldW = vpRect.width / state.viewport.zoom;
+      const vpWorldH = vpRect.height / state.viewport.zoom;
+
+      minX = Math.min(minX, vpWorldX) - 60;
+      minY = Math.min(minY, vpWorldY) - 60;
+      maxX = Math.max(maxX, vpWorldX + vpWorldW) + 60;
+      maxY = Math.max(maxY, vpWorldY + vpWorldH) + 60;
+
+      const worldW = Math.max(1, maxX - minX);
+      const worldH = Math.max(1, maxY - minY);
+      const scale = Math.min(cw / worldW, ch / worldH);
+      const offsetX = (cw - worldW * scale) / 2;
+      const offsetY = (ch - worldH * scale) / 2;
+
+      const nodeMap = new Map(state.nodes.map(n => [n.id, n]));
+      minimapCtx.strokeStyle = '#94a3b8';
+      minimapCtx.lineWidth = 1;
+      for (const e of state.edges) {
+        const s = nodeMap.get(e.source);
+        const t = nodeMap.get(e.target);
+        if (!s || !t) continue;
+        minimapCtx.beginPath();
+        minimapCtx.moveTo((s.x + s.width / 2 - minX) * scale + offsetX, (s.y + s.height / 2 - minY) * scale + offsetY);
+        minimapCtx.lineTo((t.x + t.width / 2 - minX) * scale + offsetX, (t.y + t.height / 2 - minY) * scale + offsetY);
+        minimapCtx.stroke();
+      }
+
+      for (const n of state.nodes) {
+        const nx = (n.x - minX) * scale + offsetX;
+        const ny = (n.y - minY) * scale + offsetY;
+        const nw = Math.max(4, n.width * scale);
+        const nh = Math.max(3, n.height * scale);
+
+        minimapCtx.fillStyle = n.id === state.selectedNodeId ? '#2563eb' : (n.fill && n.fill !== 'transparent' ? n.fill : '#e2e8f0');
+        minimapCtx.strokeStyle = n.id === state.selectedNodeId ? '#1d4ed8' : '#64748b';
+        minimapCtx.lineWidth = 1;
+        minimapCtx.fillRect(nx, ny, nw, nh);
+        minimapCtx.strokeRect(nx, ny, nw, nh);
+      }
+
+      const vx = (vpWorldX - minX) * scale + offsetX;
+      const vy = (vpWorldY - minY) * scale + offsetY;
+      const vw = vpWorldW * scale;
+      const vh = vpWorldH * scale;
+      minimapCtx.strokeStyle = '#2563eb';
+      minimapCtx.fillStyle = 'rgba(37, 99, 235, 0.08)';
+      minimapCtx.lineWidth = 1.5;
+      minimapCtx.fillRect(vx, vy, vw, vh);
+      minimapCtx.strokeRect(vx, vy, vw, vh);
+
+      minimapCanvas._mapTransform = { minX, minY, scale, offsetX, offsetY };
+    }
+
+    minimapCanvas.addEventListener('pointerdown', (e) => {
+      const t = minimapCanvas._mapTransform;
+      if (!t) return;
+      const rect = minimapCanvas.getBoundingClientRect();
+      const clickX = e.clientX - rect.left;
+      const clickY = e.clientY - rect.top;
+
+      const targetWorldX = (clickX - t.offsetX) / t.scale + t.minX;
+      const targetWorldY = (clickY - t.offsetY) / t.scale + t.minY;
+
+      const vpRect = viewportEl.getBoundingClientRect();
+      const newVpX = vpRect.width / 2 - targetWorldX * state.viewport.zoom;
+      const newVpY = vpRect.height / 2 - targetWorldY * state.viewport.zoom;
+      animateViewportTo(newVpX, newVpY, state.viewport.zoom, 250);
+    });
+
+    // 検索ロジック
+    const searchInput = document.getElementById('search-input');
+    const searchDropdown = document.getElementById('search-dropdown');
+    const searchCounter = document.getElementById('search-counter');
+    const searchCountText = document.getElementById('search-count-text');
+
+    function performSearch(query) {
+      state.searchQuery = query.trim().toLowerCase();
+      if (!state.searchQuery) {
+        state.searchMatches = [];
+        state.searchMatchIndex = 0;
+        searchCounter.classList.add('hidden');
+        searchDropdown.classList.add('hidden');
+        renderNodes();
+        return;
+      }
+
+      const matches = state.nodes.filter(n => (n.text || '').toLowerCase().includes(state.searchQuery));
+      state.searchMatches = matches.map(n => n.id);
+      state.searchMatchIndex = 0;
+
+      renderNodes();
+
+      if (matches.length > 0) {
+        searchCounter.classList.remove('hidden');
+        searchCountText.textContent = `1/${matches.length}`;
+        searchDropdown.innerHTML = '';
+        matches.forEach((m, idx) => {
+          const item = document.createElement('button');
+          item.className = 'search-dropdown-item';
+          const previewText = (m.text || '').replace(/\n/g, ' ').slice(0, 48) || '(空の図形)';
+          item.innerHTML = `<span class="search-item-text">${escapeHtml(previewText)}</span><span class="search-item-hint">移動 ↵</span>`;
+          item.addEventListener('click', () => {
+            state.searchMatchIndex = idx;
+            searchCountText.textContent = `${idx + 1}/${matches.length}`;
+            focusOnNode(m.id);
+            searchDropdown.classList.add('hidden');
+          });
+          searchDropdown.appendChild(item);
+        });
+        searchDropdown.classList.remove('hidden');
+      } else {
+        searchCounter.classList.remove('hidden');
+        searchCountText.textContent = '0/0';
+        searchDropdown.innerHTML = `<div class="search-empty">一致する図形が見つかりません</div>`;
+        searchDropdown.classList.remove('hidden');
+      }
+    }
+
+    searchInput.addEventListener('input', (e) => performSearch(e.target.value));
+    searchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && state.searchMatches.length > 0) {
+        e.preventDefault();
+        const targetId = state.searchMatches[state.searchMatchIndex];
+        focusOnNode(targetId);
+        state.searchMatchIndex = (state.searchMatchIndex + 1) % state.searchMatches.length;
+        searchCountText.textContent = `${state.searchMatchIndex === 0 ? state.searchMatches.length : state.searchMatchIndex}/${state.searchMatches.length}`;
+        searchDropdown.classList.add('hidden');
+      } else if (e.key === 'Escape') {
+        searchDropdown.classList.add('hidden');
+      }
+    });
+
+    document.getElementById('btn-search-next').addEventListener('click', () => {
+      if (state.searchMatches.length === 0) return;
+      const targetId = state.searchMatches[state.searchMatchIndex];
+      focusOnNode(targetId);
+      state.searchMatchIndex = (state.searchMatchIndex + 1) % state.searchMatches.length;
+      searchCountText.textContent = `${state.searchMatchIndex === 0 ? state.searchMatches.length : state.searchMatchIndex}/${state.searchMatches.length}`;
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!searchInput.contains(e.target) && !searchDropdown.contains(e.target)) {
+        searchDropdown.classList.add('hidden');
+      }
+    });
+
+    // ローカルJSONファイル保存
+    async function saveToLocalJsonFile() {
+      const exportData = {
+        app: 'CanvasFlow',
+        version: 1,
+        exportedAt: new Date().toISOString(),
+        viewport: state.viewport,
+        nodes: state.nodes,
+        edges: state.edges
+      };
+      const jsonStr = JSON.stringify(exportData, null, 2);
+
+      if ('showSaveFilePicker' in window) {
+        try {
+          if (!state.fileHandle) {
+            state.fileHandle = await window.showSaveFilePicker({
+              suggestedName: `project-diagram-${new Date().toISOString().slice(0, 10)}.json`,
+              types: [{
+                description: 'Diagram JSON File',
+                accept: { 'application/json': ['.json'] }
+              }]
+            });
+          }
+          const writable = await state.fileHandle.createWritable();
+          await writable.write(jsonStr);
+          await writable.close();
+          fileStatusLabel.textContent = `保存済: ${state.fileHandle.name}`;
+          showToast(`ローカルファイル「${state.fileHandle.name}」に保存しました`);
+          return;
+        } catch (err) {
+          if (err.name === 'AbortError') return;
+          state.fileHandle = null;
+        }
+      }
+
+      const blob = new Blob([jsonStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const fileName = `project-diagram-${new Date().toISOString().slice(0, 10)}.json`;
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast(`「${fileName}」をダウンロードしました`);
+    }
+
+    // ローカルJSONファイル読み込み
+    async function openLocalJsonFile() {
+      if ('showOpenFilePicker' in window) {
+        try {
+          const [handle] = await window.showOpenFilePicker({
+            types: [{
+              description: 'Diagram JSON File',
+              accept: { 'application/json': ['.json'] }
+            }],
+            multiple: false
+          });
+          const file = await handle.getFile();
+          const text = await file.text();
+          applyImportedJson(text, file.name, handle);
+          return;
+        } catch (err) {
+          if (err.name === 'AbortError') return;
+        }
+      }
+      document.getElementById('hidden-file-input').click();
+    }
+
+    function applyImportedJson(jsonText, fileName = 'diagram.json', handle = null) {
+      try {
+        const parsed = JSON.parse(jsonText);
+        if (!Array.isArray(parsed.nodes) || !Array.isArray(parsed.edges)) {
+          showToast('エラー: 有効なダイアグラムJSON形式ではありません');
+          return;
+        }
+        pushHistory();
+        state.nodes = parsed.nodes;
+        state.edges = parsed.edges;
+        if (parsed.viewport) {
+          state.viewport = parsed.viewport;
+        }
+        state.selectedNodeId = null;
+        state.selectedEdgeId = null;
+        state.editingNodeId = null;
+        state.fileHandle = handle;
+
+        renderAll();
+        persistToLocalStorage();
+        fileStatusLabel.textContent = `読込済: ${fileName}`;
+        showToast(`「${fileName}」を読み込みました`);
+      } catch (e) {
+        showToast('ファイルの解析に失敗しました');
+      }
+    }
+
+    document.getElementById('hidden-file-input').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => applyImportedJson(ev.target.result, file.name, null);
+      reader.readAsText(file);
+      e.target.value = '';
+    });
+
+    // ツールバー・ボタンイベント登録
+    document.querySelectorAll('[data-add-shape]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        addNode(btn.dataset.addShape);
+      });
+    });
+
+    document.getElementById('btn-save-file').addEventListener('click', saveToLocalJsonFile);
+    document.getElementById('btn-open-file').addEventListener('click', openLocalJsonFile);
+    document.getElementById('btn-undo').addEventListener('click', undo);
+    document.getElementById('btn-redo').addEventListener('click', redo);
+
+    document.getElementById('btn-reset-sample').addEventListener('click', () => {
+      pushHistory();
+      const sample = getSampleData();
+      state.nodes = sample.nodes;
+      state.edges = sample.edges;
+      state.viewport = sample.viewport;
+      state.selectedNodeId = null;
+      state.selectedEdgeId = null;
+      state.fileHandle = null;
+      renderAll();
+      persistToLocalStorage();
+      showToast('プロジェクト構成サンプルを復元しました');
+    });
+
+    document.getElementById('btn-zoom-in').addEventListener('click', () => {
+      const rect = viewportEl.getBoundingClientRect();
+      const newZoom = Math.min(2.5, state.viewport.zoom * 1.2);
+      const cx = rect.width / 2;
+      const cy = rect.height / 2;
+      state.viewport.x = cx - (cx - state.viewport.x) * (newZoom / state.viewport.zoom);
+      state.viewport.y = cy - (cy - state.viewport.y) * (newZoom / state.viewport.zoom);
+      state.viewport.zoom = newZoom;
+      applyViewportTransform();
+    });
+
+    document.getElementById('btn-zoom-out').addEventListener('click', () => {
+      const rect = viewportEl.getBoundingClientRect();
+      const newZoom = Math.max(0.2, state.viewport.zoom / 1.2);
+      const cx = rect.width / 2;
+      const cy = rect.height / 2;
+      state.viewport.x = cx - (cx - state.viewport.x) * (newZoom / state.viewport.zoom);
+      state.viewport.y = cy - (cy - state.viewport.y) * (newZoom / state.viewport.zoom);
+      state.viewport.zoom = newZoom;
+      applyViewportTransform();
+    });
+
+    document.getElementById('btn-fit-view').addEventListener('click', fitToScreen);
+
+    document.querySelectorAll('#fill-color-palette [data-fill]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const node = state.nodes.find(n => n.id === state.selectedNodeId);
+        if (!node || node.fill === btn.dataset.fill) return;
+        pushHistory();
+        node.fill = btn.dataset.fill;
+        renderNodes();
+        persistToLocalStorage();
+      });
+    });
+
+    document.querySelectorAll('#stroke-color-palette [data-stroke]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const node = state.nodes.find(n => n.id === state.selectedNodeId);
+        if (!node || node.stroke === btn.dataset.stroke) return;
+        pushHistory();
+        node.stroke = btn.dataset.stroke;
+        renderNodes();
+        persistToLocalStorage();
+      });
+    });
+
+    document.getElementById('btn-edit-text').addEventListener('click', () => {
+      if (state.selectedNodeId) {
+        startEditingNode(state.selectedNodeId);
+      }
+    });
+
+    document.getElementById('edge-style-select').addEventListener('change', (e) => {
+      const edge = state.edges.find(ed => ed.id === state.selectedEdgeId);
+      if (!edge || edge.style === e.target.value) return;
+      pushHistory();
+      edge.style = e.target.value;
+      renderEdges();
+      persistToLocalStorage();
+    });
+
+    document.getElementById('edge-arrow-check').addEventListener('change', (e) => {
+      const edge = state.edges.find(ed => ed.id === state.selectedEdgeId);
+      if (!edge) return;
+      pushHistory();
+      edge.arrow = e.target.checked;
+      renderEdges();
+      persistToLocalStorage();
+    });
+
+    function deleteSelectedElement() {
+      if (state.editingNodeId) return;
+      if (state.selectedNodeId) {
+        pushHistory();
+        const targetId = state.selectedNodeId;
+        state.nodes = state.nodes.filter(n => n.id !== targetId);
+        state.edges = state.edges.filter(e => e.source !== targetId && e.target !== targetId);
+        state.selectedNodeId = null;
+        renderAll();
+        persistToLocalStorage();
+        showToast('図形を削除しました');
+      } else if (state.selectedEdgeId) {
+        pushHistory();
+        state.edges = state.edges.filter(e => e.id !== state.selectedEdgeId);
+        state.selectedEdgeId = null;
+        renderAll();
+        persistToLocalStorage();
+        showToast('接続線を削除しました');
+      }
+    }
+
+    document.getElementById('btn-delete-selected').addEventListener('click', deleteSelectedElement);
+
+    // キーボードショートカット
+    window.addEventListener('keydown', (e) => {
+      if (state.editingNodeId) return;
+      const activeTag = document.activeElement ? document.activeElement.tagName : '';
+      if (activeTag === 'INPUT' || activeTag === 'TEXTAREA') return;
+
+      const isMod = e.ctrlKey || e.metaKey;
+      const key = e.key.toLowerCase();
+
+      if (isMod && key === 'z') {
+        e.preventDefault();
+        if (e.shiftKey) {
+          redo();
+        } else {
+          undo();
+        }
+      } else if (isMod && key === 'y') {
+        e.preventDefault();
+        redo();
+      } else if (e.key === 'Delete' || e.key === 'Backspace') {
+        deleteSelectedElement();
+      } else if (isMod && key === 's') {
+        e.preventDefault();
+        saveToLocalJsonFile();
+      } else if (isMod && key === 'f') {
+        e.preventDefault();
+        searchInput.focus();
+      }
+    });
+
+    window.addEventListener('resize', renderMinimap);
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const restored = loadFromLocalStorage();
+      if (!restored) {
+        const sample = getSampleData();
+        state.nodes = sample.nodes;
+        state.edges = sample.edges;
+        state.viewport = sample.viewport;
+        persistToLocalStorage();
+      }
+      renderAll();
+      updateHistoryButtons();
+    });
+  </script>
+</body>
+</html>
