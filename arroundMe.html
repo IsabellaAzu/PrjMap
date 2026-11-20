@@ -695,6 +695,11 @@
       background-color: #fff1f2;
       color: #be123c;
     }
+    .context-divider {
+      height: 1px;
+      background-color: #e2e8f0;
+      margin: 4px 0;
+    }
 
     /* URL編集モーダル */
     .modal-overlay {
@@ -1143,6 +1148,17 @@
           <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 8h8v8H8zM3 3h4v4H3zM17 17h4v4h-4z"/></svg>
           <span>グループ解除</span>
         </button>
+
+        <!-- レイヤー順序（最前面／最背面） -->
+        <div class="v-divider-sm"></div>
+        <button id="btn-bring-front" class="btn-secondary" style="padding: 4px 8px;" title="最前面へ移動">
+          <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 11l7-7 7 7M5 19l7-7 7 7"/></svg>
+          <span class="hide-xs">最前面</span>
+        </button>
+        <button id="btn-send-back" class="btn-secondary" style="padding: 4px 8px;" title="最背面へ移動">
+          <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 13l-7 7-7-7m14-8l-7 7-7-7"/></svg>
+          <span class="hide-xs">最背面</span>
+        </button>
       </div>
 
       <!-- 接続線用プロパティ -->
@@ -1233,6 +1249,32 @@
       <button class="context-item danger" id="ctx-delete-url">
         <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
         <span>リンクを削除</span>
+      </button>
+    </div>
+
+    <!-- オブジェクト操作コンテキストメニュー（図形右クリック時に表示） -->
+    <div id="node-context-menu" class="url-context-menu hidden">
+      <button class="context-item" id="ctx-bring-front">
+        <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 11l7-7 7 7M5 19l7-7 7 7"/></svg>
+        <span>最前面へ移動</span>
+      </button>
+      <button class="context-item" id="ctx-send-back">
+        <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 13l-7 7-7-7m14-8l-7 7-7-7"/></svg>
+        <span>最背面へ移動</span>
+      </button>
+      <div class="context-divider"></div>
+      <button class="context-item" id="ctx-node-group">
+        <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+        <span>グループ化 (Ctrl+G)</span>
+      </button>
+      <button class="context-item" id="ctx-node-ungroup">
+        <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 8h8v8H8zM3 3h4v4H3zM17 17h4v4h-4z"/></svg>
+        <span>グループ解除 (Ctrl+Shift+G)</span>
+      </button>
+      <div class="context-divider"></div>
+      <button class="context-item danger" id="ctx-node-delete">
+        <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+        <span>削除 (Delete)</span>
       </button>
     </div>
 
@@ -1853,6 +1895,14 @@
           startEditingNode(node.id);
         });
 
+        // 右クリックでコンテキストメニュー表示（最前面／最背面／グループ化／削除）
+        el.addEventListener('contextmenu', (e) => {
+          if (e.target.closest('.url-badge-item, .anchor-handle, .resize-handle')) return;
+          e.preventDefault();
+          e.stopPropagation();
+          openNodeContextMenu(e, node.id);
+        });
+
         nodesContainer.appendChild(el);
       }
 
@@ -2052,6 +2102,93 @@
       renderNodes();
       persistToLocalStorage();
       showToast('グループを解除しました (Ctrl+Shift+G)');
+    }
+
+    // ===== レイヤー順序変更（最前面／最背面移動：パワポ準拠） =====
+    function bringToFront() {
+      const selectedIds = new Set(state.selectedNodeIds);
+      if (selectedIds.size === 0 && state.selectedNodeId) {
+        selectedIds.add(state.selectedNodeId);
+      }
+      if (selectedIds.size === 0) return;
+
+      const unselected = [];
+      const selected = [];
+      for (const node of state.nodes) {
+        if (selectedIds.has(node.id)) {
+          selected.push(node);
+        } else {
+          unselected.push(node);
+        }
+      }
+
+      if (selected.length === 0 || unselected.length === 0) return;
+
+      pushHistory();
+      state.nodes = [...unselected, ...selected];
+      renderNodes();
+      persistToLocalStorage();
+      showToast('最前面へ移動しました');
+    }
+
+    function sendToBack() {
+      const selectedIds = new Set(state.selectedNodeIds);
+      if (selectedIds.size === 0 && state.selectedNodeId) {
+        selectedIds.add(state.selectedNodeId);
+      }
+      if (selectedIds.size === 0) return;
+
+      const unselected = [];
+      const selected = [];
+      for (const node of state.nodes) {
+        if (selectedIds.has(node.id)) {
+          selected.push(node);
+        } else {
+          unselected.push(node);
+        }
+      }
+
+      if (selected.length === 0 || unselected.length === 0) return;
+
+      pushHistory();
+      state.nodes = [...selected, ...unselected];
+      renderNodes();
+      persistToLocalStorage();
+      showToast('最背面へ移動しました');
+    }
+
+    // ===== オブジェクト（図形）右クリックメニュー制御 =====
+    const nodeContextMenu = document.getElementById('node-context-menu');
+
+    function openNodeContextMenu(e, nodeId) {
+      if (!state.selectedNodeIds.has(nodeId)) {
+        selectNode(nodeId, false);
+      }
+
+      closeUrlMenu();
+      if (!nodeContextMenu) return;
+
+      const ctxGroup = document.getElementById('ctx-node-group');
+      const ctxUngroup = document.getElementById('ctx-node-ungroup');
+      if (ctxGroup) {
+        ctxGroup.style.display = state.selectedNodeIds.size >= 2 ? 'flex' : 'none';
+      }
+      if (ctxUngroup) {
+        const hasGrouped = state.nodes.some(n => state.selectedNodeIds.has(n.id) && n.groupId);
+        ctxUngroup.style.display = hasGrouped ? 'flex' : 'none';
+      }
+
+      nodeContextMenu.classList.remove('hidden');
+      const menuW = 180;
+      const menuH = 190;
+      const x = Math.min(window.innerWidth - menuW - 12, Math.max(8, e.clientX));
+      const y = Math.min(window.innerHeight - menuH - 12, Math.max(8, e.clientY));
+      nodeContextMenu.style.left = `${x}px`;
+      nodeContextMenu.style.top = `${y}px`;
+    }
+
+    function closeNodeContextMenu() {
+      if (nodeContextMenu) nodeContextMenu.classList.add('hidden');
     }
 
     function startEditingNode(nodeId) {
@@ -2932,10 +3069,31 @@
       }
     });
 
-    // 画面外クリックでURLメニューを閉じる
+    // レイヤー順序ボタン（プロパティバー）
+    const btnBringFront = document.getElementById('btn-bring-front');
+    if (btnBringFront) btnBringFront.addEventListener('click', bringToFront);
+    const btnSendBack = document.getElementById('btn-send-back');
+    if (btnSendBack) btnSendBack.addEventListener('click', sendToBack);
+
+    // オブジェクトコンテキストメニュー操作
+    const ctxBringFront = document.getElementById('ctx-bring-front');
+    if (ctxBringFront) ctxBringFront.addEventListener('click', () => { closeNodeContextMenu(); bringToFront(); });
+    const ctxSendBack = document.getElementById('ctx-send-back');
+    if (ctxSendBack) ctxSendBack.addEventListener('click', () => { closeNodeContextMenu(); sendToBack(); });
+    const ctxNodeGroup = document.getElementById('ctx-node-group');
+    if (ctxNodeGroup) ctxNodeGroup.addEventListener('click', () => { closeNodeContextMenu(); groupSelectedNodes(); });
+    const ctxNodeUngroup = document.getElementById('ctx-node-ungroup');
+    if (ctxNodeUngroup) ctxNodeUngroup.addEventListener('click', () => { closeNodeContextMenu(); ungroupSelectedNodes(); });
+    const ctxNodeDelete = document.getElementById('ctx-node-delete');
+    if (ctxNodeDelete) ctxNodeDelete.addEventListener('click', () => { closeNodeContextMenu(); deleteSelectedElement(); });
+
+    // 画面外クリックでメニューを閉じる
     window.addEventListener('pointerdown', (e) => {
       if (urlContextMenu && !urlContextMenu.contains(e.target) && !e.target.closest('.url-dots-btn')) {
         closeUrlMenu();
+      }
+      if (nodeContextMenu && !nodeContextMenu.contains(e.target)) {
+        closeNodeContextMenu();
       }
     });
 
