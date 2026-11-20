@@ -429,31 +429,56 @@
       color: #2563eb;
     }
 
-    /* 上部中央プロパティバー */
+    /* 上部中央プロパティバー（2行構造＋削除ボタン右寄せ） */
     .property-bar {
       position: absolute;
       top: 12px;
       left: 50%;
       transform: translateX(-50%);
       z-index: 30;
-      background-color: rgba(255, 255, 255, 0.96);
-      backdrop-filter: blur(6px);
+      background-color: rgba(255, 255, 255, 0.97);
+      backdrop-filter: blur(8px);
       border: 1px solid #e2e8f0;
       border-radius: 16px;
-      box-shadow: 0 8px 20px -4px rgba(15, 23, 42, 0.12);
-      padding: 8px 12px;
+      box-shadow: 0 10px 24px -6px rgba(15, 23, 42, 0.14);
+      padding: 9px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      min-width: 360px;
+      max-width: min(92vw, 760px);
+    }
+
+    .prop-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      width: 100%;
+    }
+
+    .prop-row-main {
       display: flex;
       align-items: center;
       gap: 10px;
       flex-wrap: wrap;
-      max-width: 92vw;
+      flex: 1 1 auto;
+    }
+
+    .prop-row-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-left: auto;
+      flex-shrink: 0;
     }
 
     .prop-section {
       display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
+      flex-direction: column;
+      gap: 7px;
+      width: 100%;
     }
 
     .prop-label {
@@ -1078,13 +1103,12 @@
     }
 
     .edge-group:hover .edge-visible-path {
-      stroke: #3b82f6 !important;
-      stroke-width: 3px !important;
+      stroke-width: 3.2px !important;
+      filter: brightness(0.92);
     }
 
     .edge-group.selected .edge-visible-path {
-      stroke: #2563eb !important;
-      stroke-width: 3.5px !important;
+      stroke-width: 3.4px !important;
     }
 
     .guide-list strong {
@@ -1368,105 +1392,136 @@
 
     <!-- 上部中央フローティングプロパティバー（選択中の図形／線のスタイル編集） -->
     <div id="property-bar" class="property-bar hidden">
-      <!-- 図形用プロパティ -->
-      <div id="node-props" class="prop-section" style="display: flex; flex: wrap;">
+      <!-- 図形用プロパティ（1行目：塗り・枠線、2行目：配置・編集・右寄せ削除） -->
+      <div id="node-props" class="prop-section">
+        <div class="prop-row">
+          <div class="prop-row-main" style="gap: 14px;">
+            <div class="palette-row" id="fill-color-palette">
+              <span class="prop-label">塗り:</span>
+              <button data-fill="#ffffff" class="swatch-btn" style="background:#ffffff; border:1px solid #cbd5e1;"
+                title="白"></button>
+              <button data-fill="#eff6ff" class="swatch-btn" style="background:#eff6ff; border:1px solid #93c5fd;"
+                title="ライトブルー"></button>
+              <button data-fill="#f0fdf4" class="swatch-btn" style="background:#f0fdf4; border:1px solid #6ee7b7;"
+                title="ミントグリーン"></button>
+              <button data-fill="#fef9c3" class="swatch-btn" style="background:#fef9c3; border:1px solid #fcd34d;"
+                title="イエロー"></button>
+              <button data-fill="#fef2f2" class="swatch-btn" style="background:#fef2f2; border:1px solid #fda4af;"
+                title="ライトピンク"></button>
+              <button data-fill="#f3e8ff" class="swatch-btn" style="background:#f3e8ff; border:1px solid #d8b4fe;"
+                title="ラベンダー"></button>
+              <button data-fill="transparent" class="swatch-btn" style="background:#f1f5f9; border:1px solid #cbd5e1;"
+                title="透明">無</button>
+            </div>
 
-        <div style="display: flex;gap:12px;">
-          <div class="palette-row" id="fill-color-palette">
-            <span class="prop-label">塗り:</span>
-            <button data-fill="#ffffff" class="swatch-btn" style="background:#ffffff; border:1px solid #cbd5e1;"
-              title="白"></button>
-            <button data-fill="#eff6ff" class="swatch-btn" style="background:#eff6ff; border:1px solid #93c5fd;"
-              title="ライトブルー"></button>
-            <button data-fill="#f0fdf4" class="swatch-btn" style="background:#f0fdf4; border:1px solid #6ee7b7;"
-              title="ミントグリーン"></button>
-            <button data-fill="#fef9c3" class="swatch-btn" style="background:#fef9c3; border:1px solid #fcd34d;"
-              title="イエロー"></button>
-            <button data-fill="#fef2f2" class="swatch-btn" style="background:#fef2f2; border:1px solid #fda4af;"
-              title="ライトピンク"></button>
-            <button data-fill="#f3e8ff" class="swatch-btn" style="background:#f3e8ff; border:1px solid #d8b4fe;"
-              title="ラベンダー"></button>
-            <button data-fill="transparent" class="swatch-btn" style="background:#f1f5f9; border:1px solid #cbd5e1;"
-              title="透明">無</button>
+            <div class="palette-row" id="stroke-color-palette">
+              <span class="prop-label">枠線:</span>
+              <button data-stroke="#64748b" class="swatch-btn" style="background:#64748b;" title="スレート"></button>
+              <button data-stroke="#2563eb" class="swatch-btn" style="background:#2563eb;" title="ブルー"></button>
+              <button data-stroke="#059669" class="swatch-btn" style="background:#059669;" title="グリーン"></button>
+              <button data-stroke="#d97706" class="swatch-btn" style="background:#d97706;" title="アンバー"></button>
+              <button data-stroke="#e11d48" class="swatch-btn" style="background:#e11d48;" title="ローズ"></button>
+              <button data-stroke="transparent" class="swatch-btn" style="background:#f1f5f9; border:1px solid #cbd5e1;"
+                title="枠なし">無</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="prop-row">
+          <div class="prop-row-main">
+            <!-- グループ化／解除ボタン -->
+            <button id="btn-group-nodes" class="btn-secondary hidden" style="padding: 4px 8px;"
+              title="選択中の図形をグループ化 (Ctrl+G / Cmd+G)">
+              <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <rect x="3" y="3" width="7" height="7" rx="1" />
+                <rect x="14" y="3" width="7" height="7" rx="1" />
+                <rect x="14" y="14" width="7" height="7" rx="1" />
+                <rect x="3" y="14" width="7" height="7" rx="1" />
+              </svg>
+              <span>グループ化</span>
+            </button>
+            <button id="btn-ungroup-nodes" class="btn-secondary hidden" style="padding: 4px 8px;"
+              title="グループを解除 (Ctrl+Shift+G / Cmd+Shift+G)">
+              <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8 8h8v8H8zM3 3h4v4H3zM17 17h4v4h-4z" />
+              </svg>
+              <span>グループ解除</span>
+            </button>
+
+            <!-- レイヤー順序（最前面／最背面） -->
+            <button id="btn-bring-front" class="btn-secondary" style="padding: 4px 8px;" title="最前面へ移動">
+              <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 11l7-7 7 7M5 19l7-7 7 7" />
+              </svg>
+              <span class="hide-xs">最前面</span>
+            </button>
+            <button id="btn-send-back" class="btn-secondary" style="padding: 4px 8px;" title="最背面へ移動">
+              <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 13l-7 7-7-7m14-8l-7 7-7-7" />
+              </svg>
+              <span class="hide-xs">最背面</span>
+            </button>
+
+            <button id="btn-edit-text" class="btn-secondary" style="padding: 4px 8px;">
+              テキスト編集
+            </button>
           </div>
 
-          <div class="palette-row" id="stroke-color-palette">
-            <span class="prop-label">枠線:</span>
-            <button data-stroke="#64748b" class="swatch-btn" style="background:#64748b;" title="スレート"></button>
-            <button data-stroke="#2563eb" class="swatch-btn" style="background:#2563eb;" title="ブルー"></button>
-            <button data-stroke="#059669" class="swatch-btn" style="background:#059669;" title="グリーン"></button>
-            <button data-stroke="#d97706" class="swatch-btn" style="background:#d97706;" title="アンバー"></button>
-            <button data-stroke="#e11d48" class="swatch-btn" style="background:#e11d48;" title="ローズ"></button>
-            <button data-stroke="transparent" class="swatch-btn" style="background:#f1f5f9; border:1px solid #cbd5e1;"
-              title="枠なし">無</button>
+          <div class="prop-row-actions">
+            <button id="btn-delete-selected" title="選択中の要素を削除 (Delete)" class="btn-delete">
+              <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+              <span>削除</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 接続線用プロパティ（1行目：線色・ランダム、2行目：「種類」から開始＋右寄せ削除） -->
+      <div id="edge-props" class="prop-section hidden">
+        <div class="prop-row">
+          <div class="palette-row" id="edge-color-palette">
+            <span class="prop-label">線色:</span>
+            <button data-edge-color="#2563eb" class="swatch-btn" style="background:#2563eb;" title="ブルー"></button>
+            <button data-edge-color="#059669" class="swatch-btn" style="background:#059669;" title="エメラルド"></button>
+            <button data-edge-color="#d97706" class="swatch-btn" style="background:#d97706;" title="アンバー"></button>
+            <button data-edge-color="#e11d48" class="swatch-btn" style="background:#e11d48;" title="ローズ"></button>
+            <button data-edge-color="#7c3aed" class="swatch-btn" style="background:#7c3aed;" title="バイオレット"></button>
+            <button data-edge-color="#0891b2" class="swatch-btn" style="background:#0891b2;" title="シアン"></button>
+            <button data-edge-color="#ea580c" class="swatch-btn" style="background:#ea580c;" title="オレンジ"></button>
+            <button data-edge-color="#db2777" class="swatch-btn" style="background:#db2777;" title="ピンク"></button>
+            <button data-edge-color="#64748b" class="swatch-btn" style="background:#64748b;" title="スレート"></button>
+            <button id="btn-edge-random-color" type="button" class="btn-secondary" style="padding: 2px 8px; font-size: 11px; margin-left: 2px;" title="別のランダム色に変更">🎲 ランダム</button>
           </div>
         </div>
 
-        <!-- グループ化／解除ボタン（パワポ風） -->
-        <div>
-          <button id="btn-group-nodes" class="btn-secondary hidden" style="padding: 4px 8px;"
-            title="選択中の図形をグループ化 (Ctrl+G / Cmd+G)">
-            <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <rect x="3" y="3" width="7" height="7" rx="1" />
-              <rect x="14" y="3" width="7" height="7" rx="1" />
-              <rect x="14" y="14" width="7" height="7" rx="1" />
-              <rect x="3" y="14" width="7" height="7" rx="1" />
-            </svg>
-            <span>グループ化</span>
-          </button>
-          <button id="btn-ungroup-nodes" class="btn-secondary hidden" style="padding: 4px 8px;"
-            title="グループを解除 (Ctrl+Shift+G / Cmd+Shift+G)">
-            <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M8 8h8v8H8zM3 3h4v4H3zM17 17h4v4h-4z" />
-            </svg>
-            <span>グループ解除</span>
-          </button>
-        </div>
+        <div class="prop-row">
+          <div class="prop-row-main">
+            <span class="prop-label">種類:</span>
+            <select id="edge-style-select" class="prop-select">
+              <option value="avoid">自動迂回（なめらか曲線カギ線）</option>
+              <option value="bezier">滑らかな曲線（マインドマップ風）</option>
+              <option value="straight">直線</option>
+            </select>
+            <label class="prop-checkbox-label">
+              <input type="checkbox" id="edge-arrow-check" checked />
+              <span>矢印あり</span>
+            </label>
+          </div>
 
-        <!-- レイヤー順序（最前面／最背面） -->
-        <div>
-          <button id="btn-bring-front" class="btn-secondary" style="padding: 4px 8px;" title="最前面へ移動">
-            <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M5 11l7-7 7 7M5 19l7-7 7 7" />
-            </svg>
-            <span class="hide-xs">最前面</span>
-          </button>
-          <button id="btn-send-back" class="btn-secondary" style="padding: 4px 8px;" title="最背面へ移動">
-            <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M19 13l-7 7-7-7m14-8l-7 7-7-7" />
-            </svg>
-            <span class="hide-xs">最背面</span>
-          </button>
+          <div class="prop-row-actions">
+            <button id="btn-delete-edge" title="選択中の線を削除 (Delete)" class="btn-delete">
+              <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+              <span>削除</span>
+            </button>
+          </div>
         </div>
       </div>
-
-      <!-- 接続線用プロパティ -->
-      <div id="edge-props" class="prop-section hidden" style="flex: 1 1 auto;">
-        <span class="prop-label">線の種類:</span>
-        <select id="edge-style-select" class="prop-select">
-          <option value="bezier">滑らかな曲線（マインドマップ風）</option>
-          <option value="straight">直線</option>
-        </select>
-        <label class="prop-checkbox-label">
-          <input type="checkbox" id="edge-arrow-check" checked />
-          <span>矢印あり</span>
-        </label>
-      </div>
-
-      <div>
-        <button id="btn-edit-text" class="btn-secondary" style="padding: 4px 8px;">
-          テキスト編集
-        </button>
-        <!-- 削除ボタン -->
-        <button id="btn-delete-selected" title="選択中の要素を削除 (Delete)" class="btn-delete" style="margin-left: auto;">
-          <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-          </svg>
-          <span>削除</span>
-        </button>
-      </div>
-
     </div>
 
     <!-- メイン無限キャンバス -->
@@ -1474,12 +1529,12 @@
       <div id="canvas-world">
         <!-- 接続線SVGレイヤー -->
         <svg id="edges-svg">
-          <defs>
-            <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-              <polygon points="0 0, 10 3.5, 0 7" fill="#64748b" />
+          <defs id="edges-defs">
+            <marker id="arrowhead" markerWidth="12" markerHeight="9" refX="10.5" refY="4.5" orient="auto" markerUnits="userSpaceOnUse">
+              <polygon points="0 0.8, 11.5 4.5, 0 8.2" fill="#64748b" />
             </marker>
-            <marker id="arrowhead-selected" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-              <polygon points="0 0, 10 3.5, 0 7" fill="#2563eb" />
+            <marker id="arrowhead-selected" markerWidth="12" markerHeight="9" refX="10.5" refY="4.5" orient="auto" markerUnits="userSpaceOnUse">
+              <polygon points="0 0.8, 11.5 4.5, 0 8.2" fill="#2563eb" />
             </marker>
           </defs>
           <g id="edges-container"></g>
@@ -1865,12 +1920,12 @@
           }
         ],
         edges: [
-          { id: 'edge_1', source: 'node_1', sourceAnchor: 'bottom', target: 'node_2', targetAnchor: 'top', style: 'bezier', arrow: true },
-          { id: 'edge_2', source: 'node_1', sourceAnchor: 'bottom', target: 'node_3', targetAnchor: 'top', style: 'bezier', arrow: true },
-          { id: 'edge_3', source: 'node_1', sourceAnchor: 'bottom', target: 'node_4', targetAnchor: 'top', style: 'bezier', arrow: true },
-          { id: 'edge_4', source: 'node_2', sourceAnchor: 'bottom', target: 'node_5', targetAnchor: 'top', style: 'straight', arrow: true },
-          { id: 'edge_5', source: 'node_3', sourceAnchor: 'bottom', target: 'node_6', targetAnchor: 'top', style: 'bezier', arrow: true },
-          { id: 'edge_6', source: 'node_4', sourceAnchor: 'bottom', target: 'node_6', targetAnchor: 'right', style: 'bezier', arrow: true }
+          { id: 'edge_1', source: 'node_1', sourceAnchor: 'bottom', target: 'node_2', targetAnchor: 'top', style: 'bezier', color: '#2563eb', arrow: true },
+          { id: 'edge_2', source: 'node_1', sourceAnchor: 'bottom', target: 'node_3', targetAnchor: 'top', style: 'bezier', color: '#059669', arrow: true },
+          { id: 'edge_3', source: 'node_1', sourceAnchor: 'bottom', target: 'node_4', targetAnchor: 'top', style: 'bezier', color: '#d97706', arrow: true },
+          { id: 'edge_4', source: 'node_2', sourceAnchor: 'bottom', target: 'node_5', targetAnchor: 'top', style: 'straight', color: '#7c3aed', arrow: true },
+          { id: 'edge_5', source: 'node_3', sourceAnchor: 'bottom', target: 'node_6', targetAnchor: 'top', style: 'bezier', color: '#0891b2', arrow: true },
+          { id: 'edge_6', source: 'node_4', sourceAnchor: 'bottom', target: 'node_6', targetAnchor: 'right', style: 'bezier', color: '#e11d48', arrow: true }
         ]
       };
     }
@@ -2071,9 +2126,413 @@
       return bestAnchor;
     }
 
-    function buildEdgePath(p1, a1, p2, a2, style = 'bezier') {
+    // ===== A* グリッド経路探索（障害物・枠を自動迂回する直交ルーティング） =====
+    function getAnchorDirection(anchor) {
+      switch (anchor) {
+        case 'top': return { dx: 0, dy: -1 };
+        case 'bottom': return { dx: 0, dy: 1 };
+        case 'left': return { dx: -1, dy: 0 };
+        case 'right':
+        default: return { dx: 1, dy: 0 };
+      }
+    }
+
+    function computeSegmentObstacleOverlap(x1, y1, x2, y2, obstacles) {
+      const minX = Math.min(x1, x2);
+      const maxX = Math.max(x1, x2);
+      const minY = Math.min(y1, y2);
+      const maxY = Math.max(y1, y2);
+      const isHoriz = Math.abs(y1 - y2) < 0.01;
+      let overlap = 0;
+
+      for (let i = 0; i < obstacles.length; i++) {
+        const ob = obstacles[i];
+        if (isHoriz) {
+          if (y1 > ob.top && y1 < ob.bottom && maxX > ob.left && minX < ob.right) {
+            const ox1 = Math.max(minX, ob.left);
+            const ox2 = Math.min(maxX, ob.right);
+            if (ox2 > ox1) overlap += (ox2 - ox1);
+          }
+        } else {
+          if (x1 > ob.left && x1 < ob.right && maxY > ob.top && minY < ob.bottom) {
+            const oy1 = Math.max(minY, ob.top);
+            const oy2 = Math.min(maxY, ob.bottom);
+            if (oy2 > oy1) overlap += (oy2 - oy1);
+          }
+        }
+      }
+      return overlap;
+    }
+
+    function simplifyOrthogonalPoints(pts) {
+      if (pts.length <= 2) return pts;
+      // 連続重複点の除去
+      const dedup = [pts[0]];
+      for (let i = 1; i < pts.length; i++) {
+        const prev = dedup[dedup.length - 1];
+        if (Math.hypot(pts[i].x - prev.x, pts[i].y - prev.y) > 0.5) {
+          dedup.push(pts[i]);
+        }
+      }
+      if (dedup.length <= 2) return dedup;
+
+      // 同一直線上の不要な中間点を統合
+      const result = [dedup[0]];
+      for (let i = 1; i < dedup.length - 1; i++) {
+        const a = result[result.length - 1];
+        const b = dedup[i];
+        const c = dedup[i + 1];
+        const sameX = Math.abs(a.x - b.x) < 0.5 && Math.abs(b.x - c.x) < 0.5;
+        const sameY = Math.abs(a.y - b.y) < 0.5 && Math.abs(b.y - c.y) < 0.5;
+        if (!sameX && !sameY) {
+          result.push(b);
+        }
+      }
+      result.push(dedup[dedup.length - 1]);
+      return result;
+    }
+
+    // なめらか曲線のカギ線（直線区間を最小限にしたS字/U字ベジェカギ線）生成
+    // - 折れ線の各区間（始点→最初の角→中間角→最後の角→終点）をできる限り連続した3次ベジェ曲線（C）で繋ぐ
+    // - 直線（L）は矢印が潰れないための終点直前ごくわずか（12px程度）だけにとどめ、全体を柔らかな曲線カギ線にする
+    function buildRoundedKeyPath(points, cornerRadius = 32) {
+      if (!points || points.length === 0) return '';
+      if (points.length === 1) return `M ${points[0].x} ${points[0].y}`;
+      if (points.length === 2) {
+        return `M ${points[0].x} ${points[0].y} L ${points[1].x} ${points[1].y}`;
+      }
+
+      const pStart = points[0];
+      const pEnd = points[points.length - 1];
+      const filtered = [pStart];
+      for (let i = 1; i < points.length - 1; i++) {
+        const pt = points[i];
+        const prev = filtered[filtered.length - 1];
+        if (Math.hypot(pt.x - prev.x, pt.y - prev.y) >= 18 && Math.hypot(pt.x - pEnd.x, pt.y - pEnd.y) >= 18) {
+          filtered.push(pt);
+        }
+      }
+      filtered.push(pEnd);
+
+      const simplified = simplifyOrthogonalPoints(filtered);
+      if (simplified.length <= 2) {
+        return `M ${simplified[0].x} ${simplified[0].y} L ${simplified[1].x} ${simplified[1].y}`;
+      }
+
+      const nPts = simplified.length;
+      const last = simplified[nPts - 1];
+      const beforeLast = simplified[nPts - 2];
+      const endSegLen = Math.hypot(last.x - beforeLast.x, last.y - beforeLast.y);
+
+      // 矢印の形・向きがつぶれないよう、終点手前だけごく短いアプローチ直線（最大12px）を確保
+      const approachLen = Math.min(12, endSegLen * 0.25);
+      const uxEnd = endSegLen > 0.001 ? (last.x - beforeLast.x) / endSegLen : 0;
+      const uyEnd = endSegLen > 0.001 ? (last.y - beforeLast.y) / endSegLen : 1;
+      const approachPt = {
+        x: last.x - uxEnd * approachLen,
+        y: last.y - uyEnd * approachLen
+      };
+
+      // 始点から最初の曲がり角まではすぐ曲線へ入り、直線区間を減らす
+      const pts = [simplified[0]];
+      for (let i = 1; i < nPts - 1; i++) {
+        pts.push(simplified[i]);
+      }
+      if (Math.hypot(approachPt.x - pts[pts.length - 1].x, approachPt.y - pts[pts.length - 1].y) > 2) {
+        pts.push(approachPt);
+      }
+      pts.push(last);
+
+      // 折れ線の各頂点間をなめらかな3次ベジェで連続接続（直線Lの区切りを極力なくす）
+      // 各区間の中点をアンカーにし、各コーナーを3次ベジェ曲線で包み込むことで途切れのない曲線カギ線にする
+      let d = `M ${pts[0].x.toFixed(1)} ${pts[0].y.toFixed(1)}`;
+
+      if (pts.length === 3) {
+        // 典型的な1カギ線（始点 → コーナー → 終点アプローチ → 終点）
+        const p0 = pts[0];
+        const corner = pts[1];
+        const p2 = pts[2];
+        const p3 = pts[3] || p2;
+
+        // 始点からコーナー手前まで、コーナーを通過するふっくらした3次ベジェ
+        const cp1x = p0.x + (corner.x - p0.x) * 0.65;
+        const cp1y = p0.y + (corner.y - p0.y) * 0.65;
+        const cp2x = corner.x + (p2.x - corner.x) * 0.35;
+        const cp2y = corner.y + (p2.y - corner.y) * 0.35;
+        d += ` C ${cp1x.toFixed(1)} ${cp1y.toFixed(1)}, ${cp2x.toFixed(1)} ${cp2y.toFixed(1)}, ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`;
+        if (pts.length > 3) {
+          d += ` L ${p3.x.toFixed(1)} ${p3.y.toFixed(1)}`;
+        }
+        return d;
+      }
+
+      // 複数コーナー（迂回カギ線など）の場合：コーナー同士をなめらかな3次ベジェで連続接続
+      const cornerCount = pts.length - 2; // 終点アプローチ・終点を除いた中間点
+      const firstCorner = pts[1];
+      const cpStart1x = pts[0].x + (firstCorner.x - pts[0].x) * 0.55;
+      const cpStart1y = pts[0].y + (firstCorner.y - pts[0].y) * 0.55;
+
+      // 最初の区間をコーナー側へなめらかに立ち上げる
+      let prevAnchor = {
+        x: pts[0].x + (firstCorner.x - pts[0].x) * 0.45,
+        y: pts[0].y + (firstCorner.y - pts[0].y) * 0.45
+      };
+      d += ` Q ${cpStart1x.toFixed(1)} ${cpStart1y.toFixed(1)}, ${prevAnchor.x.toFixed(1)} ${prevAnchor.y.toFixed(1)}`;
+
+      for (let i = 1; i <= cornerCount; i++) {
+        const curr = pts[i];
+        const next = pts[i + 1];
+
+        // 次の区間との間になめらかな接続点（直線区間を挟まず曲線同士がつながるポイント）を設定
+        const isBeforeApproach = (i === cornerCount);
+        const endTarget = isBeforeApproach
+          ? approachPt
+          : {
+              x: curr.x + (next.x - curr.x) * 0.55,
+              y: curr.y + (next.y - curr.y) * 0.55
+            };
+
+        const cp1x = prevAnchor.x + (curr.x - prevAnchor.x) * 0.72;
+        const cp1y = prevAnchor.y + (curr.y - prevAnchor.y) * 0.72;
+        const cp2x = curr.x + (endTarget.x - curr.x) * 0.28;
+        const cp2y = curr.y + (endTarget.y - curr.y) * 0.28;
+
+        d += ` C ${cp1x.toFixed(1)} ${cp1y.toFixed(1)}, ${cp2x.toFixed(1)} ${cp2y.toFixed(1)}, ${endTarget.x.toFixed(1)} ${endTarget.y.toFixed(1)}`;
+        prevAnchor = endTarget;
+      }
+
+      d += ` L ${last.x.toFixed(1)} ${last.y.toFixed(1)}`;
+      return d;
+    }
+
+    function findObstacleAvoidingPath(p1, a1, p2, a2, nodes, srcNodeId = null, tgtNodeId = null) {
+      const STUB = 22;
+      const PAD = 18;
+      const OUTER_MARGIN = 64;
+
+      const dir1 = getAnchorDirection(a1);
+      const dir2 = getAnchorDirection(a2);
+
+      const s1 = { x: Math.round(p1.x + dir1.dx * STUB), y: Math.round(p1.y + dir1.dy * STUB) };
+      const s2 = { x: Math.round(p2.x + dir2.dx * STUB), y: Math.round(p2.y + dir2.dy * STUB) };
+
+      // 始点・終点ノードや他ノードを障害物矩形として構築
+      // 終点ノードの上部・左部など空きスペースに回り込みやすいようパディングを設定
+      const obstacles = [];
+      let minX = Math.min(p1.x, p2.x, s1.x, s2.x);
+      let maxX = Math.max(p1.x, p2.x, s1.x, s2.x);
+      let minY = Math.min(p1.y, p2.y, s1.y, s2.y);
+      let maxY = Math.max(p1.y, p2.y, s1.y, s2.y);
+
+      for (const n of nodes) {
+        const isEndpointNode = (n.id === srcNodeId || n.id === tgtNodeId);
+        const pad = isEndpointNode ? 14 : PAD;
+        const ob = {
+          left: n.x - pad,
+          right: n.x + n.width + pad,
+          top: n.y - pad,
+          bottom: n.y + n.height + pad
+        };
+        obstacles.push(ob);
+        minX = Math.min(minX, ob.left);
+        maxX = Math.max(maxX, ob.right);
+        minY = Math.min(minY, ob.top);
+        maxY = Math.max(maxY, ob.bottom);
+      }
+
+      // ハナングリッド（Hanan Grid）用のX・Y座標候補を収集
+      const xSet = new Set([
+        s1.x,
+        s2.x,
+        Math.round(minX - OUTER_MARGIN),
+        Math.round(maxX + OUTER_MARGIN)
+      ]);
+      const ySet = new Set([
+        s1.y,
+        s2.y,
+        Math.round(minY - OUTER_MARGIN),
+        Math.round(maxY + OUTER_MARGIN)
+      ]);
+
+      for (const ob of obstacles) {
+        xSet.add(Math.round(ob.left));
+        xSet.add(Math.round(ob.right));
+        ySet.add(Math.round(ob.top));
+        ySet.add(Math.round(ob.bottom));
+      }
+
+      // 隣接グリッドの中間ラインも追加して、空きスペースやノード間の空間を素直に抜けるようにする
+      const baseXs = Array.from(xSet).sort((a, b) => a - b);
+      const baseYs = Array.from(ySet).sort((a, b) => a - b);
+      for (let i = 0; i < baseXs.length - 1; i++) {
+        if (baseXs[i + 1] - baseXs[i] >= 18) {
+          xSet.add(Math.round((baseXs[i] + baseXs[i + 1]) / 2));
+        }
+      }
+      for (let i = 0; i < baseYs.length - 1; i++) {
+        if (baseYs[i + 1] - baseYs[i] >= 18) {
+          ySet.add(Math.round((baseYs[i] + baseYs[i + 1]) / 2));
+        }
+      }
+
+      const xs = Array.from(xSet).sort((a, b) => a - b);
+      const ys = Array.from(ySet).sort((a, b) => a - b);
+      const nx = xs.length;
+      const ny = ys.length;
+
+      const startIx = xs.indexOf(s1.x);
+      const startIy = ys.indexOf(s1.y);
+      const goalIx = xs.indexOf(s2.x);
+      const goalIy = ys.indexOf(s2.y);
+
+      if (startIx === -1 || startIy === -1 || goalIx === -1 || goalIy === -1) {
+        return buildRoundedKeyPath([p1, s1, s2, p2], 18);
+      }
+
+      const totalStates = nx * ny * 3;
+      const gScore = new Float64Array(totalStates);
+      gScore.fill(Infinity);
+      const cameFrom = new Int32Array(totalStates);
+      cameFrom.fill(-1);
+      const closed = new Uint8Array(totalStates);
+
+      const heapStates = [];
+      const heapF = [];
+      function pushHeap(stateIdx, fVal) {
+        let i = heapStates.length;
+        heapStates.push(stateIdx);
+        heapF.push(fVal);
+        while (i > 0) {
+          const parent = (i - 1) >> 1;
+          if (heapF[parent] <= fVal) break;
+          heapStates[i] = heapStates[parent];
+          heapF[i] = heapF[parent];
+          i = parent;
+        }
+        heapStates[i] = stateIdx;
+        heapF[i] = fVal;
+      }
+
+      function popHeap() {
+        if (heapStates.length === 0) return -1;
+        const top = heapStates[0];
+        const lastState = heapStates.pop();
+        const lastF = heapF.pop();
+        if (heapStates.length > 0) {
+          let i = 0;
+          const half = heapStates.length >> 1;
+          while (i < half) {
+            let child = (i << 1) + 1;
+            const right = child + 1;
+            if (right < heapStates.length && heapF[right] < heapF[child]) {
+              child = right;
+            }
+            if (lastF <= heapF[child]) break;
+            heapStates[i] = heapStates[child];
+            heapF[i] = heapF[child];
+            i = child;
+          }
+          heapStates[i] = lastState;
+          heapF[i] = lastF;
+        }
+        return top;
+      }
+
+      const initDir = (dir1.dx !== 0) ? 1 : 2;
+      const startState = (startIy * nx + startIx) * 3 + initDir;
+      gScore[startState] = 0;
+      const h0 = Math.abs(xs[goalIx] - xs[startIx]) + Math.abs(ys[goalIy] - ys[startIy]);
+      pushHeap(startState, h0);
+
+      // カギ線としてスッキリ見えるよう、無駄な角（曲がり）にはしっかりペナルティを与える
+      const BEND_PENALTY = 220;
+      const OBSTACLE_PENALTY = 50000;
+      const DIRS = [
+        { dx: 1, dy: 0, dirCode: 1 },
+        { dx: -1, dy: 0, dirCode: 1 },
+        { dx: 0, dy: 1, dirCode: 2 },
+        { dx: 0, dy: -1, dirCode: 2 }
+      ];
+
+      let bestGoalState = -1;
+      let bestGoalCost = Infinity;
+
+      while (heapStates.length > 0) {
+        const curr = popHeap();
+        if (closed[curr]) continue;
+        closed[curr] = 1;
+
+        const currDir = curr % 3;
+        const cellIdx = (curr - currDir) / 3;
+        const ix = cellIdx % nx;
+        const iy = (cellIdx - ix) / nx;
+
+        if (ix === goalIx && iy === goalIy) {
+          const endDir = (dir2.dx !== 0) ? 1 : 2;
+          const finalBend = (currDir !== 0 && currDir !== endDir) ? BEND_PENALTY : 0;
+          const totalCost = gScore[curr] + finalBend;
+          if (totalCost < bestGoalCost) {
+            bestGoalCost = totalCost;
+            bestGoalState = curr;
+          }
+          break;
+        }
+
+        const x1 = xs[ix];
+        const y1 = ys[iy];
+        const currG = gScore[curr];
+
+        for (let d = 0; d < 4; d++) {
+          const nix = ix + DIRS[d].dx;
+          const niy = iy + DIRS[d].dy;
+          if (nix < 0 || nix >= nx || niy < 0 || niy >= ny) continue;
+
+          const nextDir = DIRS[d].dirCode;
+          const nextState = (niy * nx + nix) * 3 + nextDir;
+          if (closed[nextState]) continue;
+
+          const x2 = xs[nix];
+          const y2 = ys[niy];
+          const segLen = Math.abs(x2 - x1) + Math.abs(y2 - y1);
+          const overlap = computeSegmentObstacleOverlap(x1, y1, x2, y2, obstacles);
+          const bendCost = (currDir !== 0 && currDir !== nextDir) ? BEND_PENALTY : 0;
+
+          const tentativeG = currG + segLen + bendCost + overlap * OBSTACLE_PENALTY;
+          if (tentativeG < gScore[nextState]) {
+            gScore[nextState] = tentativeG;
+            cameFrom[nextState] = curr;
+            const h = Math.abs(xs[goalIx] - x2) + Math.abs(ys[goalIy] - y2);
+            pushHeap(nextState, tentativeG + h);
+          }
+        }
+      }
+
+      const gridPts = [];
+      if (bestGoalState !== -1) {
+        let trace = bestGoalState;
+        while (trace !== -1) {
+          const dir = trace % 3;
+          const cell = (trace - dir) / 3;
+          const ix = cell % nx;
+          const iy = (cell - ix) / nx;
+          gridPts.push({ x: xs[ix], y: ys[iy] });
+          trace = cameFrom[trace];
+        }
+        gridPts.reverse();
+      } else {
+        gridPts.push(s1, s2);
+      }
+
+      const fullPts = [p1, ...gridPts, p2];
+      return buildRoundedKeyPath(fullPts, 18);
+    }
+
+    function buildEdgePath(p1, a1, p2, a2, style = 'bezier', srcNodeId = null, tgtNodeId = null) {
       if (style === 'straight') {
         return `M ${p1.x} ${p1.y} L ${p2.x} ${p2.y}`;
+      }
+      if (style === 'avoid') {
+        return findObstacleAvoidingPath(p1, a1, p2, a2, state.nodes, srcNodeId, tgtNodeId);
       }
       const dist = Math.max(45, Math.hypot(p2.x - p1.x, p2.y - p1.y) * 0.4);
       const offset = (anchor) => {
@@ -2090,6 +2549,51 @@
       return `M ${p1.x} ${p1.y} C ${p1.x + o1.dx} ${p1.y + o1.dy}, ${p2.x + o2.dx} ${p2.y + o2.dy}, ${p2.x} ${p2.y}`;
     }
 
+    const EDGE_RANDOM_PALETTE = [
+      '#2563eb', // ブルー
+      '#059669', // エメラルド
+      '#d97706', // アンバー
+      '#e11d48', // ローズ
+      '#7c3aed', // バイオレット
+      '#0891b2', // シアン
+      '#ea580c', // オレンジ
+      '#db2777', // ピンク
+      '#4f46e5', // インディゴ
+      '#0d9488', // ティール
+      '#65a30d', // ライムグリーン
+      '#9333ea'  // パープル
+    ];
+
+    function getRandomEdgeColor(excludeColor = null) {
+      const candidates = excludeColor
+        ? EDGE_RANDOM_PALETTE.filter(c => c.toLowerCase() !== excludeColor.toLowerCase())
+        : EDGE_RANDOM_PALETTE;
+      const pool = candidates.length > 0 ? candidates : EDGE_RANDOM_PALETTE;
+      return pool[Math.floor(Math.random() * pool.length)];
+    }
+
+    function getArrowMarkerIdForColor(color) {
+      const normalized = (color || '#64748b').toLowerCase();
+      const safeId = 'arrowhead-' + normalized.replace(/[^a-z0-9]/g, '');
+      const defs = document.getElementById('edges-defs');
+      if (defs && !document.getElementById(safeId)) {
+        const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
+        marker.setAttribute('id', safeId);
+        marker.setAttribute('markerWidth', '12');
+        marker.setAttribute('markerHeight', '9');
+        marker.setAttribute('refX', '10.5');
+        marker.setAttribute('refY', '4.5');
+        marker.setAttribute('orient', 'auto');
+        marker.setAttribute('markerUnits', 'userSpaceOnUse');
+        const poly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+        poly.setAttribute('points', '0 0.8, 11.5 4.5, 0 8.2');
+        poly.setAttribute('fill', color || '#64748b');
+        marker.appendChild(poly);
+        defs.appendChild(marker);
+      }
+      return safeId;
+    }
+
     function renderEdges() {
       const nodeMap = new Map(state.nodes.map(n => [n.id, n]));
       edgesContainer.innerHTML = '';
@@ -2101,9 +2605,12 @@
 
         const p1 = getAnchorPoint(srcNode, edge.sourceAnchor || 'right');
         const p2 = getAnchorPoint(tgtNode, edge.targetAnchor || 'left');
-        const d = buildEdgePath(p1, edge.sourceAnchor, p2, edge.targetAnchor, edge.style || 'bezier');
+        const d = buildEdgePath(p1, edge.sourceAnchor, p2, edge.targetAnchor, edge.style || 'bezier', edge.source, edge.target);
 
         const isSelected = state.selectedEdgeId === edge.id;
+        const baseColor = edge.color || '#64748b';
+        const strokeColor = baseColor;
+
         const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
         g.setAttribute('class', `edge-group ${isSelected ? 'selected' : ''}`);
 
@@ -2115,13 +2622,27 @@
           selectEdge(edge.id);
         });
 
+        // 選択時は背景に淡いハロー線を描画して、線自体の色を保ったまま選択状態を分かりやすく表示
+        if (isSelected) {
+          const haloPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+          haloPath.setAttribute('d', d);
+          haloPath.setAttribute('fill', 'none');
+          haloPath.setAttribute('stroke', strokeColor);
+          haloPath.setAttribute('stroke-opacity', '0.24');
+          haloPath.setAttribute('stroke-width', '8');
+          haloPath.setAttribute('stroke-linecap', 'round');
+          haloPath.style.pointerEvents = 'none';
+          g.appendChild(haloPath);
+        }
+
         const visPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
         visPath.setAttribute('d', d);
         visPath.setAttribute('class', 'edge-visible-path');
-        visPath.setAttribute('stroke', isSelected ? '#2563eb' : '#64748b');
-        visPath.setAttribute('stroke-width', isSelected ? '3' : '2');
+        visPath.setAttribute('stroke', strokeColor);
+        visPath.setAttribute('stroke-width', isSelected ? '3.2' : '2.2');
         if (edge.arrow !== false) {
-          visPath.setAttribute('marker-end', isSelected ? 'url(#arrowhead-selected)' : 'url(#arrowhead)');
+          const markerId = getArrowMarkerIdForColor(strokeColor);
+          visPath.setAttribute('marker-end', `url(#${markerId})`);
         }
 
         g.appendChild(hitPath);
@@ -3093,13 +3614,17 @@
     function startConnecting(sourceNodeId, sourceAnchor, e) {
       const srcNode = state.nodes.find(n => n.id === sourceNodeId);
       if (!srcNode) return;
+      const lastEdgeColor = state.edges.length > 0 ? state.edges[state.edges.length - 1].color : null;
+      const previewColor = getRandomEdgeColor(lastEdgeColor);
       interaction = {
         mode: 'connect',
         targetNodeId: sourceNodeId,
-        sourceAnchor
+        sourceAnchor,
+        previewColor
       };
       document.body.classList.add('connecting-mode');
       const p1 = getAnchorPoint(srcNode, sourceAnchor);
+      tempEdgePath.setAttribute('stroke', previewColor);
       tempEdgePath.setAttribute('d', `M ${p1.x} ${p1.y} L ${p1.x} ${p1.y}`);
       tempEdgePath.classList.remove('hidden');
     }
@@ -3215,7 +3740,7 @@
         if (!srcNode) return;
         const p1 = getAnchorPoint(srcNode, interaction.sourceAnchor);
         const p2 = screenToWorld(e.clientX, e.clientY);
-        const d = buildEdgePath(p1, interaction.sourceAnchor, p2, 'left', 'bezier');
+        const d = buildEdgePath(p1, interaction.sourceAnchor, p2, 'left', 'avoid', srcNode.id, null);
         tempEdgePath.setAttribute('d', d);
       }
     });
@@ -3258,7 +3783,8 @@
               sourceAnchor: interaction.sourceAnchor,
               target: targetId,
               targetAnchor,
-              style: 'bezier',
+              style: 'avoid',
+              color: interaction.previewColor || getRandomEdgeColor(),
               arrow: true
             });
             renderEdges();
@@ -3387,12 +3913,12 @@
       const offsetY = (ch - worldH * scale) / 2;
 
       const nodeMap = new Map(state.nodes.map(n => [n.id, n]));
-      minimapCtx.strokeStyle = '#94a3b8';
-      minimapCtx.lineWidth = 1;
+      minimapCtx.lineWidth = 1.2;
       for (const e of state.edges) {
         const s = nodeMap.get(e.source);
         const t = nodeMap.get(e.target);
         if (!s || !t) continue;
+        minimapCtx.strokeStyle = e.color || '#94a3b8';
         minimapCtx.beginPath();
         minimapCtx.moveTo((s.x + s.width / 2 - minX) * scale + offsetX, (s.y + s.height / 2 - minY) * scale + offsetY);
         minimapCtx.lineTo((t.x + t.width / 2 - minX) * scale + offsetX, (t.y + t.height / 2 - minY) * scale + offsetY);
@@ -3735,6 +4261,26 @@
       persistToLocalStorage();
     });
 
+    document.querySelectorAll('#edge-color-palette [data-edge-color]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const edge = state.edges.find(ed => ed.id === state.selectedEdgeId);
+        if (!edge) return;
+        pushHistory();
+        edge.color = btn.dataset.edgeColor;
+        renderEdges();
+        persistToLocalStorage();
+      });
+    });
+
+    document.getElementById('btn-edge-random-color').addEventListener('click', () => {
+      const edge = state.edges.find(ed => ed.id === state.selectedEdgeId);
+      if (!edge) return;
+      pushHistory();
+      edge.color = getRandomEdgeColor(edge.color);
+      renderEdges();
+      persistToLocalStorage();
+    });
+
     function copySelectedNodes() {
       if (state.editingNodeId) return false;
       const targetIds = new Set(state.selectedNodeIds);
@@ -3874,6 +4420,7 @@
     }
 
     document.getElementById('btn-delete-selected').addEventListener('click', deleteSelectedElement);
+    document.getElementById('btn-delete-edge').addEventListener('click', deleteSelectedElement);
 
     // URLメニュー・モーダルイベント登録
     document.getElementById('ctx-edit-url').addEventListener('click', () => {
