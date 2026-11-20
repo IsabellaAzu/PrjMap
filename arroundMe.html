@@ -1096,84 +1096,17 @@
       stroke-width: 3.5px !important;
     }
 
-    /* 左下操作ガイド */
-    .guide-chip {
-      position: absolute;
-      left: 12px;
-      bottom: 12px;
-      z-index: 20;
-      background-color: rgba(255, 255, 255, 0.92);
-      backdrop-filter: blur(6px);
-      border: 1px solid #e2e8f0;
-      border-radius: 12px;
-      padding: 8px 12px;
-      font-size: 11px;
-      color: #64748b;
-      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
-      pointer-events: none;
-      display: none;
-    }
-
-    @media (min-width: 640px) {
-      .guide-chip {
-        display: block;
-      }
-    }
-
-    .guide-list {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 4px 12px;
-    }
-
     .guide-list strong {
       color: #334155;
     }
-
-    /* 右下ミニマップ */
-    .minimap-box {
-      position: absolute;
-      right: 12px;
-      bottom: 12px;
-      z-index: 30;
-      background-color: rgba(255, 255, 255, 0.96);
-      backdrop-filter: blur(6px);
-      border: 1px solid #e2e8f0;
-      border-radius: 12px;
-      box-shadow: 0 8px 20px -4px rgba(15, 23, 42, 0.1);
-      padding: 6px;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .minimap-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 4px;
-    }
-
-    .minimap-title {
-      font-size: 10px;
-      font-weight: 700;
-      color: #64748b;
-    }
-
-    .minimap-count {
-      font-size: 10px;
-      color: #94a3b8;
-    }
-
-    #minimap-canvas {
+#minimap-canvas {
       border-radius: 8px;
       background-color: #f8fafc;
       border: 1px solid #e2e8f0;
       cursor: pointer;
       display: block;
     }
-
-    /* トースト通知 */
+/* トースト通知 */
     .toast-box {
       position: fixed;
       bottom: 64px;
@@ -1205,6 +1138,80 @@
       background-color: #cbd5e1;
       border-radius: 3px;
     }
+  
+    /* 俯瞰マップ：画面右上配置 */
+    .minimap-box {
+      position: absolute;
+      right: 12px;
+      top: 12px;
+      bottom: auto;
+      z-index: 30;
+      background-color: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(6px);
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px -4px rgba(15, 23, 42, 0.1);
+      padding: 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    /* 左下操作ガイド：単一枠内で💡クリックにより詳細テキストを開閉 */
+    .guide-chip {
+      position: absolute;
+      left: 12px;
+      bottom: 12px;
+      z-index: 25;
+      display: none;
+      align-items: center;
+      gap: 8px;
+      background-color: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(6px);
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 6px 10px;
+      font-size: 11px;
+      color: #64748b;
+      box-shadow: 0 8px 20px -4px rgba(15, 23, 42, 0.12);
+      pointer-events: auto;
+      max-width: min(680px, calc(100vw - 24px));
+    }
+
+    @media (min-width: 640px) {
+      .guide-chip {
+        display: inline-flex;
+      }
+    }
+
+    .guide-bulb-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      font-size: 14px;
+      line-height: 1;
+      flex-shrink: 0;
+      transition: background-color 0.15s, transform 0.12s;
+    }
+
+    .guide-bulb-btn:hover {
+      background-color: #fef9c3;
+    }
+
+    .guide-bulb-btn.active {
+      background-color: #fef08a;
+    }
+
+    .guide-list {
+      display: inline-flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 4px 10px;
+    }
+
   </style>
 </head>
 
@@ -1299,13 +1306,18 @@
           <path stroke-linecap="round" d="M12 4v16m8-8H4" />
         </svg>
       </button>
-      <button id="btn-fit-view" title="プロジェクト全体を俯瞰表示" class="btn-secondary">
-        <svg class="icon-sm" style="color: #2563eb;" fill="none" stroke="currentColor" stroke-width="2"
+      <button id="btn-fit-view" title="プロジェクト全体を俯瞰表示" class="btn-icon" style="color: #2563eb;">
+        <svg class="icon-md" fill="none" stroke="currentColor" stroke-width="2"
           viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round"
             d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
         </svg>
-        <span class="hide-xs">全体俯瞰</span>
+      </button>
+      <button id="btn-toggle-minimap" title="俯瞰マップの表示/非表示" class="btn-icon" aria-pressed="true">
+        <svg class="icon-md" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+        </svg>
       </button>
     </div>
   </header>
@@ -1492,9 +1504,10 @@
       </div>
     </div>
 
-    <!-- 左下操作ガイドチップ -->
-    <div class="guide-chip">
-      <div class="guide-list">
+    <!-- 左下操作ガイドチップ（同一枠内で💡クリックにより詳細テキストを開閉） -->
+    <div id="guide-chip" class="guide-chip">
+      <button id="btn-toggle-guide" type="button" title="操作ガイド詳細の表示/非表示" class="guide-bulb-btn" aria-expanded="false">💡</button>
+      <div id="guide-body" class="guide-list hidden">
         <span><strong>ドラッグ:</strong> キャンバス移動 / 図形移動</span>
         <span><strong>Shift+ドラッグ:</strong> 範囲選択</span>
         <span><strong>Shift+クリック:</strong> 複数選択</span>
@@ -3838,6 +3851,62 @@
         searchInput.focus();
       }
     });
+
+
+    // 俯瞰マップ表示/非表示トグル（初期表示：表示）
+    const minimapWrapper = document.getElementById('minimap-wrapper');
+    const btnToggleMinimap = document.getElementById('btn-toggle-minimap');
+    let minimapVisible = true;
+
+    function setMinimapVisible(visible) {
+      minimapVisible = visible;
+      if (minimapWrapper) {
+        minimapWrapper.classList.toggle('hidden', !visible);
+      }
+      if (btnToggleMinimap) {
+        btnToggleMinimap.setAttribute('aria-pressed', String(visible));
+        btnToggleMinimap.style.color = visible ? '#2563eb' : '#64748b';
+        btnToggleMinimap.style.backgroundColor = visible ? '#eff6ff' : '';
+      }
+      if (visible) {
+        renderMinimap();
+      }
+    }
+
+    if (btnToggleMinimap) {
+      setMinimapVisible(true);
+      btnToggleMinimap.addEventListener('click', () => {
+        setMinimapVisible(!minimapVisible);
+      });
+    }
+
+    // 左下操作ガイド 💡 トグル（同一枠内の詳細テキストを表示/非表示）
+    const guideBody = document.getElementById('guide-body');
+    const btnToggleGuide = document.getElementById('btn-toggle-guide');
+    let guideVisible = false;
+
+    function setGuideVisible(visible) {
+      guideVisible = Boolean(visible);
+      if (guideBody) {
+        guideBody.classList.toggle('hidden', !guideVisible);
+      }
+      if (btnToggleGuide) {
+        btnToggleGuide.setAttribute('aria-expanded', String(guideVisible));
+        btnToggleGuide.classList.toggle('active', guideVisible);
+      }
+    }
+
+    if (btnToggleGuide) {
+      setGuideVisible(false);
+      btnToggleGuide.addEventListener('pointerdown', (e) => {
+        e.stopPropagation();
+      });
+      btnToggleGuide.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setGuideVisible(!guideVisible);
+      });
+    }
 
     window.addEventListener('resize', renderMinimap);
 
