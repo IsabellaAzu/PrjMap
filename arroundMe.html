@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CanvasFlow - 完全オフライン図形・マインドマップ作成ツール</title>
+  <title>InMyMind - 完全オフラインマップ作成ツール</title>
   <style>
     *,
     *::before,
@@ -1222,7 +1222,7 @@
           </svg>
         </div>
         <div class="brand-info">
-          <h1 class="brand-title">CanvasFlow</h1>
+          <h1 class="brand-title">InMyMind</h1>
           <p class="brand-subtitle" id="file-status-label">完全オフライン・自動保存済</p>
         </div>
       </div>
@@ -1647,7 +1647,7 @@
 
   <script>
     /**
-     * CanvasFlow - 完全オフライン完結型ダイアグラム＆マインドマップ作成ツール
+     * InMyMind - 完全オフライン完結型ダイアグラム＆マインドマップ作成ツール
      * 外部CDNや外部ネットワーク通信を一切行わず、単体HTMLファイルのみで動作します。
      */
 
@@ -2362,6 +2362,8 @@
         propertyBar.classList.remove('hidden');
         nodeProps.classList.remove('hidden');
         edgeProps.classList.add('hidden');
+        const btnEditText = document.getElementById('btn-edit-text');
+        if (btnEditText) btnEditText.classList.remove('hidden');
 
         if (btnGroupNodes) {
           if (state.selectedNodeIds.size >= 2) {
@@ -2383,6 +2385,8 @@
         const edge = state.edges.find(e => e.id === state.selectedEdgeId);
         if (edge) {
           propertyBar.classList.remove('hidden');
+          const btnEditText = document.getElementById('btn-edit-text');
+          if (btnEditText) btnEditText.classList.add('hidden');
           nodeProps.classList.add('hidden');
           edgeProps.classList.remove('hidden');
           document.getElementById('edge-style-select').value = edge.style || 'bezier';
@@ -3510,7 +3514,7 @@
     // ローカルJSONファイル保存
     async function saveToLocalJsonFile() {
       const exportData = {
-        app: 'CanvasFlow',
+        app: 'InMyMind',
         version: 1,
         exportedAt: new Date().toISOString(),
         viewport: state.viewport,
