@@ -502,10 +502,33 @@
       outline-offset: 3px;
       z-index: 20 !important;
     }
+    .diagram-node.grouped::before {
+      content: '';
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      width: 7px;
+      height: 7px;
+      background-color: #2563eb;
+      border: 1.5px solid #ffffff;
+      border-radius: 50%;
+      z-index: 25;
+      pointer-events: none;
+    }
     .diagram-node.search-match {
       outline: 3px solid #f59e0b;
       outline-offset: 4px;
       box-shadow: 0 0 0 8px rgba(245, 158, 11, 0.22);
+    }
+
+    /* 範囲選択（ラバーバンド）矩形 */
+    .selection-marquee {
+      position: absolute;
+      border: 1.5px dashed #2563eb;
+      background-color: rgba(37, 99, 235, 0.08);
+      pointer-events: none;
+      z-index: 50;
+      border-radius: 2px;
     }
 
     /* ひし形用SVG背景 */
@@ -1109,6 +1132,17 @@
         <button id="btn-edit-text" class="btn-secondary" style="padding: 4px 8px;">
           テキスト編集
         </button>
+
+        <!-- グループ化／解除ボタン（パワポ風） -->
+        <div class="v-divider-sm" id="group-divider"></div>
+        <button id="btn-group-nodes" class="btn-secondary hidden" style="padding: 4px 8px;" title="選択中の図形をグループ化 (Ctrl+G / Cmd+G)">
+          <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+          <span>グループ化</span>
+        </button>
+        <button id="btn-ungroup-nodes" class="btn-secondary hidden" style="padding: 4px 8px;" title="グループを解除 (Ctrl+Shift+G / Cmd+Shift+G)">
+          <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 8h8v8H8zM3 3h4v4H3zM17 17h4v4h-4z"/></svg>
+          <span>グループ解除</span>
+        </button>
       </div>
 
       <!-- 接続線用プロパティ -->
@@ -1153,6 +1187,9 @@
           <path id="temp-edge-path" d="" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-dasharray="6,4" class="hidden" />
         </svg>
 
+        <!-- 範囲選択（ラバーバンド）矩形 -->
+        <div id="selection-marquee" class="selection-marquee hidden"></div>
+
         <!-- 図形・ノードレイヤー -->
         <div id="nodes-container"></div>
       </div>
@@ -1162,9 +1199,11 @@
     <div class="guide-chip">
       <div class="guide-list">
         <span><strong>ドラッグ:</strong> キャンバス移動 / 図形移動</span>
-        <span><strong>ホイール:</strong> ズーム</span>
+        <span><strong>Shift+ドラッグ:</strong> 範囲選択</span>
+        <span><strong>Shift+クリック:</strong> 複数選択</span>
+        <span><strong>Ctrl+G:</strong> グループ化</span>
         <span><strong>ダブルクリック:</strong> テキスト作成・編集</span>
-        <span><strong>青い丸(●):</strong> ドラッグで線を接続</span>
+        <span><strong>青い丸(●):</strong> 接続線ドラッグ</span>
         <span><strong>Cmd+Z:</strong> 元に戻す</span>
       </div>
     </div>
@@ -1235,6 +1274,7 @@
         zoom: 1
       },
       selectedNodeId: null,
+      selectedNodeIds: new Set(), // 複数選択・グループ選択用
       selectedEdgeId: null,
       editingNodeId: null,
       searchQuery: '',
@@ -1286,6 +1326,7 @@
       state.nodes = restored.nodes;
       state.edges = restored.edges;
       state.selectedNodeId = null;
+      state.selectedNodeIds.clear();
       state.selectedEdgeId = null;
 
       renderAll();
@@ -1304,6 +1345,7 @@
       state.nodes = restored.nodes;
       state.edges = restored.edges;
       state.selectedNodeId = null;
+      state.selectedNodeIds.clear();
       state.selectedEdgeId = null;
 
       renderAll();
@@ -1326,6 +1368,9 @@
     const minimapCtx = minimapCanvas.getContext('2d');
     const nodeCountLabel = document.getElementById('node-count-label');
     const fileStatusLabel = document.getElementById('file-status-label');
+    const btnGroupNodes = document.getElementById('btn-group-nodes');
+    const btnUngroupNodes = document.getElementById('btn-ungroup-nodes');
+    const selectionMarquee = document.getElementById('selection-marquee');
 
     // インタラクション状態
     let interaction = {
@@ -1630,11 +1675,12 @@
         const el = document.createElement('div');
         el.dataset.nodeId = node.id;
 
-        const isSelected = state.selectedNodeId === node.id;
+        const isSelected = state.selectedNodeIds.has(node.id) || state.selectedNodeId === node.id;
         const isEditing = state.editingNodeId === node.id;
         const isMatched = matchedSet.has(node.id);
+        const isGrouped = !!node.groupId;
 
-        el.className = `diagram-node ${isSelected ? 'selected' : ''} ${isMatched ? 'search-match' : ''}`;
+        el.className = `diagram-node ${isSelected ? 'selected' : ''} ${isGrouped ? 'grouped' : ''} ${isMatched ? 'search-match' : ''}`;
         el.style.left = `${node.x}px`;
         el.style.top = `${node.y}px`;
         el.style.width = `${node.width}px`;
@@ -1796,7 +1842,8 @@
           lastClickTime = now;
           lastClickPos = { x: e.clientX, y: e.clientY };
 
-          selectNode(node.id);
+          const isMulti = e.shiftKey || e.ctrlKey || e.metaKey;
+          selectNode(node.id, isMulti);
           startDraggingNode(node.id, e);
         });
 
@@ -1827,10 +1874,30 @@
     }
 
     function updatePropertyBar() {
-      if (state.selectedNodeId) {
+      const hasNodeSelection = state.selectedNodeIds.size > 0 || !!state.selectedNodeId;
+      if (hasNodeSelection) {
         propertyBar.classList.remove('hidden');
         nodeProps.classList.remove('hidden');
         edgeProps.classList.add('hidden');
+
+        // グループ化ボタン（2つ以上の図形が選択されている場合に表示）
+        if (btnGroupNodes) {
+          if (state.selectedNodeIds.size >= 2) {
+            btnGroupNodes.classList.remove('hidden');
+          } else {
+            btnGroupNodes.classList.add('hidden');
+          }
+        }
+
+        // グループ解除ボタン（選択中にgroupIdを持つ図形が含まれている場合に表示）
+        if (btnUngroupNodes) {
+          const hasGrouped = state.nodes.some(n => state.selectedNodeIds.has(n.id) && n.groupId);
+          if (hasGrouped) {
+            btnUngroupNodes.classList.remove('hidden');
+          } else {
+            btnUngroupNodes.classList.add('hidden');
+          }
+        }
       } else if (state.selectedEdgeId) {
         const edge = state.edges.find(e => e.id === state.selectedEdgeId);
         if (edge) {
@@ -1845,21 +1912,81 @@
       }
     }
 
-    function selectNode(nodeId) {
-      if (state.selectedNodeId === nodeId && !state.selectedEdgeId) {
-        updatePropertyBar();
-        return;
-      }
-      state.selectedNodeId = nodeId;
+    // パワーポイント準拠の図形選択（単一・複数・グループ連動）
+    function selectNode(nodeId, isMultiSelect = false) {
       state.selectedEdgeId = null;
+      const clickedNode = state.nodes.find(n => n.id === nodeId);
+      if (!clickedNode) return;
 
-      // DOM再生成を避けclassの付け替えのみにすることでdblclickイベントの破棄を防ぐ
-      document.querySelectorAll('.diagram-node.selected').forEach(el => {
-        if (el.dataset.nodeId !== nodeId) el.classList.remove('selected');
+      if (isMultiSelect) {
+        // Shift / Ctrl / Cmd クリックでの複数選択トグル
+        if (state.selectedNodeIds.has(nodeId)) {
+          if (clickedNode.groupId) {
+            const groupNodeIds = state.nodes.filter(n => n.groupId === clickedNode.groupId).map(n => n.id);
+            groupNodeIds.forEach(id => state.selectedNodeIds.delete(id));
+          } else {
+            state.selectedNodeIds.delete(nodeId);
+          }
+        } else {
+          if (clickedNode.groupId) {
+            const groupNodeIds = state.nodes.filter(n => n.groupId === clickedNode.groupId).map(n => n.id);
+            groupNodeIds.forEach(id => state.selectedNodeIds.add(id));
+          } else {
+            state.selectedNodeIds.add(nodeId);
+          }
+        }
+      } else {
+        // 通常クリック
+        if (clickedNode.groupId) {
+          const groupNodeIds = state.nodes.filter(n => n.groupId === clickedNode.groupId).map(n => n.id);
+          const allGroupSelected = groupNodeIds.every(id => state.selectedNodeIds.has(id)) && state.selectedNodeIds.size === groupNodeIds.length;
+
+          if (allGroupSelected) {
+            // パワポ仕様：グループ選択中に同じ図形を再度クリックした場合は個別図形を選択
+            state.selectedNodeIds.clear();
+            state.selectedNodeIds.add(nodeId);
+          } else {
+            // グループ全体を一括選択
+            state.selectedNodeIds.clear();
+            groupNodeIds.forEach(id => state.selectedNodeIds.add(id));
+          }
+        } else {
+          // 単体図形選択
+          state.selectedNodeIds.clear();
+          state.selectedNodeIds.add(nodeId);
+        }
+      }
+
+      state.selectedNodeId = state.selectedNodeIds.values().next().value || null;
+
+      // DOM上のselectedクラスを同期
+      document.querySelectorAll('.diagram-node').forEach(el => {
+        if (state.selectedNodeIds.has(el.dataset.nodeId)) {
+          el.classList.add('selected');
+        } else {
+          el.classList.remove('selected');
+        }
       });
-      const targetEl = nodesContainer.querySelector(`[data-node-id="${nodeId}"]`);
-      if (targetEl) targetEl.classList.add('selected');
+      document.querySelectorAll('.edge-group.selected').forEach(el => el.classList.remove('selected'));
+      updatePropertyBar();
+    }
 
+    // 複数図形の一括選択（範囲選択用）
+    function selectNodes(nodeIds) {
+      state.selectedEdgeId = null;
+      state.selectedNodeIds.clear();
+      for (const id of nodeIds) {
+        state.selectedNodeIds.add(id);
+      }
+      state.selectedNodeId = state.selectedNodeIds.values().next().value || null;
+
+      document.querySelectorAll('.diagram-node').forEach(el => {
+        if (state.selectedNodeIds.has(el.dataset.nodeId)) {
+          el.classList.add('selected');
+        } else {
+          el.classList.remove('selected');
+        }
+      });
       document.querySelectorAll('.edge-group.selected').forEach(el => el.classList.remove('selected'));
       updatePropertyBar();
     }
@@ -1867,6 +1994,7 @@
     function selectEdge(edgeId) {
       state.selectedEdgeId = edgeId;
       state.selectedNodeId = null;
+      state.selectedNodeIds.clear();
       state.editingNodeId = null;
       renderNodes();
       renderEdges();
@@ -1875,17 +2003,62 @@
 
     function clearSelection() {
       if (state.editingNodeId) return;
-      if (!state.selectedNodeId && !state.selectedEdgeId) return;
+      if (state.selectedNodeIds.size === 0 && !state.selectedNodeId && !state.selectedEdgeId) return;
       state.selectedNodeId = null;
+      state.selectedNodeIds.clear();
       state.selectedEdgeId = null;
       document.querySelectorAll('.diagram-node.selected').forEach(el => el.classList.remove('selected'));
       document.querySelectorAll('.edge-group.selected').forEach(el => el.classList.remove('selected'));
       updatePropertyBar();
     }
 
+    // 図形同士のグループ化 (Ctrl+G / Cmd+G)
+    function groupSelectedNodes() {
+      const selectedIds = Array.from(state.selectedNodeIds);
+      if (selectedIds.length < 2) {
+        showToast('グループ化するには2つ以上の図形を選択してください');
+        return;
+      }
+      pushHistory();
+      const newGroupId = 'group_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+      for (const id of selectedIds) {
+        const node = state.nodes.find(n => n.id === id);
+        if (node) {
+          node.groupId = newGroupId;
+        }
+      }
+      renderNodes();
+      persistToLocalStorage();
+      showToast(`${selectedIds.length}個の図形をグループ化しました (Ctrl+G)`);
+    }
+
+    // グループ解除 (Ctrl+Shift+G / Cmd+Shift+G)
+    function ungroupSelectedNodes() {
+      const selectedIds = Array.from(state.selectedNodeIds);
+      const groupedNodes = state.nodes.filter(n => selectedIds.includes(n.id) && n.groupId);
+      if (groupedNodes.length === 0) {
+        showToast('選択中の図形にグループはありません');
+        return;
+      }
+      pushHistory();
+      const groupIdsToClear = new Set(groupedNodes.map(n => n.groupId));
+      let count = 0;
+      for (const node of state.nodes) {
+        if (node.groupId && groupIdsToClear.has(node.groupId)) {
+          delete node.groupId;
+          count++;
+        }
+      }
+      renderNodes();
+      persistToLocalStorage();
+      showToast('グループを解除しました (Ctrl+Shift+G)');
+    }
+
     function startEditingNode(nodeId) {
       state.editingNodeId = nodeId;
       state.selectedNodeId = nodeId;
+      state.selectedNodeIds.clear();
+      state.selectedNodeIds.add(nodeId);
       renderNodes();
     }
 
@@ -2031,13 +2204,27 @@
     function startDraggingNode(nodeId, e) {
       const node = state.nodes.find(n => n.id === nodeId);
       if (!node) return;
+
+      // ドラッグ対象が選択ノードに含まれていなければ選択に追加
+      if (!state.selectedNodeIds.has(nodeId)) {
+        state.selectedNodeIds.add(nodeId);
+        state.selectedNodeId = nodeId;
+      }
+
+      // 選択中のすべてのノードを同時にドラッグ移動する
+      const dragNodes = [];
+      for (const nid of state.selectedNodeIds) {
+        const n = state.nodes.find(x => x.id === nid);
+        if (n) {
+          dragNodes.push({ id: n.id, origX: n.x, origY: n.y });
+        }
+      }
+
       interaction = {
         mode: 'drag-node',
         startX: e.clientX,
         startY: e.clientY,
-        origX: node.x,
-        origY: node.y,
-        targetNodeId: nodeId,
+        dragNodes,
         beforeSnapshot: createSnapshot()
       };
     }
@@ -2072,15 +2259,34 @@
 
     viewportEl.addEventListener('pointerdown', (e) => {
       if (e.target !== viewportEl && e.target !== worldEl && e.target.id !== 'edges-svg') return;
-      clearSelection();
-      interaction = {
-        mode: 'pan',
-        startX: e.clientX,
-        startY: e.clientY,
-        origX: state.viewport.x,
-        origY: state.viewport.y
-      };
-      viewportEl.classList.add('panning');
+
+      const worldPos = screenToWorld(e.clientX, e.clientY);
+      if (e.shiftKey) {
+        // Shift + ドラッグ：パワーポイント風ラバーバンド範囲選択
+        interaction = {
+          mode: 'marquee',
+          startX: e.clientX,
+          startY: e.clientY,
+          worldStartX: worldPos.x,
+          worldStartY: worldPos.y,
+          marqueeSelectedIds: new Set()
+        };
+        selectionMarquee.style.left = `${worldPos.x}px`;
+        selectionMarquee.style.top = `${worldPos.y}px`;
+        selectionMarquee.style.width = '0px';
+        selectionMarquee.style.height = '0px';
+        selectionMarquee.classList.remove('hidden');
+      } else {
+        clearSelection();
+        interaction = {
+          mode: 'pan',
+          startX: e.clientX,
+          startY: e.clientY,
+          origX: state.viewport.x,
+          origY: state.viewport.y
+        };
+        viewportEl.classList.add('panning');
+      }
     });
 
     viewportEl.addEventListener('dblclick', (e) => {
@@ -2097,20 +2303,53 @@
         state.viewport.y = interaction.origY + (e.clientY - interaction.startY);
         applyViewportTransform();
       } else if (interaction.mode === 'drag-node') {
-        const node = state.nodes.find(n => n.id === interaction.targetNodeId);
-        if (!node) return;
         const dx = (e.clientX - interaction.startX) / state.viewport.zoom;
         const dy = (e.clientY - interaction.startY) / state.viewport.zoom;
-        node.x = Math.round(interaction.origX + dx);
-        node.y = Math.round(interaction.origY + dy);
 
-        const nodeEl = nodesContainer.querySelector(`[data-node-id="${node.id}"]`);
-        if (nodeEl) {
-          nodeEl.style.left = `${node.x}px`;
-          nodeEl.style.top = `${node.y}px`;
+        for (const item of interaction.dragNodes) {
+          const node = state.nodes.find(n => n.id === item.id);
+          if (!node) continue;
+          node.x = Math.round(item.origX + dx);
+          node.y = Math.round(item.origY + dy);
+
+          const nodeEl = nodesContainer.querySelector(`[data-node-id="${node.id}"]`);
+          if (nodeEl) {
+            nodeEl.style.left = `${node.x}px`;
+            nodeEl.style.top = `${node.y}px`;
+          }
         }
         renderEdges();
         renderMinimap();
+      } else if (interaction.mode === 'marquee') {
+        // ラバーバンド範囲選択の更新
+        const curWorld = screenToWorld(e.clientX, e.clientY);
+        const x1 = Math.min(interaction.worldStartX, curWorld.x);
+        const y1 = Math.min(interaction.worldStartY, curWorld.y);
+        const w = Math.abs(curWorld.x - interaction.worldStartX);
+        const h = Math.abs(curWorld.y - interaction.worldStartY);
+
+        selectionMarquee.style.left = `${x1}px`;
+        selectionMarquee.style.top = `${y1}px`;
+        selectionMarquee.style.width = `${w}px`;
+        selectionMarquee.style.height = `${h}px`;
+
+        const selectedIds = new Set();
+        for (const n of state.nodes) {
+          if (x1 < n.x + n.width && x1 + w > n.x && y1 < n.y + n.height && y1 + h > n.y) {
+            selectedIds.add(n.id);
+            if (n.groupId) {
+              state.nodes.filter(x => x.groupId === n.groupId).forEach(x => selectedIds.add(x.id));
+            }
+          }
+        }
+        document.querySelectorAll('.diagram-node').forEach(el => {
+          if (selectedIds.has(el.dataset.nodeId)) {
+            el.classList.add('selected');
+          } else {
+            el.classList.remove('selected');
+          }
+        });
+        interaction.marqueeSelectedIds = selectedIds;
       } else if (interaction.mode === 'resize-node') {
         const node = state.nodes.find(n => n.id === interaction.targetNodeId);
         if (!node) return;
@@ -2147,6 +2386,13 @@
           pushHistory(interaction.beforeSnapshot);
         }
         persistToLocalStorage();
+      } else if (interaction.mode === 'marquee') {
+        selectionMarquee.classList.add('hidden');
+        if (interaction.marqueeSelectedIds && interaction.marqueeSelectedIds.size > 0) {
+          selectNodes(interaction.marqueeSelectedIds);
+        } else {
+          clearSelection();
+        }
       } else if (interaction.mode === 'connect') {
         document.body.classList.remove('connecting-mode');
         tempEdgePath.classList.add('hidden');
@@ -2585,10 +2831,13 @@
 
     document.querySelectorAll('#fill-color-palette [data-fill]').forEach(btn => {
       btn.addEventListener('click', () => {
-        const node = state.nodes.find(n => n.id === state.selectedNodeId);
-        if (!node || node.fill === btn.dataset.fill) return;
+        const targetIds = state.selectedNodeIds.size > 0 ? Array.from(state.selectedNodeIds) : (state.selectedNodeId ? [state.selectedNodeId] : []);
+        if (targetIds.length === 0) return;
         pushHistory();
-        node.fill = btn.dataset.fill;
+        targetIds.forEach(id => {
+          const node = state.nodes.find(n => n.id === id);
+          if (node) node.fill = btn.dataset.fill;
+        });
         renderNodes();
         persistToLocalStorage();
       });
@@ -2596,10 +2845,13 @@
 
     document.querySelectorAll('#stroke-color-palette [data-stroke]').forEach(btn => {
       btn.addEventListener('click', () => {
-        const node = state.nodes.find(n => n.id === state.selectedNodeId);
-        if (!node || node.stroke === btn.dataset.stroke) return;
+        const targetIds = state.selectedNodeIds.size > 0 ? Array.from(state.selectedNodeIds) : (state.selectedNodeId ? [state.selectedNodeId] : []);
+        if (targetIds.length === 0) return;
         pushHistory();
-        node.stroke = btn.dataset.stroke;
+        targetIds.forEach(id => {
+          const node = state.nodes.find(n => n.id === id);
+          if (node) node.stroke = btn.dataset.stroke;
+        });
         renderNodes();
         persistToLocalStorage();
       });
@@ -2610,6 +2862,10 @@
         startEditingNode(state.selectedNodeId);
       }
     });
+
+    // グループ化・グループ解除ボタン登録
+    document.getElementById('btn-group-nodes').addEventListener('click', groupSelectedNodes);
+    document.getElementById('btn-ungroup-nodes').addEventListener('click', ungroupSelectedNodes);
 
     document.getElementById('edge-style-select').addEventListener('change', (e) => {
       const edge = state.edges.find(ed => ed.id === state.selectedEdgeId);
@@ -2629,17 +2885,21 @@
       persistToLocalStorage();
     });
 
+    // 選択中の要素（複数図形／グループ／接続線）の一括削除
     function deleteSelectedElement() {
       if (state.editingNodeId) return;
-      if (state.selectedNodeId) {
+      const targetIds = new Set(state.selectedNodeIds);
+      if (state.selectedNodeId) targetIds.add(state.selectedNodeId);
+
+      if (targetIds.size > 0) {
         pushHistory();
-        const targetId = state.selectedNodeId;
-        state.nodes = state.nodes.filter(n => n.id !== targetId);
-        state.edges = state.edges.filter(e => e.source !== targetId && e.target !== targetId);
+        state.nodes = state.nodes.filter(n => !targetIds.has(n.id));
+        state.edges = state.edges.filter(e => !targetIds.has(e.source) && !targetIds.has(e.target));
         state.selectedNodeId = null;
+        state.selectedNodeIds.clear();
         renderAll();
         persistToLocalStorage();
-        showToast('図形を削除しました');
+        showToast(targetIds.size > 1 ? `${targetIds.size}個の図形を一括削除しました` : '図形を削除しました');
       } else if (state.selectedEdgeId) {
         pushHistory();
         state.edges = state.edges.filter(e => e.id !== state.selectedEdgeId);
@@ -2688,7 +2948,15 @@
       const isMod = e.ctrlKey || e.metaKey;
       const key = e.key.toLowerCase();
 
-      if (isMod && key === 'z') {
+      // パワポ風グループ化 (Ctrl+G / Cmd+G) & 解除 (Ctrl+Shift+G / Cmd+Shift+G)
+      if (isMod && key === 'g') {
+        e.preventDefault();
+        if (e.shiftKey) {
+          ungroupSelectedNodes();
+        } else {
+          groupSelectedNodes();
+        }
+      } else if (isMod && key === 'z') {
         e.preventDefault();
         if (e.shiftKey) {
           redo();
