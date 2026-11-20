@@ -1505,6 +1505,7 @@
         <span><strong>Shift+ドラッグ:</strong> 範囲選択</span>
         <span><strong>Shift+クリック:</strong> 複数選択</span>
         <span><strong>Ctrl+G:</strong> グループ化</span>
+        <span><strong>Ctrl+C / V:</strong> コピー・貼り付け</span>
         <span><strong>ダブルクリック:</strong> テキスト作成・編集</span>
         <span><strong>画像ドロップ:</strong> 画面へ直接挿入</span>
         <span><strong>Cmd+Z:</strong> 元に戻す</span>
@@ -1669,7 +1670,12 @@
       searchQuery: '',
       searchMatches: [],
       searchMatchIndex: 0,
-      fileHandle: null
+      fileHandle: null,
+      clipboard: {
+        nodes: [],
+        edges: [],
+        pasteCount: 0
+      }
     };
 
     // Undo / Redo 履歴スタック
@@ -3014,7 +3020,12 @@
         if (file) {
           e.preventDefault();
           processImageFile(file);
+          return;
         }
+      }
+
+      if (pasteNodes()) {
+        e.preventDefault();
       }
     });
 
@@ -3724,6 +3735,110 @@
       persistToLocalStorage();
     });
 
+    function copySelectedNodes() {
+      if (state.editingNodeId) return false;
+      const targetIds = new Set(state.selectedNodeIds);
+      if (state.selectedNodeId) targetIds.add(state.selectedNodeId);
+
+      // グループメンバーも自動包含
+      for (const id of Array.from(targetIds)) {
+        const n = state.nodes.find(x => x.id === id);
+        if (n && n.groupId) {
+          for (const member of state.nodes) {
+            if (member.groupId === n.groupId) {
+              targetIds.add(member.id);
+            }
+          }
+        }
+      }
+
+      if (targetIds.size === 0) return false;
+
+      const copiedNodes = state.nodes
+        .filter(n => targetIds.has(n.id))
+        .map(n => JSON.parse(JSON.stringify(n)));
+
+      // 選択されたノード同士をつなぐ内部エッジも一緒にコピー
+      const copiedEdges = state.edges
+        .filter(e => targetIds.has(e.source) && targetIds.has(e.target))
+        .map(e => JSON.parse(JSON.stringify(e)));
+
+      state.clipboard = {
+        nodes: copiedNodes,
+        edges: copiedEdges,
+        pasteCount: 0
+      };
+
+      showToast(copiedNodes.length > 1
+        ? `${copiedNodes.length}個のオブジェクトをコピーしました`
+        : 'オブジェクトをコピーしました');
+      return true;
+    }
+
+    function pasteNodes() {
+      if (state.editingNodeId) return false;
+      if (!state.clipboard || !state.clipboard.nodes || state.clipboard.nodes.length === 0) {
+        return false;
+      }
+
+      pushHistory();
+      state.clipboard.pasteCount += 1;
+      const offset = 24 * state.clipboard.pasteCount;
+
+      const idMap = new Map();
+      const groupMap = new Map();
+      const newNodes = [];
+      const timestamp = Date.now();
+
+      state.clipboard.nodes.forEach((orig, idx) => {
+        const newId = `node_${timestamp}_${idx}_${Math.random().toString(36).slice(2, 6)}`;
+        idMap.set(orig.id, newId);
+
+        const cloned = JSON.parse(JSON.stringify(orig));
+        cloned.id = newId;
+        cloned.x = Math.round(orig.x + offset);
+        cloned.y = Math.round(orig.y + offset);
+
+        if (orig.groupId) {
+          if (!groupMap.has(orig.groupId)) {
+            groupMap.set(orig.groupId, `group_${timestamp}_${Math.random().toString(36).slice(2, 6)}`);
+          }
+          cloned.groupId = groupMap.get(orig.groupId);
+        }
+
+        newNodes.push(cloned);
+      });
+
+      const newEdges = [];
+      state.clipboard.edges.forEach((origEdge, idx) => {
+        const newSource = idMap.get(origEdge.source);
+        const newTarget = idMap.get(origEdge.target);
+        if (newSource && newTarget) {
+          const clonedEdge = JSON.parse(JSON.stringify(origEdge));
+          clonedEdge.id = `edge_${timestamp}_${idx}_${Math.random().toString(36).slice(2, 6)}`;
+          clonedEdge.source = newSource;
+          clonedEdge.target = newTarget;
+          newEdges.push(clonedEdge);
+        }
+      });
+
+      state.nodes.push(...newNodes);
+      state.edges.push(...newEdges);
+
+      // ペーストしたオブジェクトを選択状態にする
+      state.selectedEdgeId = null;
+      state.selectedNodeIds.clear();
+      newNodes.forEach(n => state.selectedNodeIds.add(n.id));
+      state.selectedNodeId = newNodes[0] ? newNodes[0].id : null;
+
+      renderAll();
+      persistToLocalStorage();
+      showToast(newNodes.length > 1
+        ? `${newNodes.length}個のオブジェクトを貼り付けました`
+        : 'オブジェクトを貼り付けました');
+      return true;
+    }
+
     function deleteSelectedElement() {
       if (state.editingNodeId) return;
       const targetIds = new Set(state.selectedNodeIds);
@@ -3821,7 +3936,23 @@
       const isMod = e.ctrlKey || e.metaKey;
       const key = e.key.toLowerCase();
 
-      if (isMod && key === 'g') {
+      if (isMod && key === 'c') {
+        const selection = window.getSelection();
+        if (selection && selection.toString().length > 0) return;
+        if (copySelectedNodes()) {
+          e.preventDefault();
+        }
+      } else if (isMod && key === 'v') {
+        if (state.clipboard && state.clipboard.nodes && state.clipboard.nodes.length > 0) {
+          e.preventDefault();
+          pasteNodes();
+        }
+      } else if (isMod && key === 'd') {
+        if (copySelectedNodes()) {
+          e.preventDefault();
+          pasteNodes();
+        }
+      } else if (isMod && key === 'g') {
         e.preventDefault();
         if (e.shiftKey) {
           ungroupSelectedNodes();
