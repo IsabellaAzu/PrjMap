@@ -1,15 +1,20 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CanvasFlow - 完全オフライン図形・マインドマップ作成ツール</title>
   <style>
-    *, *::before, *::after {
+    *,
+    *::before,
+    *::after {
       box-sizing: border-box;
       user-select: none;
     }
-    html, body {
+
+    html,
+    body {
       margin: 0;
       padding: 0;
       width: 100%;
@@ -20,15 +25,21 @@
       color: #1e293b;
       -webkit-font-smoothing: antialiased;
     }
+
     body {
       display: flex;
       flex-direction: column;
       height: 100vh;
       width: 100vw;
     }
-    button, input, select, textarea {
+
+    button,
+    input,
+    select,
+    textarea {
       font-family: inherit;
     }
+
     button {
       border: none;
       background: transparent;
@@ -36,6 +47,7 @@
       padding: 0;
       color: inherit;
     }
+
     .hidden {
       display: none !important;
     }
@@ -54,16 +66,19 @@
       box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
       flex-shrink: 0;
     }
+
     .header-group {
       display: flex;
       align-items: center;
       gap: 8px;
     }
+
     .brand-wrap {
       display: flex;
       align-items: center;
       gap: 8px;
     }
+
     .brand-logo {
       width: 32px;
       height: 32px;
@@ -77,20 +92,25 @@
       box-shadow: 0 1px 2px rgba(37, 99, 235, 0.25);
       flex-shrink: 0;
     }
+
     .brand-info {
       display: none;
     }
+
     @media (min-width: 768px) {
       .app-header {
         padding: 0 16px;
       }
+
       .header-group {
         gap: 10px;
       }
+
       .brand-info {
         display: block;
       }
     }
+
     .brand-title {
       margin: 0;
       font-size: 14px;
@@ -98,12 +118,14 @@
       color: #1e293b;
       line-height: 1.2;
     }
+
     .brand-subtitle {
       margin: 0;
       font-size: 11px;
       color: #94a3b8;
       line-height: 1.2;
     }
+
     .v-divider {
       height: 24px;
       width: 1px;
@@ -111,6 +133,7 @@
       margin: 0 2px;
       flex-shrink: 0;
     }
+
     .v-divider-sm {
       height: 16px;
       width: 1px;
@@ -124,6 +147,7 @@
       align-items: center;
       gap: 6px;
     }
+
     .btn-secondary {
       display: inline-flex;
       align-items: center;
@@ -136,9 +160,11 @@
       border-radius: 8px;
       transition: background-color 0.15s, color 0.15s;
     }
+
     .btn-secondary:hover {
       background-color: #e2e8f0;
     }
+
     .btn-primary {
       display: inline-flex;
       align-items: center;
@@ -152,9 +178,11 @@
       box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
       transition: background-color 0.15s;
     }
+
     .btn-primary:hover {
       background-color: #1d4ed8;
     }
+
     .btn-ghost {
       display: none;
       align-items: center;
@@ -166,23 +194,28 @@
       border-radius: 8px;
       transition: background-color 0.15s, color 0.15s;
     }
+
     .btn-ghost:hover {
       color: #334155;
       background-color: #f1f5f9;
     }
+
     @media (min-width: 640px) {
       .btn-ghost {
         display: inline-flex;
       }
+
       .hide-xs {
         display: inline;
       }
     }
+
     @media (max-width: 639px) {
       .hide-xs {
         display: none;
       }
     }
+
     .btn-icon {
       display: inline-flex;
       align-items: center;
@@ -192,18 +225,22 @@
       border-radius: 8px;
       transition: background-color 0.15s, opacity 0.15s;
     }
+
     .btn-icon:hover:not(:disabled) {
       background-color: #f1f5f9;
     }
+
     .btn-icon:disabled {
       opacity: 0.35;
       pointer-events: none;
     }
+
     .icon-sm {
       width: 16px;
       height: 16px;
       flex-shrink: 0;
     }
+
     .icon-md {
       width: 20px;
       height: 20px;
@@ -217,11 +254,13 @@
       max-width: 440px;
       margin: 0 6px;
     }
+
     .search-input-box {
       position: relative;
       display: flex;
       align-items: center;
     }
+
     .search-icon {
       position: absolute;
       left: 10px;
@@ -230,6 +269,7 @@
       color: #94a3b8;
       pointer-events: none;
     }
+
     .search-input {
       width: 100%;
       padding: 6px 64px 6px 34px;
@@ -242,10 +282,12 @@
       transition: border-color 0.15s, background-color 0.15s;
       user-select: text;
     }
+
     .search-input:focus {
       border-color: #2563eb;
       background-color: #ffffff;
     }
+
     .search-counter {
       position: absolute;
       right: 8px;
@@ -260,14 +302,17 @@
       border-radius: 4px;
       border: 1px solid #e2e8f0;
     }
+
     .search-next-btn {
       padding: 0 2px;
       font-size: 10px;
       color: #64748b;
     }
+
     .search-next-btn:hover {
       color: #2563eb;
     }
+
     .search-dropdown {
       position: absolute;
       left: 0;
@@ -281,6 +326,7 @@
       overflow-y: auto;
       z-index: 50;
     }
+
     .search-dropdown-item {
       width: 100%;
       text-align: left;
@@ -293,12 +339,15 @@
       border-bottom: 1px solid #f1f5f9;
       transition: background-color 0.12s;
     }
+
     .search-dropdown-item:last-child {
       border-bottom: none;
     }
+
     .search-dropdown-item:hover {
       background-color: #eff6ff;
     }
+
     .search-item-text {
       font-weight: 500;
       color: #334155;
@@ -306,18 +355,21 @@
       text-overflow: ellipsis;
       white-space: nowrap;
     }
+
     .search-item-hint {
       font-size: 10px;
       color: #2563eb;
       font-weight: 600;
       flex-shrink: 0;
     }
+
     .search-empty {
       padding: 10px 12px;
       font-size: 12px;
       color: #94a3b8;
       text-align: center;
     }
+
     .zoom-label {
       font-size: 12px;
       font-weight: 600;
@@ -352,6 +404,7 @@
       flex-direction: column;
       gap: 6px;
     }
+
     .toolbar-heading {
       font-size: 10px;
       font-weight: 700;
@@ -359,6 +412,7 @@
       text-align: center;
       padding-top: 2px;
     }
+
     .tool-btn {
       width: 40px;
       height: 40px;
@@ -369,13 +423,16 @@
       color: #334155;
       transition: background-color 0.15s, color 0.15s;
     }
+
     .tool-btn:hover {
       background-color: #eff6ff;
       color: #2563eb;
     }
+
     .tool-btn-sticky {
       color: #d97706;
     }
+
     .tool-btn-sticky:hover {
       background-color: #fffbeb;
       color: #b45309;
@@ -400,22 +457,26 @@
       flex-wrap: wrap;
       max-width: 92vw;
     }
+
     .prop-section {
       display: flex;
       align-items: center;
       gap: 8px;
       flex-wrap: wrap;
     }
+
     .prop-label {
       font-size: 12px;
       font-weight: 600;
       color: #64748b;
     }
+
     .palette-row {
       display: flex;
       align-items: center;
       gap: 4px;
     }
+
     .swatch-btn {
       width: 20px;
       height: 20px;
@@ -427,9 +488,11 @@
       font-size: 9px;
       color: #64748b;
     }
+
     .swatch-btn:hover {
       transform: scale(1.15);
     }
+
     .prop-select {
       font-size: 12px;
       background-color: #f1f5f9;
@@ -439,6 +502,7 @@
       color: #334155;
       outline: none;
     }
+
     .prop-checkbox-label {
       display: inline-flex;
       align-items: center;
@@ -448,6 +512,7 @@
       cursor: pointer;
       margin-left: 4px;
     }
+
     .btn-delete {
       display: inline-flex;
       align-items: center;
@@ -459,6 +524,7 @@
       border-radius: 8px;
       transition: background-color 0.15s;
     }
+
     .btn-delete:hover {
       background-color: #fff1f2;
     }
@@ -475,9 +541,11 @@
       cursor: grab;
       touch-action: none;
     }
+
     #canvas-viewport.panning {
       cursor: grabbing;
     }
+
     #canvas-world {
       transform-origin: 0 0;
       position: absolute;
@@ -497,11 +565,13 @@
       cursor: move;
       transition: box-shadow 0.15s ease;
     }
+
     .diagram-node.selected {
       outline: 2px solid #2563eb;
       outline-offset: 3px;
       z-index: 20 !important;
     }
+
     .diagram-node.grouped::before {
       content: '';
       position: absolute;
@@ -515,6 +585,7 @@
       z-index: 25;
       pointer-events: none;
     }
+
     .diagram-node.search-match {
       outline: 3px solid #f59e0b;
       outline-offset: 4px;
@@ -558,6 +629,7 @@
       font-size: 14px;
       line-height: 1.45;
     }
+
     .node-text-display {
       width: 100%;
       white-space: pre-wrap;
@@ -565,6 +637,7 @@
       font-weight: 500;
       color: #1e293b;
     }
+
     .node-textarea {
       width: 100%;
       height: 100%;
@@ -594,6 +667,7 @@
       margin-top: 6px;
       max-width: 100%;
     }
+
     .url-badge-item {
       display: inline-flex;
       align-items: center;
@@ -604,11 +678,13 @@
       transition: background-color 0.15s, border-color 0.15s, box-shadow 0.15s;
       max-width: 100%;
     }
+
     .url-badge-item:hover {
       background-color: #ffffff;
       border-color: #60a5fa;
       box-shadow: 0 2px 4px rgba(37, 99, 235, 0.12);
     }
+
     .url-link {
       display: inline-flex;
       align-items: center;
@@ -624,14 +700,17 @@
       white-space: nowrap;
       cursor: pointer;
     }
+
     .url-link:hover {
       text-decoration: underline;
     }
+
     .url-icon {
       width: 12px;
       height: 12px;
       flex-shrink: 0;
     }
+
     .url-dots-btn {
       display: inline-flex;
       align-items: center;
@@ -646,6 +725,7 @@
       transition: background-color 0.15s, color 0.15s;
       flex-shrink: 0;
     }
+
     .url-dots-btn:hover {
       background-color: #e2e8f0;
       color: #1e293b;
@@ -666,10 +746,19 @@
       gap: 2px;
       animation: menuFadeIn 0.12s ease;
     }
+
     @keyframes menuFadeIn {
-      from { opacity: 0; transform: scale(0.95); }
-      to   { opacity: 1; transform: scale(1); }
+      from {
+        opacity: 0;
+        transform: scale(0.95);
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
     }
+
     .context-item {
       display: flex;
       align-items: center;
@@ -684,21 +773,111 @@
       cursor: pointer;
       transition: background-color 0.12s, color 0.12s;
     }
+
     .context-item:hover {
       background-color: #f1f5f9;
       color: #0f172a;
     }
+
     .context-item.danger {
       color: #e11d48;
     }
+
     .context-item.danger:hover {
       background-color: #fff1f2;
       color: #be123c;
     }
+
     .context-divider {
       height: 1px;
       background-color: #e2e8f0;
       margin: 4px 0;
+    }
+
+    /* 画面全体ドラッグ＆ドロップオーバーレイ */
+    .drop-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 300;
+      background-color: rgba(37, 99, 235, 0.45);
+      backdrop-filter: blur(5px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: auto;
+      animation: menuFadeIn 0.15s ease;
+    }
+
+    .drop-zone-card {
+      background: #ffffff;
+      border: 3px dashed #2563eb;
+      border-radius: 20px;
+      padding: 44px 64px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25);
+      pointer-events: none;
+      transform: scale(1.02);
+    }
+
+    .drop-icon {
+      width: 56px;
+      height: 56px;
+      color: #2563eb;
+      margin-bottom: 12px;
+    }
+
+    .drop-title {
+      font-size: 19px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 6px;
+    }
+
+    .drop-desc {
+      font-size: 13px;
+      color: #64748b;
+    }
+
+    /* 画像アップロードモーダル内のドロップエリア */
+    .modal-drop-area {
+      border: 2px dashed #94a3b8;
+      border-radius: 12px;
+      padding: 32px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      background-color: #f8fafc;
+      cursor: pointer;
+      transition: border-color 0.15s, background-color 0.15s;
+    }
+
+    .modal-drop-area:hover,
+    .modal-drop-area.drag-over {
+      border-color: #2563eb;
+      background-color: #eff6ff;
+    }
+
+    /* 画像ノード表示 */
+    .diagram-node.image-node {
+      background-color: transparent;
+      padding: 0;
+      overflow: visible;
+    }
+
+    .node-image {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      pointer-events: none;
+      border-radius: 4px;
+      display: block;
+      user-select: none;
+      -webkit-user-drag: none;
     }
 
     /* URL編集モーダル */
@@ -713,6 +892,7 @@
       justify-content: center;
       padding: 16px;
     }
+
     .modal-card {
       background-color: #ffffff;
       border: 1px solid #e2e8f0;
@@ -723,10 +903,19 @@
       overflow: hidden;
       animation: modalIn 0.15s ease;
     }
+
     @keyframes modalIn {
-      from { opacity: 0; transform: scale(0.96); }
-      to   { opacity: 1; transform: scale(1); }
+      from {
+        opacity: 0;
+        transform: scale(0.96);
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
     }
+
     .modal-header {
       padding: 12px 16px;
       border-bottom: 1px solid #e2e8f0;
@@ -734,12 +923,14 @@
       align-items: center;
       justify-content: space-between;
     }
+
     .modal-title {
       margin: 0;
       font-size: 14px;
       font-weight: 700;
       color: #1e293b;
     }
+
     .modal-close-btn {
       color: #94a3b8;
       font-size: 16px;
@@ -747,21 +938,25 @@
       border-radius: 4px;
       line-height: 1;
     }
+
     .modal-close-btn:hover {
       color: #334155;
       background-color: #f1f5f9;
     }
+
     .modal-body {
       padding: 16px;
       display: flex;
       flex-direction: column;
       gap: 8px;
     }
+
     .modal-label {
       font-size: 12px;
       font-weight: 600;
       color: #475569;
     }
+
     .modal-input {
       width: 100%;
       padding: 8px 12px;
@@ -772,10 +967,12 @@
       transition: border-color 0.15s, box-shadow 0.15s;
       user-select: text;
     }
+
     .modal-input:focus {
       border-color: #2563eb;
       box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
     }
+
     .modal-footer {
       padding: 12px 16px;
       background-color: #f8fafc;
@@ -799,20 +996,38 @@
       transition: opacity 0.15s, transform 0.15s, background-color 0.15s;
       cursor: crosshair;
     }
+
     .diagram-node:hover .anchor-handle,
     .diagram-node.selected .anchor-handle,
     .connecting-mode .anchor-handle {
       opacity: 1;
       transform: scale(1);
     }
+
     .anchor-handle:hover {
       background-color: #2563eb;
       transform: scale(1.25);
     }
-    .anchor-top    { top: -6px; left: calc(50% - 6px); }
-    .anchor-right  { right: -6px; top: calc(50% - 6px); }
-    .anchor-bottom { bottom: -6px; left: calc(50% - 6px); }
-    .anchor-left   { left: -6px; top: calc(50% - 6px); }
+
+    .anchor-top {
+      top: -6px;
+      left: calc(50% - 6px);
+    }
+
+    .anchor-right {
+      right: -6px;
+      top: calc(50% - 6px);
+    }
+
+    .anchor-bottom {
+      bottom: -6px;
+      left: calc(50% - 6px);
+    }
+
+    .anchor-left {
+      left: -6px;
+      top: calc(50% - 6px);
+    }
 
     /* リサイズハンドル（右下） */
     .resize-handle {
@@ -829,6 +1044,7 @@
       opacity: 0;
       transition: opacity 0.15s;
     }
+
     .diagram-node.selected .resize-handle,
     .diagram-node:hover .resize-handle {
       opacity: 1;
@@ -843,6 +1059,7 @@
       pointer-events: none;
       z-index: 1;
     }
+
     .edge-hit-area {
       fill: none;
       stroke: transparent;
@@ -850,16 +1067,19 @@
       pointer-events: stroke;
       cursor: pointer;
     }
+
     .edge-visible-path {
       fill: none;
       stroke-linecap: round;
       transition: stroke 0.15s, stroke-width 0.15s;
       pointer-events: none;
     }
+
     .edge-group:hover .edge-visible-path {
       stroke: #3b82f6 !important;
       stroke-width: 3px !important;
     }
+
     .edge-group.selected .edge-visible-path {
       stroke: #2563eb !important;
       stroke-width: 3.5px !important;
@@ -882,16 +1102,19 @@
       pointer-events: none;
       display: none;
     }
+
     @media (min-width: 640px) {
       .guide-chip {
         display: block;
       }
     }
+
     .guide-list {
       display: flex;
       flex-wrap: wrap;
       gap: 4px 12px;
     }
+
     .guide-list strong {
       color: #334155;
     }
@@ -912,21 +1135,25 @@
       flex-direction: column;
       gap: 4px;
     }
+
     .minimap-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
       padding: 0 4px;
     }
+
     .minimap-title {
       font-size: 10px;
       font-weight: 700;
       color: #64748b;
     }
+
     .minimap-count {
       font-size: 10px;
       color: #94a3b8;
     }
+
     #minimap-canvas {
       border-radius: 8px;
       background-color: #f8fafc;
@@ -953,6 +1180,7 @@
       pointer-events: none;
       transition: opacity 0.2s ease;
     }
+
     .toast-box.visible {
       opacity: 1;
     }
@@ -961,12 +1189,14 @@
     .custom-scroll::-webkit-scrollbar {
       width: 6px;
     }
+
     .custom-scroll::-webkit-scrollbar-thumb {
       background-color: #cbd5e1;
       border-radius: 3px;
     }
   </style>
 </head>
+
 <body>
 
   <!-- トップヘッダー：ファイル操作・履歴・検索・俯瞰コントロール -->
@@ -976,9 +1206,9 @@
       <div class="brand-wrap">
         <div class="brand-logo" aria-hidden="true">
           <svg class="icon-md" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-            <rect x="3" y="3" width="7" height="7" rx="1.5"/>
-            <rect x="14" y="14" width="7" height="7" rx="1.5"/>
-            <path d="M10 6.5h4a2 2 0 0 1 2 2v5.5"/>
+            <rect x="3" y="3" width="7" height="7" rx="1.5" />
+            <rect x="14" y="14" width="7" height="7" rx="1.5" />
+            <path d="M10 6.5h4a2 2 0 0 1 2 2v5.5" />
           </svg>
         </div>
         <div class="brand-info">
@@ -993,13 +1223,15 @@
       <div class="btn-group">
         <button id="btn-open-file" title="PC上のJSONファイルを開く" class="btn-secondary">
           <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
           </svg>
           <span>開く</span>
         </button>
         <button id="btn-save-file" title="JSONファイルとしてPCに保存（上書きまたは新規保存）" class="btn-primary">
           <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
           </svg>
           <span>保存</span>
         </button>
@@ -1015,12 +1247,12 @@
       <div class="btn-group">
         <button id="btn-undo" title="元に戻す (Cmd+Z / Ctrl+Z)" disabled class="btn-icon">
           <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a5 5 0 0 1 5 5v2M3 10l5-5m-5 5l5 5"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a5 5 0 0 1 5 5v2M3 10l5-5m-5 5l5 5" />
           </svg>
         </button>
         <button id="btn-redo" title="やり直す (Cmd+Shift+Z / Ctrl+Y)" disabled class="btn-icon">
           <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M21 10H11a5 5 0 0 0-5 5v2m15-7l-5-5m5 5l-5 5"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 10H11a5 5 0 0 0-5 5v2m15-7l-5-5m5 5l-5 5" />
           </svg>
         </button>
       </div>
@@ -1030,7 +1262,8 @@
     <div class="search-wrapper">
       <div class="search-input-box">
         <svg class="search-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <circle cx="11" cy="11" r="8"/><path stroke-linecap="round" d="M21 21l-4.35-4.35"/>
+          <circle cx="11" cy="11" r="8" />
+          <path stroke-linecap="round" d="M21 21l-4.35-4.35" />
         </svg>
         <input id="search-input" type="text" placeholder="図形・テキスト・URLを検索して移動 (Enter)..." class="search-input" />
         <div id="search-counter" class="search-counter hidden">
@@ -1045,15 +1278,21 @@
     <!-- 右側：ズーム・全体俯瞰ボタン -->
     <div class="btn-group">
       <button id="btn-zoom-out" title="縮小 (-)" class="btn-icon">
-        <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M20 12H4"/></svg>
+        <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" d="M20 12H4" />
+        </svg>
       </button>
       <span id="zoom-level-label" class="zoom-label">100%</span>
       <button id="btn-zoom-in" title="拡大 (+)" class="btn-icon">
-        <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M12 4v16m8-8H4"/></svg>
+        <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" d="M12 4v16m8-8H4" />
+        </svg>
       </button>
       <button id="btn-fit-view" title="プロジェクト全体を俯瞰表示" class="btn-secondary">
-        <svg class="icon-sm" style="color: #2563eb;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/>
+        <svg class="icon-sm" style="color: #2563eb;" fill="none" stroke="currentColor" stroke-width="2"
+          viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
         </svg>
         <span class="hide-xs">全体俯瞰</span>
       </button>
@@ -1069,38 +1308,46 @@
 
       <button data-add-shape="rect" title="四角形を追加" class="tool-btn">
         <svg class="icon-md" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <rect x="3" y="5" width="18" height="14"/>
+          <rect x="3" y="5" width="18" height="14" />
         </svg>
       </button>
 
       <button data-add-shape="roundRect" title="角丸四角形を追加" class="tool-btn">
         <svg class="icon-md" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <rect x="3" y="5" width="18" height="14" rx="4"/>
+          <rect x="3" y="5" width="18" height="14" rx="4" />
         </svg>
       </button>
 
       <button data-add-shape="ellipse" title="円・楕円を追加" class="tool-btn">
         <svg class="icon-md" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <ellipse cx="12" cy="12" rx="9" ry="7"/>
+          <ellipse cx="12" cy="12" rx="9" ry="7" />
         </svg>
       </button>
 
       <button data-add-shape="diamond" title="ひし形（条件分岐）を追加" class="tool-btn">
         <svg class="icon-md" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <polygon points="12 3 21 12 12 21 3 12 12 3"/>
+          <polygon points="12 3 21 12 12 21 3 12 12 3" />
         </svg>
       </button>
 
       <button data-add-shape="sticky" title="付箋メモを追加" class="tool-btn tool-btn-sticky">
         <svg class="icon-md" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path d="M15.5 3H5a2 2 0 0 0-2 2v14c0 1.1.9 2 2 2h14a2 2 0 0 0 2-2V8.5L15.5 3Z"/>
-          <path d="M15 3v6h6"/>
+          <path d="M15.5 3H5a2 2 0 0 0-2 2v14c0 1.1.9 2 2 2h14a2 2 0 0 0 2-2V8.5L15.5 3Z" />
+          <path d="M15 3v6h6" />
         </svg>
       </button>
 
       <button data-add-shape="text" title="自由テキストを追加（キャンバスダブルクリックでも作成可）" class="tool-btn">
         <svg class="icon-md" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M4 7V4h16v3M9 20h6M12 4v16"/>
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 7V4h16v3M9 20h6M12 4v16" />
+        </svg>
+      </button>
+
+      <button id="btn-add-image" title="画像を挿入（クリックでアップロード / 画面へドラッグ＆ドロップでも可）" class="tool-btn">
+        <svg class="icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="4" width="18" height="16" rx="3" />
+          <text x="12" y="14.5" font-size="8" font-weight="700" text-anchor="middle" fill="currentColor" stroke="none"
+            font-family="system-ui, sans-serif">img</text>
         </svg>
       </button>
     </aside>
@@ -1111,13 +1358,20 @@
       <div id="node-props" class="prop-section">
         <span class="prop-label">塗り:</span>
         <div class="palette-row" id="fill-color-palette">
-          <button data-fill="#ffffff" class="swatch-btn" style="background:#ffffff; border:1px solid #cbd5e1;" title="白"></button>
-          <button data-fill="#eff6ff" class="swatch-btn" style="background:#eff6ff; border:1px solid #93c5fd;" title="ライトブルー"></button>
-          <button data-fill="#f0fdf4" class="swatch-btn" style="background:#f0fdf4; border:1px solid #6ee7b7;" title="ミントグリーン"></button>
-          <button data-fill="#fef9c3" class="swatch-btn" style="background:#fef9c3; border:1px solid #fcd34d;" title="イエロー"></button>
-          <button data-fill="#fef2f2" class="swatch-btn" style="background:#fef2f2; border:1px solid #fda4af;" title="ライトピンク"></button>
-          <button data-fill="#f3e8ff" class="swatch-btn" style="background:#f3e8ff; border:1px solid #d8b4fe;" title="ラベンダー"></button>
-          <button data-fill="transparent" class="swatch-btn" style="background:#f1f5f9; border:1px solid #cbd5e1;" title="透明">無</button>
+          <button data-fill="#ffffff" class="swatch-btn" style="background:#ffffff; border:1px solid #cbd5e1;"
+            title="白"></button>
+          <button data-fill="#eff6ff" class="swatch-btn" style="background:#eff6ff; border:1px solid #93c5fd;"
+            title="ライトブルー"></button>
+          <button data-fill="#f0fdf4" class="swatch-btn" style="background:#f0fdf4; border:1px solid #6ee7b7;"
+            title="ミントグリーン"></button>
+          <button data-fill="#fef9c3" class="swatch-btn" style="background:#fef9c3; border:1px solid #fcd34d;"
+            title="イエロー"></button>
+          <button data-fill="#fef2f2" class="swatch-btn" style="background:#fef2f2; border:1px solid #fda4af;"
+            title="ライトピンク"></button>
+          <button data-fill="#f3e8ff" class="swatch-btn" style="background:#f3e8ff; border:1px solid #d8b4fe;"
+            title="ラベンダー"></button>
+          <button data-fill="transparent" class="swatch-btn" style="background:#f1f5f9; border:1px solid #cbd5e1;"
+            title="透明">無</button>
         </div>
 
         <div class="v-divider-sm"></div>
@@ -1129,7 +1383,8 @@
           <button data-stroke="#059669" class="swatch-btn" style="background:#059669;" title="グリーン"></button>
           <button data-stroke="#d97706" class="swatch-btn" style="background:#d97706;" title="アンバー"></button>
           <button data-stroke="#e11d48" class="swatch-btn" style="background:#e11d48;" title="ローズ"></button>
-          <button data-stroke="transparent" class="swatch-btn" style="background:#f1f5f9; border:1px solid #cbd5e1;" title="枠なし">無</button>
+          <button data-stroke="transparent" class="swatch-btn" style="background:#f1f5f9; border:1px solid #cbd5e1;"
+            title="枠なし">無</button>
         </div>
 
         <div class="v-divider-sm"></div>
@@ -1140,23 +1395,36 @@
 
         <!-- グループ化／解除ボタン（パワポ風） -->
         <div class="v-divider-sm" id="group-divider"></div>
-        <button id="btn-group-nodes" class="btn-secondary hidden" style="padding: 4px 8px;" title="選択中の図形をグループ化 (Ctrl+G / Cmd+G)">
-          <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+        <button id="btn-group-nodes" class="btn-secondary hidden" style="padding: 4px 8px;"
+          title="選択中の図形をグループ化 (Ctrl+G / Cmd+G)">
+          <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <rect x="3" y="3" width="7" height="7" rx="1" />
+            <rect x="14" y="3" width="7" height="7" rx="1" />
+            <rect x="14" y="14" width="7" height="7" rx="1" />
+            <rect x="3" y="14" width="7" height="7" rx="1" />
+          </svg>
           <span>グループ化</span>
         </button>
-        <button id="btn-ungroup-nodes" class="btn-secondary hidden" style="padding: 4px 8px;" title="グループを解除 (Ctrl+Shift+G / Cmd+Shift+G)">
-          <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 8h8v8H8zM3 3h4v4H3zM17 17h4v4h-4z"/></svg>
+        <button id="btn-ungroup-nodes" class="btn-secondary hidden" style="padding: 4px 8px;"
+          title="グループを解除 (Ctrl+Shift+G / Cmd+Shift+G)">
+          <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8 8h8v8H8zM3 3h4v4H3zM17 17h4v4h-4z" />
+          </svg>
           <span>グループ解除</span>
         </button>
 
         <!-- レイヤー順序（最前面／最背面） -->
         <div class="v-divider-sm"></div>
         <button id="btn-bring-front" class="btn-secondary" style="padding: 4px 8px;" title="最前面へ移動">
-          <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 11l7-7 7 7M5 19l7-7 7 7"/></svg>
+          <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 11l7-7 7 7M5 19l7-7 7 7" />
+          </svg>
           <span class="hide-xs">最前面</span>
         </button>
         <button id="btn-send-back" class="btn-secondary" style="padding: 4px 8px;" title="最背面へ移動">
-          <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 13l-7 7-7-7m14-8l-7 7-7-7"/></svg>
+          <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19 13l-7 7-7-7m14-8l-7 7-7-7" />
+          </svg>
           <span class="hide-xs">最背面</span>
         </button>
       </div>
@@ -1179,7 +1447,8 @@
       <!-- 削除ボタン -->
       <button id="btn-delete-selected" title="選択中の要素を削除 (Delete)" class="btn-delete">
         <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
         </svg>
         <span>削除</span>
       </button>
@@ -1200,7 +1469,8 @@
           </defs>
           <g id="edges-container"></g>
           <!-- ドラッグ中の仮接続線 -->
-          <path id="temp-edge-path" d="" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-dasharray="6,4" class="hidden" />
+          <path id="temp-edge-path" d="" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-dasharray="6,4"
+            class="hidden" />
         </svg>
 
         <!-- 範囲選択（ラバーバンド）矩形 -->
@@ -1219,7 +1489,7 @@
         <span><strong>Shift+クリック:</strong> 複数選択</span>
         <span><strong>Ctrl+G:</strong> グループ化</span>
         <span><strong>ダブルクリック:</strong> テキスト作成・編集</span>
-        <span><strong>青い丸(●):</strong> 接続線ドラッグ</span>
+        <span><strong>画像ドロップ:</strong> 画面へ直接挿入</span>
         <span><strong>Cmd+Z:</strong> 元に戻す</span>
       </div>
     </div>
@@ -1239,15 +1509,24 @@
     <!-- URL操作コンテキストメニュー（縦3点ドットクリック時に表示） -->
     <div id="url-context-menu" class="url-context-menu hidden">
       <button class="context-item" id="ctx-edit-url">
-        <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+        <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+        </svg>
         <span>リンクURLを編集...</span>
       </button>
       <button class="context-item" id="ctx-copy-url">
-        <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+        <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+        </svg>
         <span>URLをコピー</span>
       </button>
       <button class="context-item danger" id="ctx-delete-url">
-        <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+        <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+        </svg>
         <span>リンクを削除</span>
       </button>
     </div>
@@ -1255,25 +1534,39 @@
     <!-- オブジェクト操作コンテキストメニュー（図形右クリック時に表示） -->
     <div id="node-context-menu" class="url-context-menu hidden">
       <button class="context-item" id="ctx-bring-front">
-        <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 11l7-7 7 7M5 19l7-7 7 7"/></svg>
+        <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 11l7-7 7 7M5 19l7-7 7 7" />
+        </svg>
         <span>最前面へ移動</span>
       </button>
       <button class="context-item" id="ctx-send-back">
-        <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 13l-7 7-7-7m14-8l-7 7-7-7"/></svg>
+        <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M19 13l-7 7-7-7m14-8l-7 7-7-7" />
+        </svg>
         <span>最背面へ移動</span>
       </button>
       <div class="context-divider"></div>
       <button class="context-item" id="ctx-node-group">
-        <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+        <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <rect x="3" y="3" width="7" height="7" rx="1" />
+          <rect x="14" y="3" width="7" height="7" rx="1" />
+          <rect x="14" y="14" width="7" height="7" rx="1" />
+          <rect x="3" y="14" width="7" height="7" rx="1" />
+        </svg>
         <span>グループ化 (Ctrl+G)</span>
       </button>
       <button class="context-item" id="ctx-node-ungroup">
-        <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 8h8v8H8zM3 3h4v4H3zM17 17h4v4h-4z"/></svg>
+        <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M8 8h8v8H8zM3 3h4v4H3zM17 17h4v4h-4z" />
+        </svg>
         <span>グループ解除 (Ctrl+Shift+G)</span>
       </button>
       <div class="context-divider"></div>
       <button class="context-item danger" id="ctx-node-delete">
-        <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+        <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+        </svg>
         <span>削除 (Delete)</span>
       </button>
     </div>
@@ -1287,11 +1580,48 @@
         </div>
         <div class="modal-body">
           <label class="modal-label" for="modal-url-input">URL (http:// または https://):</label>
-          <input type="url" id="modal-url-input" class="modal-input" placeholder="https://example.com/..." autocomplete="off" />
+          <input type="url" id="modal-url-input" class="modal-input" placeholder="https://example.com/..."
+            autocomplete="off" />
         </div>
         <div class="modal-footer">
           <button id="btn-cancel-url-modal" class="btn-secondary" style="padding: 6px 12px;">キャンセル</button>
           <button id="btn-save-url-modal" class="btn-primary" style="padding: 6px 14px;">保存する</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 画面全体ドラッグ＆ドロップ案内オーバーレイ -->
+    <div id="drop-overlay" class="drop-overlay hidden">
+      <div class="drop-zone-card">
+        <svg class="drop-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+        <div class="drop-title">画像をドロップして挿入</div>
+        <div class="drop-desc">最前面の図形として配置されます（PNG, JPG, WebP, GIF対応）</div>
+      </div>
+    </div>
+
+    <!-- 画像アップロードモーダルダイアログ（左メニューのimgボタンから開く） -->
+    <div id="image-upload-modal" class="modal-overlay hidden">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3 class="modal-title">画像の挿入</h3>
+          <button id="btn-close-image-modal" class="modal-close-btn" title="閉じる">✕</button>
+        </div>
+        <div class="modal-body">
+          <div id="modal-drop-zone" class="modal-drop-area">
+            <svg class="icon-lg" style="width: 48px; height: 48px; color: #2563eb; margin-bottom: 10px;" fill="none"
+              stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <p style="font-size: 14px; font-weight: 600; color: #1e293b; margin-bottom: 4px;">ここに画像をドラッグ＆ドロップ</p>
+            <p style="font-size: 12px; color: #64748b; margin-bottom: 14px;">または枠内をクリックしてPCから選択</p>
+            <button type="button" class="btn-primary"
+              style="pointer-events: none; padding: 6px 14px; font-size: 12px;">画像ファイルを選択...</button>
+          </div>
+          <input type="file" id="image-file-input" accept="image/*" class="hidden" />
         </div>
       </div>
     </div>
@@ -1316,7 +1646,7 @@
         zoom: 1
       },
       selectedNodeId: null,
-      selectedNodeIds: new Set(), // 複数選択・グループ選択用
+      selectedNodeIds: new Set(),
       selectedEdgeId: null,
       editingNodeId: null,
       searchQuery: '',
@@ -1452,7 +1782,7 @@
             width: 220,
             height: 110,
             text: '1. 要件定義・UI設計\n画面ワイヤーフレーム作成\nhttps://example.com/design-spec',
-            fill: '#ffffff',
+              fill: '#ffffff',
             stroke: '#64748b'
           },
           {
@@ -1463,7 +1793,7 @@
             width: 220,
             height: 110,
             text: '2. フロントエンド実装\nオフライン対応＆ローカル保存\nhttps://github.com/example/app',
-            fill: '#f0fdf4',
+              fill: '#f0fdf4',
             stroke: '#059669'
           },
           {
@@ -1496,7 +1826,7 @@
             width: 200,
             height: 95,
             text: '本番リリース\nマニュアル公開\nhttps://example.com/docs',
-            fill: '#f3e8ff',
+              fill: '#f3e8ff',
             stroke: '#7c3aed'
           },
           {
@@ -1534,46 +1864,123 @@
       }, 2400);
     }
 
-    // localStorage 自動保存
-    function persistToLocalStorage() {
+    // ===== IndexedDB ストレージ管理（大容量対応＆LocalStorage自動フォールバック） =====
+    const DB_NAME = 'CanvasFlowDB';
+    const DB_VERSION = 1;
+    const STORE_NAME = 'diagramStore';
+    const RECORD_KEY = 'current_diagram';
+
+    let dbInstance = null;
+
+    function openDatabase() {
+      if (dbInstance) return Promise.resolve(dbInstance);
+      return new Promise((resolve, reject) => {
+        if (!('indexedDB' in window)) {
+          return reject(new Error('IndexedDB not supported'));
+        }
+        try {
+          const req = indexedDB.open(DB_NAME, DB_VERSION);
+          req.onupgradeneeded = (e) => {
+            const db = e.target.result;
+            if (!db.objectStoreNames.contains(STORE_NAME)) {
+              db.createObjectStore(STORE_NAME);
+            }
+          };
+          req.onsuccess = (e) => {
+            dbInstance = e.target.result;
+            resolve(dbInstance);
+          };
+          req.onerror = () => {
+            reject(req.error || new Error('Failed to open IndexedDB'));
+          };
+        } catch (err) {
+          reject(err);
+        }
+      });
+    }
+
+    async function saveToStorageData(payload) {
       try {
-        const payload = {
-          nodes: state.nodes,
-          edges: state.edges,
-          viewport: state.viewport,
-          updatedAt: new Date().toISOString()
-        };
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
-        const now = new Date();
-        const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-        fileStatusLabel.textContent = `ローカル自動保存 (${timeStr})`;
-      } catch (e) {
-        console.error('LocalStorage保存エラー:', e);
+        const db = await openDatabase();
+        return await new Promise((resolve, reject) => {
+          const tx = db.transaction(STORE_NAME, 'readwrite');
+          const store = tx.objectStore(STORE_NAME);
+          const req = store.put(payload, RECORD_KEY);
+          req.onsuccess = () => resolve(true);
+          req.onerror = () => reject(req.error);
+        });
+      } catch (err) {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+          return true;
+        } catch (e) {
+          console.error('Storage save failed:', e);
+          return false;
+        }
       }
     }
 
-    // localStorage からの復元
-    function loadFromLocalStorage() {
+    async function loadFromStorageData() {
+      try {
+        const db = await openDatabase();
+        const data = await new Promise((resolve, reject) => {
+          const tx = db.transaction(STORE_NAME, 'readonly');
+          const store = tx.objectStore(STORE_NAME);
+          const req = store.get(RECORD_KEY);
+          req.onsuccess = () => resolve(req.result);
+          req.onerror = () => reject(req.error);
+        });
+        if (data && Array.isArray(data.nodes) && Array.isArray(data.edges)) {
+          return data;
+        }
+      } catch (err) { }
+
       try {
         const raw = localStorage.getItem(STORAGE_KEY);
         if (raw) {
           const parsed = JSON.parse(raw);
           if (Array.isArray(parsed.nodes) && Array.isArray(parsed.edges)) {
-            state.nodes = parsed.nodes;
-            state.edges = parsed.edges;
-            if (parsed.viewport) {
-              state.viewport = parsed.viewport;
-            }
-            return true;
+            saveToStorageData(parsed).catch(() => { });
+            return parsed;
           }
         }
       } catch (e) {
-        console.error('LocalStorage読み込みエラー:', e);
+        console.error('LocalStorage fallback read failed:', e);
+      }
+      return null;
+    }
+
+    function persistToLocalStorage() {
+      const payload = {
+        nodes: state.nodes,
+        edges: state.edges,
+        viewport: state.viewport,
+        updatedAt: new Date().toISOString()
+      };
+
+      saveToStorageData(payload).then((success) => {
+        if (success) {
+          const now = new Date();
+          const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+          fileStatusLabel.textContent = `ローカル自動保存 (${timeStr})`;
+        }
+      }).catch(() => { });
+    }
+
+    async function loadFromLocalStorage() {
+      const data = await loadFromStorageData();
+      if (data) {
+        state.nodes = data.nodes;
+        state.edges = data.edges;
+        if (data.viewport) {
+          state.viewport = data.viewport;
+        }
+        return true;
       }
       return false;
     }
 
-    // URL抽出＆サニタイズ（http:// または https:// のみ安全に許可）
+    // URL抽出＆サニタイズ
     function extractSafeUrls(text) {
       if (!text) return [];
       const regex = /https?:\/\/[^\s<>"'()]+/gi;
@@ -1585,9 +1992,7 @@
           if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
             validUrls.push(parsed.href);
           }
-        } catch (_) {
-          // 無効なURLは除外
-        }
+        } catch (_) { }
       }
       return [...new Set(validUrls)];
     }
@@ -1600,7 +2005,6 @@
       return cleaned;
     }
 
-    // ビューポート変換の適用
     function applyViewportTransform() {
       const { x, y, zoom } = state.viewport;
       worldEl.style.transform = `translate(${x}px, ${y}px) scale(${zoom})`;
@@ -1611,7 +2015,6 @@
       renderMinimap();
     }
 
-    // スクリーン座標 -> ワールド座標変換
     function screenToWorld(clientX, clientY) {
       const rect = viewportEl.getBoundingClientRect();
       return {
@@ -1620,18 +2023,16 @@
       };
     }
 
-    // アンカーポイント座標の計算
     function getAnchorPoint(node, anchor = 'right') {
       switch (anchor) {
-        case 'top':    return { x: node.x + node.width / 2, y: node.y };
+        case 'top': return { x: node.x + node.width / 2, y: node.y };
         case 'bottom': return { x: node.x + node.width / 2, y: node.y + node.height };
-        case 'left':   return { x: node.x, y: node.y + node.height / 2 };
+        case 'left': return { x: node.x, y: node.y + node.height / 2 };
         case 'right':
-        default:       return { x: node.x + node.width, y: node.y + node.height / 2 };
+        default: return { x: node.x + node.width, y: node.y + node.height / 2 };
       }
     }
 
-    // 2つのノード間で最も近いアンカーペアを自動判定
     function findClosestAnchor(targetNode, worldX, worldY) {
       const anchors = ['top', 'right', 'bottom', 'left'];
       let bestAnchor = 'left';
@@ -1647,7 +2048,6 @@
       return bestAnchor;
     }
 
-    // 接続線パス文字列の生成
     function buildEdgePath(p1, a1, p2, a2, style = 'bezier') {
       if (style === 'straight') {
         return `M ${p1.x} ${p1.y} L ${p2.x} ${p2.y}`;
@@ -1655,11 +2055,11 @@
       const dist = Math.max(45, Math.hypot(p2.x - p1.x, p2.y - p1.y) * 0.4);
       const offset = (anchor) => {
         switch (anchor) {
-          case 'top':    return { dx: 0, dy: -dist };
+          case 'top': return { dx: 0, dy: -dist };
           case 'bottom': return { dx: 0, dy: dist };
-          case 'left':   return { dx: -dist, dy: 0 };
-          case 'right':  return { dx: dist, dy: 0 };
-          default:       return { dx: 0, dy: 0 };
+          case 'left': return { dx: -dist, dy: 0 };
+          case 'right': return { dx: dist, dy: 0 };
+          default: return { dx: 0, dy: 0 };
         }
       };
       const o1 = offset(a1);
@@ -1667,7 +2067,6 @@
       return `M ${p1.x} ${p1.y} C ${p1.x + o1.dx} ${p1.y + o1.dy}, ${p2.x + o2.dx} ${p2.y + o2.dy}, ${p2.x} ${p2.y}`;
     }
 
-    // すべての接続線を描画
     function renderEdges() {
       const nodeMap = new Map(state.nodes.map(n => [n.id, n]));
       edgesContainer.innerHTML = '';
@@ -1708,7 +2107,6 @@
       }
     }
 
-    // すべての図形・ノードを描画
     function renderNodes() {
       nodesContainer.innerHTML = '';
       const matchedSet = new Set(state.searchMatches);
@@ -1728,7 +2126,25 @@
         el.style.width = `${node.width}px`;
         el.style.height = `${node.height}px`;
 
-        if (node.type === 'diamond') {
+        if (node.type === 'image') {
+          el.classList.add('image-node');
+          el.style.backgroundColor = 'transparent';
+          if (node.stroke && node.stroke !== 'transparent') {
+            el.style.border = `2px solid ${node.stroke}`;
+          } else {
+            el.style.border = isSelected ? '1px dashed #2563eb' : '2px solid transparent';
+          }
+          el.style.boxShadow = '0 4px 14px rgba(15, 23, 42, 0.08)';
+          el.style.borderRadius = '6px';
+          el.style.overflow = 'hidden';
+
+          const img = document.createElement('img');
+          img.className = 'node-image';
+          img.src = node.src;
+          img.alt = node.alt || '画像';
+          img.draggable = false;
+          el.appendChild(img);
+        } else if (node.type === 'diamond') {
           el.style.backgroundColor = 'transparent';
           const svgBg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
           svgBg.setAttribute('viewBox', '0 0 100 100');
@@ -1767,81 +2183,81 @@
           }
         }
 
-        const content = document.createElement('div');
-        content.className = 'node-content';
-        if (node.type === 'diamond') {
-          content.style.padding = '16px 26px';
-        }
+        if (node.type !== 'image') {
+          const content = document.createElement('div');
+          content.className = 'node-content';
+          if (node.type === 'diamond') {
+            content.style.padding = '16px 26px';
+          }
 
-        if (isEditing) {
-          const textarea = document.createElement('textarea');
-          textarea.className = 'node-textarea';
-          textarea.value = node.text || '';
-          textarea.placeholder = 'テキストやURLを入力...';
-          textarea.addEventListener('pointerdown', (e) => e.stopPropagation());
-          textarea.addEventListener('keydown', (e) => {
-            e.stopPropagation();
-            if (e.key === 'Escape' || (e.key === 'Enter' && (e.ctrlKey || e.metaKey))) {
+          if (isEditing) {
+            const textarea = document.createElement('textarea');
+            textarea.className = 'node-textarea';
+            textarea.value = node.text || '';
+            textarea.placeholder = 'テキストやURLを入力...';
+            textarea.addEventListener('pointerdown', (e) => e.stopPropagation());
+            textarea.addEventListener('keydown', (e) => {
+              e.stopPropagation();
+              if (e.key === 'Escape' || (e.key === 'Enter' && (e.ctrlKey || e.metaKey))) {
+                finishEditingNode(node.id, textarea.value);
+              }
+            });
+            textarea.addEventListener('blur', () => {
               finishEditingNode(node.id, textarea.value);
+            });
+            content.appendChild(textarea);
+            setTimeout(() => {
+              textarea.focus();
+              textarea.select();
+            }, 10);
+          } else {
+            const textDiv = document.createElement('div');
+            textDiv.className = 'node-text-display';
+            const displayText = getTextWithoutUrls(node.text);
+            textDiv.textContent = displayText || '';
+            if (displayText) {
+              content.appendChild(textDiv);
             }
-          });
-          textarea.addEventListener('blur', () => {
-            finishEditingNode(node.id, textarea.value);
-          });
-          content.appendChild(textarea);
-          setTimeout(() => {
-            textarea.focus();
-            textarea.select();
-          }, 10);
-        } else {
-          const textDiv = document.createElement('div');
-          textDiv.className = 'node-text-display';
-          const displayText = getTextWithoutUrls(node.text);
-          textDiv.textContent = displayText || '';
-          if (displayText) {
-            content.appendChild(textDiv);
+
+            const urls = extractSafeUrls(node.text);
+            if (urls.length > 0) {
+              const linksWrap = document.createElement('div');
+              linksWrap.className = 'node-links';
+              for (const url of urls) {
+                const badge = document.createElement('div');
+                badge.className = 'url-badge-item';
+
+                const a = document.createElement('a');
+                a.href = url;
+                a.target = '_blank';
+                a.rel = 'noopener noreferrer';
+                a.className = 'url-link';
+                a.title = `新しいタブで開く: ${url}`;
+                const displayHost = url.replace(/^https?:\/\//, '');
+                a.innerHTML = `<svg class="url-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg><span>${escapeHtml(displayHost)}</span>`;
+                a.addEventListener('pointerdown', (e) => e.stopPropagation());
+                a.addEventListener('click', (e) => e.stopPropagation());
+
+                const dotsBtn = document.createElement('button');
+                dotsBtn.className = 'url-dots-btn';
+                dotsBtn.title = 'リンクを編集・操作';
+                dotsBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor" style="width:14px;height:14px;"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>`;
+                dotsBtn.addEventListener('pointerdown', (e) => e.stopPropagation());
+                dotsBtn.addEventListener('click', (e) => {
+                  e.stopPropagation();
+                  openUrlMenu(e, node.id, url);
+                });
+
+                badge.appendChild(a);
+                badge.appendChild(dotsBtn);
+                linksWrap.appendChild(badge);
+              }
+              content.appendChild(linksWrap);
+            }
           }
 
-          const urls = extractSafeUrls(node.text);
-          if (urls.length > 0) {
-            const linksWrap = document.createElement('div');
-            linksWrap.className = 'node-links';
-            for (const url of urls) {
-              const badge = document.createElement('div');
-              badge.className = 'url-badge-item';
-
-              // リンク部分（クリックで安全に別タブ遷移）
-              const a = document.createElement('a');
-              a.href = url;
-              a.target = '_blank';
-              a.rel = 'noopener noreferrer';
-              a.className = 'url-link';
-              a.title = `新しいタブで開く: ${url}`;
-              const displayHost = url.replace(/^https?:\/\//, '');
-              a.innerHTML = `<svg class="url-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg><span>${escapeHtml(displayHost)}</span>`;
-              a.addEventListener('pointerdown', (e) => e.stopPropagation());
-              a.addEventListener('click', (e) => e.stopPropagation());
-
-              // 縦3点ドットボタン（クリックでリンク編集・操作メニューを開く）
-              const dotsBtn = document.createElement('button');
-              dotsBtn.className = 'url-dots-btn';
-              dotsBtn.title = 'リンクを編集・操作';
-              dotsBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor" style="width:14px;height:14px;"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>`;
-              dotsBtn.addEventListener('pointerdown', (e) => e.stopPropagation());
-              dotsBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                openUrlMenu(e, node.id, url);
-              });
-
-              badge.appendChild(a);
-              badge.appendChild(dotsBtn);
-              linksWrap.appendChild(badge);
-            }
-            content.appendChild(linksWrap);
-          }
+          el.appendChild(content);
         }
-
-        el.appendChild(content);
 
         ['top', 'right', 'bottom', 'left'].forEach(pos => {
           const anchor = document.createElement('div');
@@ -1863,7 +2279,6 @@
         });
         el.appendChild(resizer);
 
-        // ダブルクリック判定用変数
         let lastClickTime = 0;
         let lastClickPos = { x: 0, y: 0 };
 
@@ -1873,16 +2288,17 @@
 
           e.stopPropagation();
 
-          // 独自ダブルクリック判定（ブラウザネイティブと併用し100%確実に編集開始）
-          const now = Date.now();
-          const dist = Math.hypot(e.clientX - lastClickPos.x, e.clientY - lastClickPos.y);
-          if (now - lastClickTime < 350 && dist < 12) {
-            startEditingNode(node.id);
-            lastClickTime = 0;
-            return;
+          if (node.type !== 'image') {
+            const now = Date.now();
+            const dist = Math.hypot(e.clientX - lastClickPos.x, e.clientY - lastClickPos.y);
+            if (now - lastClickTime < 350 && dist < 12) {
+              startEditingNode(node.id);
+              lastClickTime = 0;
+              return;
+            }
+            lastClickTime = now;
+            lastClickPos = { x: e.clientX, y: e.clientY };
           }
-          lastClickTime = now;
-          lastClickPos = { x: e.clientX, y: e.clientY };
 
           const isMulti = e.shiftKey || e.ctrlKey || e.metaKey;
           selectNode(node.id, isMulti);
@@ -1890,12 +2306,12 @@
         });
 
         el.addEventListener('dblclick', (e) => {
+          if (node.type === 'image') return;
           if (e.target.closest('.url-badge-item, .anchor-handle, .resize-handle, button, a')) return;
           e.stopPropagation();
           startEditingNode(node.id);
         });
 
-        // 右クリックでコンテキストメニュー表示（最前面／最背面／グループ化／削除）
         el.addEventListener('contextmenu', (e) => {
           if (e.target.closest('.url-badge-item, .anchor-handle, .resize-handle')) return;
           e.preventDefault();
@@ -1930,7 +2346,6 @@
         nodeProps.classList.remove('hidden');
         edgeProps.classList.add('hidden');
 
-        // グループ化ボタン（2つ以上の図形が選択されている場合に表示）
         if (btnGroupNodes) {
           if (state.selectedNodeIds.size >= 2) {
             btnGroupNodes.classList.remove('hidden');
@@ -1939,7 +2354,6 @@
           }
         }
 
-        // グループ解除ボタン（選択中にgroupIdを持つ図形が含まれている場合に表示）
         if (btnUngroupNodes) {
           const hasGrouped = state.nodes.some(n => state.selectedNodeIds.has(n.id) && n.groupId);
           if (hasGrouped) {
@@ -1962,14 +2376,12 @@
       }
     }
 
-    // パワーポイント準拠の図形選択（単一・複数・グループ連動）
     function selectNode(nodeId, isMultiSelect = false) {
       state.selectedEdgeId = null;
       const clickedNode = state.nodes.find(n => n.id === nodeId);
       if (!clickedNode) return;
 
       if (isMultiSelect) {
-        // Shift / Ctrl / Cmd クリックでの複数選択トグル
         if (state.selectedNodeIds.has(nodeId)) {
           if (clickedNode.groupId) {
             const groupNodeIds = state.nodes.filter(n => n.groupId === clickedNode.groupId).map(n => n.id);
@@ -1986,22 +2398,18 @@
           }
         }
       } else {
-        // 通常クリック
         if (clickedNode.groupId) {
           const groupNodeIds = state.nodes.filter(n => n.groupId === clickedNode.groupId).map(n => n.id);
           const allGroupSelected = groupNodeIds.every(id => state.selectedNodeIds.has(id)) && state.selectedNodeIds.size === groupNodeIds.length;
 
           if (allGroupSelected) {
-            // パワポ仕様：グループ選択中に同じ図形を再度クリックした場合は個別図形を選択
             state.selectedNodeIds.clear();
             state.selectedNodeIds.add(nodeId);
           } else {
-            // グループ全体を一括選択
             state.selectedNodeIds.clear();
             groupNodeIds.forEach(id => state.selectedNodeIds.add(id));
           }
         } else {
-          // 単体図形選択
           state.selectedNodeIds.clear();
           state.selectedNodeIds.add(nodeId);
         }
@@ -2009,7 +2417,6 @@
 
       state.selectedNodeId = state.selectedNodeIds.values().next().value || null;
 
-      // DOM上のselectedクラスを同期
       document.querySelectorAll('.diagram-node').forEach(el => {
         if (state.selectedNodeIds.has(el.dataset.nodeId)) {
           el.classList.add('selected');
@@ -2021,7 +2428,6 @@
       updatePropertyBar();
     }
 
-    // 複数図形の一括選択（範囲選択用）
     function selectNodes(nodeIds) {
       state.selectedEdgeId = null;
       state.selectedNodeIds.clear();
@@ -2062,7 +2468,6 @@
       updatePropertyBar();
     }
 
-    // 図形同士のグループ化 (Ctrl+G / Cmd+G)
     function groupSelectedNodes() {
       const selectedIds = Array.from(state.selectedNodeIds);
       if (selectedIds.length < 2) {
@@ -2082,7 +2487,6 @@
       showToast(`${selectedIds.length}個の図形をグループ化しました (Ctrl+G)`);
     }
 
-    // グループ解除 (Ctrl+Shift+G / Cmd+Shift+G)
     function ungroupSelectedNodes() {
       const selectedIds = Array.from(state.selectedNodeIds);
       const groupedNodes = state.nodes.filter(n => selectedIds.includes(n.id) && n.groupId);
@@ -2092,11 +2496,9 @@
       }
       pushHistory();
       const groupIdsToClear = new Set(groupedNodes.map(n => n.groupId));
-      let count = 0;
       for (const node of state.nodes) {
         if (node.groupId && groupIdsToClear.has(node.groupId)) {
           delete node.groupId;
-          count++;
         }
       }
       renderNodes();
@@ -2104,7 +2506,6 @@
       showToast('グループを解除しました (Ctrl+Shift+G)');
     }
 
-    // ===== レイヤー順序変更（最前面／最背面移動：パワポ準拠） =====
     function bringToFront() {
       const selectedIds = new Set(state.selectedNodeIds);
       if (selectedIds.size === 0 && state.selectedNodeId) {
@@ -2157,7 +2558,6 @@
       showToast('最背面へ移動しました');
     }
 
-    // ===== オブジェクト（図形）右クリックメニュー制御 =====
     const nodeContextMenu = document.getElementById('node-context-menu');
 
     function openNodeContextMenu(e, nodeId) {
@@ -2192,6 +2592,8 @@
     }
 
     function startEditingNode(nodeId) {
+      const node = state.nodes.find(n => n.id === nodeId);
+      if (!node || node.type === 'image') return;
       state.editingNodeId = nodeId;
       state.selectedNodeId = nodeId;
       state.selectedNodeIds.clear();
@@ -2306,12 +2708,12 @@
       const centerWorld = customWorldPos || screenToWorld(rect.left + rect.width / 2, rect.top + rect.height / 2);
 
       const presets = {
-        rect:      { w: 180, h: 90,  fill: '#ffffff', stroke: '#64748b', text: '新しい四角形' },
-        roundRect: { w: 190, h: 90,  fill: '#eff6ff', stroke: '#2563eb', text: '新しいステップ' },
-        ellipse:   { w: 170, h: 100, fill: '#f0fdf4', stroke: '#059669', text: '開始 / 終了' },
-        diamond:   { w: 170, h: 110, fill: '#fef9c3', stroke: '#d97706', text: '条件分岐？' },
-        sticky:    { w: 180, h: 110, fill: '#fef9c3', stroke: '#eab308', text: '付箋メモ' },
-        text:      { w: 200, h: 64,  fill: 'transparent', stroke: 'transparent', text: 'テキストを入力' }
+        rect: { w: 180, h: 90, fill: '#ffffff', stroke: '#64748b', text: '新しい四角形' },
+        roundRect: { w: 190, h: 90, fill: '#eff6ff', stroke: '#2563eb', text: '新しいステップ' },
+        ellipse: { w: 170, h: 100, fill: '#f0fdf4', stroke: '#059669', text: '開始 / 終了' },
+        diamond: { w: 170, h: 110, fill: '#fef9c3', stroke: '#d97706', text: '条件分岐？' },
+        sticky: { w: 180, h: 110, fill: '#fef9c3', stroke: '#eab308', text: '付箋メモ' },
+        text: { w: 200, h: 64, fill: 'transparent', stroke: 'transparent', text: 'テキストを入力' }
       };
       const p = presets[type] || presets.rect;
       const jitter = customWorldPos ? 0 : (state.nodes.length % 5) * 18;
@@ -2330,6 +2732,8 @@
 
       state.nodes.push(newNode);
       state.selectedNodeId = newNode.id;
+      state.selectedNodeIds.clear();
+      state.selectedNodeIds.add(newNode.id);
       state.selectedEdgeId = null;
       renderAll();
       persistToLocalStorage();
@@ -2338,17 +2742,244 @@
       }
     }
 
+    // ===== 画像ファイルの読み込み＆最前面配置 =====
+    function processImageFile(file, customWorldPos = null) {
+      if (!file || !file.type.startsWith('image/')) {
+        showToast('画像ファイル (PNG, JPG, WebP, GIF等) を選択してください');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const rawDataUrl = e.target.result;
+        const img = new Image();
+        img.onload = () => {
+          const maxDim = 1200;
+          let w = img.naturalWidth || img.width;
+          let h = img.naturalHeight || img.height;
+          if (w > maxDim || h > maxDim) {
+            if (w > h) {
+              h = Math.round((h * maxDim) / w);
+              w = maxDim;
+            } else {
+              w = Math.round((w * maxDim) / h);
+              h = maxDim;
+            }
+          }
+
+          const canvas = document.createElement('canvas');
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+
+          const isPng = file.type === 'image/png' || file.type === 'image/gif';
+          const outputType = isPng ? 'image/png' : 'image/jpeg';
+          const compressedDataUrl = canvas.toDataURL(outputType, 0.85);
+
+          const initialW = 240;
+          const initialH = Math.max(60, Math.round((initialW * h) / w));
+
+          const rect = viewportEl.getBoundingClientRect();
+          const centerWorld = customWorldPos || screenToWorld(rect.left + rect.width / 2, rect.top + rect.height / 2);
+
+          const newNode = {
+            id: 'node_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+            type: 'image',
+            x: Math.round(centerWorld.x - initialW / 2),
+            y: Math.round(centerWorld.y - initialH / 2),
+            width: initialW,
+            height: initialH,
+            src: compressedDataUrl,
+            alt: file.name || '画像',
+            fill: 'transparent',
+            stroke: 'transparent'
+          };
+
+          pushHistory();
+          // 配列末尾にpushすることで自動的に最前面レイヤーに配置
+          state.nodes.push(newNode);
+          state.selectedNodeId = newNode.id;
+          state.selectedNodeIds.clear();
+          state.selectedNodeIds.add(newNode.id);
+          state.selectedEdgeId = null;
+
+          renderAll();
+          persistToLocalStorage();
+          showToast(`画像「${file.name}」を最前面に配置しました`);
+        };
+        img.onerror = () => {
+          showToast('画像の読み込みに失敗しました');
+        };
+        img.src = rawDataUrl;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // ===== 画像アップロード（画面全体ドラッグ＆ドロップ ＋ 左メニューimgモーダル） =====
+    const dropOverlay = document.getElementById('drop-overlay');
+    const imageUploadModal = document.getElementById('image-upload-modal');
+    const modalDropZone = document.getElementById('modal-drop-zone');
+    const imageFileInput = document.getElementById('image-file-input');
+
+    function openImageUploadModal() {
+      if (imageUploadModal) imageUploadModal.classList.remove('hidden');
+    }
+
+    function closeImageUploadModal() {
+      if (imageUploadModal) imageUploadModal.classList.add('hidden');
+      if (modalDropZone) modalDropZone.classList.remove('drag-over');
+    }
+
+    // 左メニュー「img」ボタンクリック時
+    const btnAddImage = document.getElementById('btn-add-image');
+    if (btnAddImage) {
+      btnAddImage.addEventListener('click', openImageUploadModal);
+    }
+
+    const btnCloseImageModal = document.getElementById('btn-close-image-modal');
+    if (btnCloseImageModal) {
+      btnCloseImageModal.addEventListener('click', closeImageUploadModal);
+    }
+
+    if (imageUploadModal) {
+      imageUploadModal.addEventListener('pointerdown', (e) => {
+        if (e.target === imageUploadModal) closeImageUploadModal();
+      });
+    }
+
+    // モーダル内のドロップエリアクリックでファイル選択ダイアログを開く
+    if (modalDropZone && imageFileInput) {
+      modalDropZone.addEventListener('click', () => {
+        imageFileInput.click();
+      });
+
+      modalDropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        modalDropZone.classList.add('drag-over');
+      });
+
+      modalDropZone.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        modalDropZone.classList.remove('drag-over');
+      });
+
+      modalDropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        modalDropZone.classList.remove('drag-over');
+        if (dropOverlay) dropOverlay.classList.add('hidden');
+        dragDepth = 0;
+
+        const files = e.dataTransfer ? Array.from(e.dataTransfer.files) : [];
+        const imgFiles = files.filter(f => f.type.startsWith('image/'));
+        if (imgFiles.length > 0) {
+          closeImageUploadModal();
+          imgFiles.forEach((file, idx) => {
+            const rect = viewportEl.getBoundingClientRect();
+            const center = screenToWorld(rect.left + rect.width / 2, rect.top + rect.height / 2);
+            processImageFile(file, { x: center.x + idx * 24, y: center.y + idx * 24 });
+          });
+        } else {
+          showToast('画像ファイルを選択してください');
+        }
+      });
+
+      imageFileInput.addEventListener('change', (e) => {
+        const files = e.target.files ? Array.from(e.target.files) : [];
+        if (files.length > 0) {
+          closeImageUploadModal();
+          files.forEach((file, idx) => {
+            const rect = viewportEl.getBoundingClientRect();
+            const center = screenToWorld(rect.left + rect.width / 2, rect.top + rect.height / 2);
+            processImageFile(file, { x: center.x + idx * 24, y: center.y + idx * 24 });
+          });
+        }
+        e.target.value = '';
+      });
+    }
+
+    // 画面全体へのドラッグ＆ドロップ検知
+    let dragDepth = 0;
+    function hasFileTransfer(e) {
+      return e.dataTransfer && Array.from(e.dataTransfer.types || []).includes('Files');
+    }
+
+    window.addEventListener('dragenter', (e) => {
+      if (!hasFileTransfer(e)) return;
+      e.preventDefault();
+      dragDepth++;
+      // 画像モーダルが開いていない場合は画面全体オーバーレイを表示
+      if (imageUploadModal && imageUploadModal.classList.contains('hidden')) {
+        if (dropOverlay) dropOverlay.classList.remove('hidden');
+      }
+    });
+
+    window.addEventListener('dragover', (e) => {
+      if (!hasFileTransfer(e)) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'copy';
+    });
+
+    window.addEventListener('dragleave', (e) => {
+      if (!hasFileTransfer(e)) return;
+      e.preventDefault();
+      dragDepth = Math.max(0, dragDepth - 1);
+      if (dragDepth === 0 && dropOverlay) {
+        dropOverlay.classList.add('hidden');
+      }
+    });
+
+    window.addEventListener('drop', (e) => {
+      if (!hasFileTransfer(e)) return;
+      e.preventDefault();
+      dragDepth = 0;
+      if (dropOverlay) dropOverlay.classList.add('hidden');
+      closeImageUploadModal();
+
+      const files = e.dataTransfer ? Array.from(e.dataTransfer.files) : [];
+      const imgFiles = files.filter(f => f.type.startsWith('image/'));
+      if (imgFiles.length > 0) {
+        const dropWorldPos = screenToWorld(e.clientX, e.clientY);
+        imgFiles.forEach((file, idx) => {
+          processImageFile(file, {
+            x: dropWorldPos.x + idx * 24,
+            y: dropWorldPos.y + idx * 24
+          });
+        });
+      } else if (files.length > 0) {
+        showToast('画像ファイル (PNG, JPG, WebP, GIF等) のみドロップできます');
+      }
+    });
+
+    // クリップボードからの画像貼り付け (Ctrl+V / Cmd+V) にも対応
+    window.addEventListener('paste', (e) => {
+      if (state.editingNodeId) return;
+      const activeTag = document.activeElement ? document.activeElement.tagName : '';
+      if (activeTag === 'INPUT' || activeTag === 'TEXTAREA') return;
+
+      const items = e.clipboardData ? Array.from(e.clipboardData.items || []) : [];
+      const imageItem = items.find(item => item.type.startsWith('image/'));
+      if (imageItem) {
+        const file = imageItem.getAsFile();
+        if (file) {
+          e.preventDefault();
+          processImageFile(file);
+        }
+      }
+    });
+
     function startDraggingNode(nodeId, e) {
       const node = state.nodes.find(n => n.id === nodeId);
       if (!node) return;
 
-      // ドラッグ対象が選択ノードに含まれていなければ選択に追加
       if (!state.selectedNodeIds.has(nodeId)) {
         state.selectedNodeIds.add(nodeId);
         state.selectedNodeId = nodeId;
       }
 
-      // 選択中のすべてのノードを同時にドラッグ移動する
       const dragNodes = [];
       for (const nid of state.selectedNodeIds) {
         const n = state.nodes.find(x => x.id === nid);
@@ -2399,7 +3030,6 @@
 
       const worldPos = screenToWorld(e.clientX, e.clientY);
       if (e.shiftKey) {
-        // Shift + ドラッグ：パワーポイント風ラバーバンド範囲選択
         interaction = {
           mode: 'marquee',
           startX: e.clientX,
@@ -2458,7 +3088,6 @@
         renderEdges();
         renderMinimap();
       } else if (interaction.mode === 'marquee') {
-        // ラバーバンド範囲選択の更新
         const curWorld = screenToWorld(e.clientX, e.clientY);
         const x1 = Math.min(interaction.worldStartX, curWorld.x);
         const y1 = Math.min(interaction.worldStartY, curWorld.y);
@@ -2492,8 +3121,8 @@
         if (!node) return;
         const dx = (e.clientX - interaction.startX) / state.viewport.zoom;
         const dy = (e.clientY - interaction.startY) / state.viewport.zoom;
-        node.width = Math.max(80, Math.round(interaction.origW + dx));
-        node.height = Math.max(44, Math.round(interaction.origH + dy));
+        node.width = Math.max(40, Math.round(interaction.origW + dx));
+        node.height = Math.max(30, Math.round(interaction.origH + dy));
 
         const nodeEl = nodesContainer.querySelector(`[data-node-id="${node.id}"]`);
         if (nodeEl) {
@@ -2750,7 +3379,10 @@
         return;
       }
 
-      const matches = state.nodes.filter(n => (n.text || '').toLowerCase().includes(state.searchQuery));
+      const matches = state.nodes.filter(n => {
+        const searchable = `${n.text || ''} ${n.alt || ''}`.toLowerCase();
+        return searchable.includes(state.searchQuery);
+      });
       state.searchMatches = matches.map(n => n.id);
       state.searchMatchIndex = 0;
 
@@ -2763,7 +3395,8 @@
         matches.forEach((m, idx) => {
           const item = document.createElement('button');
           item.className = 'search-dropdown-item';
-          const previewText = (m.text || '').replace(/\n/g, ' ').slice(0, 48) || '(空の図形)';
+          const rawLabel = m.type === 'image' ? `[画像] ${m.alt || '画像'}` : (m.text || '').replace(/\n/g, ' ');
+          const previewText = rawLabel.slice(0, 48) || '(空の図形)';
           item.innerHTML = `<span class="search-item-text">${escapeHtml(previewText)}</span><span class="search-item-hint">移動 ↵</span>`;
           item.addEventListener('click', () => {
             state.searchMatchIndex = idx;
@@ -2894,6 +3527,7 @@
           state.viewport = parsed.viewport;
         }
         state.selectedNodeId = null;
+        state.selectedNodeIds.clear();
         state.selectedEdgeId = null;
         state.editingNodeId = null;
         state.fileHandle = handle;
@@ -2935,6 +3569,7 @@
       state.edges = sample.edges;
       state.viewport = sample.viewport;
       state.selectedNodeId = null;
+      state.selectedNodeIds.clear();
       state.selectedEdgeId = null;
       state.fileHandle = null;
       renderAll();
@@ -3000,7 +3635,6 @@
       }
     });
 
-    // グループ化・グループ解除ボタン登録
     document.getElementById('btn-group-nodes').addEventListener('click', groupSelectedNodes);
     document.getElementById('btn-ungroup-nodes').addEventListener('click', ungroupSelectedNodes);
 
@@ -3022,7 +3656,6 @@
       persistToLocalStorage();
     });
 
-    // 選択中の要素（複数図形／グループ／接続線）の一括削除
     function deleteSelectedElement() {
       if (state.editingNodeId) return;
       const targetIds = new Set(state.selectedNodeIds);
@@ -3069,13 +3702,11 @@
       }
     });
 
-    // レイヤー順序ボタン（プロパティバー）
     const btnBringFront = document.getElementById('btn-bring-front');
     if (btnBringFront) btnBringFront.addEventListener('click', bringToFront);
     const btnSendBack = document.getElementById('btn-send-back');
     if (btnSendBack) btnSendBack.addEventListener('click', sendToBack);
 
-    // オブジェクトコンテキストメニュー操作
     const ctxBringFront = document.getElementById('ctx-bring-front');
     if (ctxBringFront) ctxBringFront.addEventListener('click', () => { closeNodeContextMenu(); bringToFront(); });
     const ctxSendBack = document.getElementById('ctx-send-back');
@@ -3087,7 +3718,6 @@
     const ctxNodeDelete = document.getElementById('ctx-node-delete');
     if (ctxNodeDelete) ctxNodeDelete.addEventListener('click', () => { closeNodeContextMenu(); deleteSelectedElement(); });
 
-    // 画面外クリックでメニューを閉じる
     window.addEventListener('pointerdown', (e) => {
       if (urlContextMenu && !urlContextMenu.contains(e.target) && !e.target.closest('.url-dots-btn')) {
         closeUrlMenu();
@@ -3099,6 +3729,13 @@
 
     // キーボードショートカット
     window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeImageUploadModal();
+        closeUrlEditModal();
+        closeUrlMenu();
+        closeNodeContextMenu();
+      }
+
       if (state.editingNodeId) return;
       const activeTag = document.activeElement ? document.activeElement.tagName : '';
       if (activeTag === 'INPUT' || activeTag === 'TEXTAREA') return;
@@ -3106,7 +3743,6 @@
       const isMod = e.ctrlKey || e.metaKey;
       const key = e.key.toLowerCase();
 
-      // パワポ風グループ化 (Ctrl+G / Cmd+G) & 解除 (Ctrl+Shift+G / Cmd+Shift+G)
       if (isMod && key === 'g') {
         e.preventDefault();
         if (e.shiftKey) {
@@ -3137,8 +3773,8 @@
 
     window.addEventListener('resize', renderMinimap);
 
-    window.addEventListener('DOMContentLoaded', () => {
-      const restored = loadFromLocalStorage();
+    window.addEventListener('DOMContentLoaded', async () => {
+      const restored = await loadFromLocalStorage();
       if (!restored) {
         const sample = getSampleData();
         state.nodes = sample.nodes;
@@ -3151,4 +3787,5 @@
     });
   </script>
 </body>
+
 </html>
