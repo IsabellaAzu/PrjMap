@@ -799,11 +799,12 @@
       position: fixed;
       inset: 0;
       z-index: 300;
-      background-color: rgba(37, 99, 235, 0.45);
-      backdrop-filter: blur(5px);
+      background-color: rgba(15, 23, 42, 0.42);
+      backdrop-filter: blur(6px);
       display: flex;
       align-items: center;
       justify-content: center;
+      padding: 24px;
       pointer-events: auto;
       animation: menuFadeIn 0.15s ease;
     }
@@ -811,15 +812,25 @@
     .drop-zone-card {
       background: #ffffff;
       border: 3px dashed #2563eb;
-      border-radius: 20px;
-      padding: 44px 64px;
+      border-radius: 24px;
+      padding: 48px 64px;
+      max-width: 520px;
+      width: 100%;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25);
-      pointer-events: none;
+      text-align: center;
+      box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.28);
+      pointer-events: auto;
       transform: scale(1.02);
+      transition: transform 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+    }
+
+    .drop-zone-card.drag-hover {
+      background-color: #eff6ff;
+      border-color: #1d4ed8;
+      transform: scale(1.04);
     }
 
     .drop-icon {
@@ -1591,14 +1602,14 @@
     </div>
 
     <!-- 画面全体ドラッグ＆ドロップ案内オーバーレイ -->
-    <div id="drop-overlay" class="drop-overlay hidden">
-      <div class="drop-zone-card">
+    <div id="drop-overlay" class="drop-overlay hidden" aria-hidden="true">
+      <div id="drop-zone-card" class="drop-zone-card">
         <svg class="drop-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round"
             d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
         </svg>
-        <div class="drop-title">画像をドロップして挿入</div>
-        <div class="drop-desc">最前面の図形として配置されます（PNG, JPG, WebP, GIF対応）</div>
+        <div class="drop-title">ここに画像をドロップして追加</div>
+        <div class="drop-desc">ドラッグ＆ドロップ専用レイヤー・最前面の図形として配置されます（PNG, JPG, WebP, GIF対応）</div>
       </div>
     </div>
 
@@ -2400,15 +2411,8 @@
       } else {
         if (clickedNode.groupId) {
           const groupNodeIds = state.nodes.filter(n => n.groupId === clickedNode.groupId).map(n => n.id);
-          const allGroupSelected = groupNodeIds.every(id => state.selectedNodeIds.has(id)) && state.selectedNodeIds.size === groupNodeIds.length;
-
-          if (allGroupSelected) {
-            state.selectedNodeIds.clear();
-            state.selectedNodeIds.add(nodeId);
-          } else {
-            state.selectedNodeIds.clear();
-            groupNodeIds.forEach(id => state.selectedNodeIds.add(id));
-          }
+          state.selectedNodeIds.clear();
+          groupNodeIds.forEach(id => state.selectedNodeIds.add(id));
         } else {
           state.selectedNodeIds.clear();
           state.selectedNodeIds.add(nodeId);
@@ -2901,19 +2905,40 @@
       });
     }
 
-    // 画面全体へのドラッグ＆ドロップ検知
+    // 画面全体へのドラッグ＆ドロップ検知（ドラッグ時に専用レイヤーを自動表示）
+    const dropZoneCard = document.getElementById('drop-zone-card');
     let dragDepth = 0;
+
     function hasFileTransfer(e) {
-      return e.dataTransfer && Array.from(e.dataTransfer.types || []).includes('Files');
+      if (!e.dataTransfer) return false;
+      const types = Array.from(e.dataTransfer.types || []);
+      if (types.includes('Files')) return true;
+      return e.dataTransfer.items && Array.from(e.dataTransfer.items).some(it => it.kind === 'file');
+    }
+
+    function showDropLayer() {
+      if (dropOverlay) {
+        dropOverlay.classList.remove('hidden');
+        dropOverlay.setAttribute('aria-hidden', 'false');
+      }
+    }
+
+    function hideDropLayer() {
+      if (dropOverlay) {
+        dropOverlay.classList.add('hidden');
+        dropOverlay.setAttribute('aria-hidden', 'true');
+      }
+      if (dropZoneCard) {
+        dropZoneCard.classList.remove('drag-hover');
+      }
     }
 
     window.addEventListener('dragenter', (e) => {
       if (!hasFileTransfer(e)) return;
       e.preventDefault();
       dragDepth++;
-      // 画像モーダルが開いていない場合は画面全体オーバーレイを表示
       if (imageUploadModal && imageUploadModal.classList.contains('hidden')) {
-        if (dropOverlay) dropOverlay.classList.remove('hidden');
+        showDropLayer();
       }
     });
 
@@ -2921,14 +2946,26 @@
       if (!hasFileTransfer(e)) return;
       e.preventDefault();
       e.dataTransfer.dropEffect = 'copy';
+      if (imageUploadModal && imageUploadModal.classList.contains('hidden')) {
+        showDropLayer();
+      }
+      if (dropZoneCard) {
+        const target = e.target;
+        if (target && (target === dropZoneCard || dropZoneCard.contains(target))) {
+          dropZoneCard.classList.add('drag-hover');
+        } else {
+          dropZoneCard.classList.remove('drag-hover');
+        }
+      }
     });
 
     window.addEventListener('dragleave', (e) => {
       if (!hasFileTransfer(e)) return;
       e.preventDefault();
       dragDepth = Math.max(0, dragDepth - 1);
-      if (dragDepth === 0 && dropOverlay) {
-        dropOverlay.classList.add('hidden');
+      if (dragDepth === 0 || (e.clientX <= 0 && e.clientY <= 0)) {
+        dragDepth = 0;
+        hideDropLayer();
       }
     });
 
@@ -2936,7 +2973,7 @@
       if (!hasFileTransfer(e)) return;
       e.preventDefault();
       dragDepth = 0;
-      if (dropOverlay) dropOverlay.classList.add('hidden');
+      hideDropLayer();
       closeImageUploadModal();
 
       const files = e.dataTransfer ? Array.from(e.dataTransfer.files) : [];
@@ -2979,6 +3016,27 @@
         state.selectedNodeIds.add(nodeId);
         state.selectedNodeId = nodeId;
       }
+
+      const expandedIds = new Set(state.selectedNodeIds);
+      for (const nid of state.selectedNodeIds) {
+        const n = state.nodes.find(x => x.id === nid);
+        if (n && n.groupId) {
+          for (const member of state.nodes) {
+            if (member.groupId === n.groupId) {
+              expandedIds.add(member.id);
+            }
+          }
+        }
+      }
+      state.selectedNodeIds = expandedIds;
+      state.selectedNodeId = state.selectedNodeIds.values().next().value || null;
+      document.querySelectorAll('.diagram-node').forEach(el => {
+        if (state.selectedNodeIds.has(el.dataset.nodeId)) {
+          el.classList.add('selected');
+        } else {
+          el.classList.remove('selected');
+        }
+      });
 
       const dragNodes = [];
       for (const nid of state.selectedNodeIds) {
@@ -3660,6 +3718,16 @@
       if (state.editingNodeId) return;
       const targetIds = new Set(state.selectedNodeIds);
       if (state.selectedNodeId) targetIds.add(state.selectedNodeId);
+      for (const id of Array.from(targetIds)) {
+        const n = state.nodes.find(x => x.id === id);
+        if (n && n.groupId) {
+          for (const member of state.nodes) {
+            if (member.groupId === n.groupId) {
+              targetIds.add(member.id);
+            }
+          }
+        }
+      }
 
       if (targetIds.size > 0) {
         pushHistory();
