@@ -242,8 +242,8 @@
     }
 
     .icon-md {
-      width: 20px;
-      height: 20px;
+      width: 22px;
+      height: 22px;
       flex-shrink: 0;
     }
 
@@ -429,24 +429,194 @@
       color: #2563eb;
     }
 
-    /* 上部中央プロパティバー（2行構造＋削除ボタン右寄せ） */
+
+    .swatch-btn.active {
+      box-shadow: 0 0 0 2.5px #ffffff, 0 0 0 4px #2563eb;
+      transform: scale(0.66);
+    }
+
+    .color-slot-group {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .custom-picker-btn {
+      width: 22px;
+      height: 22px;
+      min-width: 22px;
+      min-height: 22px;
+      flex: 0 0 22px;
+      aspect-ratio: 1 / 1;
+      border-radius: 9999px;
+      border: 1px solid #cbd5e1;
+      background-color: #f8fafc;
+      color: #475569;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 600;
+      line-height: 1;
+      padding: 0;
+      transition: background-color 0.15s, color 0.15s, border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .custom-picker-btn:hover,
+    .custom-picker-btn.open {
+      box-shadow: 0 0 0 2px #eff6ff, 0 0 0 3.5px #2563eb;
+    }
+
+    .color-picker-popover {
+      margin-top: 4px;
+      padding: 12px;
+      background-color: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      box-shadow: 0 12px 28px -6px rgba(15, 23, 42, 0.18);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      width: 100%;
+    }
+
+    .picker-top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #334155;
+    }
+
+    .picker-sv-canvas {
+      width: 100%;
+      height: 148px;
+      border-radius: 8px;
+      cursor: crosshair;
+      display: block;
+      border: 1px solid #cbd5e1;
+      touch-action: none;
+    }
+
+    .picker-controls-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .picker-preview-circle {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      border: 2px solid #cbd5e1;
+      flex-shrink: 0;
+      box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.12);
+    }
+
+    .picker-sliders {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .hue-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 11px;
+      border-radius: 9999px;
+      background: linear-gradient(to right, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%);
+      outline: none;
+      cursor: pointer;
+    }
+
+    .hue-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      background: #ffffff;
+      border: 2px solid #1e293b;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+      cursor: pointer;
+    }
+
+    .alpha-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 11px;
+      border-radius: 9999px;
+      outline: none;
+      cursor: pointer;
+      border: 1px solid #cbd5e1;
+    }
+
+    .alpha-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      background: #ffffff;
+      border: 2px solid #1e293b;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+      cursor: pointer;
+    }
+
+    .picker-footer-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .picker-hex-input {
+      width: 118px;
+      padding: 4px 8px;
+      font-size: 12px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      color: #1e293b;
+      user-select: text;
+    }
+
+    .picker-close-btn {
+      padding: 4px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      border-radius: 6px;
+      background-color: #f1f5f9;
+      color: #334155;
+    }
+
+    .picker-close-btn:hover {
+      background-color: #e2e8f0;
+    }
+
+    /* 上部中央プロパティバー */
     .property-bar {
       position: absolute;
       top: 12px;
       left: 50%;
       transform: translateX(-50%);
       z-index: 30;
-      background-color: rgba(255, 255, 255, 0.97);
-      backdrop-filter: blur(8px);
+      background-color: #ffffff;
       border: 1px solid #e2e8f0;
-      border-radius: 16px;
-      box-shadow: 0 10px 24px -6px rgba(15, 23, 42, 0.14);
-      padding: 9px 14px;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(15, 23, 42, 0.08);
+      padding: 8px 12px;
       display: flex;
       flex-direction: column;
-      gap: 7px;
-      min-width: 360px;
-      max-width: min(92vw, 760px);
+      gap: 6px;
+      min-width: 340px;
+      max-width: min(92vw, 740px);
     }
 
     .prop-row {
@@ -490,23 +660,32 @@
     .palette-row {
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 8px;
+      flex-wrap: nowrap;
     }
 
     .swatch-btn {
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      transition: transform 0.12s;
+      width: 22px;
+      height: 22px;
+      min-width: 22px;
+      max-width: 22px;
+      min-height: 22px;
+      max-height: 22px;
+      flex: 0 0 22px;
+      aspect-ratio: 1 / 1;
+      border-radius: 9999px;
+      transition: box-shadow 0.15s, border-color 0.15s;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       font-size: 9px;
+      line-height: 1;
       color: #64748b;
+      padding: 0;
     }
 
-    .swatch-btn:hover {
-      transform: scale(1.15);
+    .swatch-btn:hover:not(.active) {
+      box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.14);
     }
 
     .prop-select {
@@ -731,8 +910,8 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      width: 20px;
-      height: 20px;
+      width: 22px;
+      height: 22px;
       border-radius: 50%;
       color: #64748b;
       cursor: pointer;
@@ -1398,32 +1577,45 @@
           <div class="prop-row-main" style="gap: 14px;">
             <div class="palette-row" id="fill-color-palette">
               <span class="prop-label">塗り:</span>
-              <button data-fill="#ffffff" class="swatch-btn" style="background:#ffffff; border:1px solid #cbd5e1;"
-                title="白"></button>
-              <button data-fill="#eff6ff" class="swatch-btn" style="background:#eff6ff; border:1px solid #93c5fd;"
-                title="ライトブルー"></button>
-              <button data-fill="#f0fdf4" class="swatch-btn" style="background:#f0fdf4; border:1px solid #6ee7b7;"
-                title="ミントグリーン"></button>
-              <button data-fill="#fef9c3" class="swatch-btn" style="background:#fef9c3; border:1px solid #fcd34d;"
-                title="イエロー"></button>
-              <button data-fill="#fef2f2" class="swatch-btn" style="background:#fef2f2; border:1px solid #fda4af;"
-                title="ライトピンク"></button>
-              <button data-fill="#f3e8ff" class="swatch-btn" style="background:#f3e8ff; border:1px solid #d8b4fe;"
-                title="ラベンダー"></button>
-              <button data-fill="transparent" class="swatch-btn" style="background:#f1f5f9; border:1px solid #cbd5e1;"
-                title="透明">無</button>
+              <button type="button" data-fill="transparent" id="fill-none-btn" class="swatch-btn"
+                style="background:#f1f5f9; border:1px solid #cbd5e1;" title="透明（無）">無</button>
+              <div id="fill-history-slots" class="color-slot-group" title="過去に使用した色（履歴順・最大3個）"></div>
+              <div id="fill-active-slot" class="color-slot-group" title="選択中オブジェクトの現在の塗り色"></div>
+              <button type="button" id="btn-toggle-fill-picker" class="custom-picker-btn"
+                title="詳細な色を選択（カラーピッカー）">+</button>
             </div>
 
             <div class="palette-row" id="stroke-color-palette">
               <span class="prop-label">枠線:</span>
-              <button data-stroke="#64748b" class="swatch-btn" style="background:#64748b;" title="スレート"></button>
-              <button data-stroke="#2563eb" class="swatch-btn" style="background:#2563eb;" title="ブルー"></button>
-              <button data-stroke="#059669" class="swatch-btn" style="background:#059669;" title="グリーン"></button>
-              <button data-stroke="#d97706" class="swatch-btn" style="background:#d97706;" title="アンバー"></button>
-              <button data-stroke="#e11d48" class="swatch-btn" style="background:#e11d48;" title="ローズ"></button>
-              <button data-stroke="transparent" class="swatch-btn" style="background:#f1f5f9; border:1px solid #cbd5e1;"
-                title="枠なし">無</button>
+              <button type="button" data-stroke="transparent" id="stroke-none-btn" class="swatch-btn"
+                style="background:#f1f5f9; border:1px solid #cbd5e1;" title="枠なし（無）">無</button>
+              <div id="stroke-history-slots" class="color-slot-group" title="過去に使用した色（履歴順・最大3個）"></div>
+              <div id="stroke-active-slot" class="color-slot-group" title="選択中オブジェクトの現在の枠線色"></div>
+              <button type="button" id="btn-toggle-stroke-picker" class="custom-picker-btn"
+                title="詳細な色を選択（カラーピッカー）">+</button>
             </div>
+          </div>
+        </div>
+
+        <!-- 下部展開カラーピッカー（塗り / 枠線 切替） -->
+        <div id="custom-color-picker-panel" class="color-picker-popover hidden">
+          <div class="picker-top-row">
+            <span id="picker-target-label">塗り カラー選択</span>
+            <span id="picker-rgba-readout" style="color:#64748b; font-size:11px;">100%</span>
+          </div>
+          <canvas id="picker-sv-canvas" class="picker-sv-canvas" width="320" height="148"></canvas>
+          <div class="picker-controls-row">
+            <div id="picker-preview-circle" class="picker-preview-circle"></div>
+            <div class="picker-sliders">
+              <input id="picker-hue-slider" type="range" min="0" max="360" value="145" class="hue-slider"
+                aria-label="色相" />
+              <input id="picker-alpha-slider" type="range" min="0" max="100" value="100" class="alpha-slider"
+                aria-label="不透明度" />
+            </div>
+          </div>
+          <div class="picker-footer-row">
+            <input id="picker-hex-input" type="text" class="picker-hex-input" placeholder="#059669" />
+            <button type="button" id="btn-close-color-picker" class="picker-close-btn">閉じる</button>
           </div>
         </div>
 
@@ -1484,15 +1676,10 @@
         <div class="prop-row">
           <div class="palette-row" id="edge-color-palette">
             <span class="prop-label">線色:</span>
-            <button data-edge-color="#2563eb" class="swatch-btn" style="background:#2563eb;" title="ブルー"></button>
-            <button data-edge-color="#059669" class="swatch-btn" style="background:#059669;" title="エメラルド"></button>
-            <button data-edge-color="#d97706" class="swatch-btn" style="background:#d97706;" title="アンバー"></button>
-            <button data-edge-color="#e11d48" class="swatch-btn" style="background:#e11d48;" title="ローズ"></button>
-            <button data-edge-color="#7c3aed" class="swatch-btn" style="background:#7c3aed;" title="バイオレット"></button>
-            <button data-edge-color="#0891b2" class="swatch-btn" style="background:#0891b2;" title="シアン"></button>
-            <button data-edge-color="#ea580c" class="swatch-btn" style="background:#ea580c;" title="オレンジ"></button>
-            <button data-edge-color="#db2777" class="swatch-btn" style="background:#db2777;" title="ピンク"></button>
-            <button data-edge-color="#64748b" class="swatch-btn" style="background:#64748b;" title="スレート"></button>
+            <div id="edge-history-slots" class="color-slot-group" title="過去に使用した線色（履歴順・最大3個）"></div>
+            <div id="edge-active-slot" class="color-slot-group" title="選択中接続線の現在の線色"></div>
+            <button type="button" id="btn-toggle-edge-picker" class="custom-picker-btn"
+              title="詳細な線色を選択（カラーピッカー）">+</button>
             <button id="btn-edge-random-color" type="button" class="btn-secondary" style="padding: 2px 8px; font-size: 11px; margin-left: 2px;" title="別のランダム色に変更">🎲 ランダム</button>
           </div>
         </div>
@@ -1504,6 +1691,9 @@
               <option value="avoid">自動迂回（なめらか曲線カギ線）</option>
               <option value="bezier">滑らかな曲線（マインドマップ風）</option>
               <option value="straight">直線</option>
+              <option value="avoid-dashed">自動迂回（点線）</option>
+              <option value="bezier-dashed">滑らかな曲線（点線）</option>
+              <option value="straight-dashed">直線（点線）</option>
             </select>
             <label class="prop-checkbox-label">
               <input type="checkbox" id="edge-arrow-check" checked />
@@ -1642,6 +1832,29 @@
         </svg>
         <span>削除 (Delete)</span>
       </button>
+    </div>
+
+    <!-- エクスポート出力表示モーダル -->
+    <div id="export-output-modal" class="modal-overlay hidden">
+      <div class="modal-card export-modal-card">
+        <div class="modal-header">
+          <h3 id="export-modal-title" class="modal-title">エクスポート出力</h3>
+          <button id="btn-close-export-modal" class="modal-close-btn" title="閉じる">✕</button>
+        </div>
+        <div class="modal-body" style="gap: 10px;">
+          <div class="export-toolbar-row">
+            <span id="export-modal-desc" style="font-size: 12px; color: #64748b;">下のテキストを選択・コピーして利用できます。</span>
+            <div style="display: flex; gap: 6px;">
+              <button type="button" id="btn-select-all-export" class="btn-secondary" style="padding: 4px 10px;">全選択</button>
+              <button type="button" id="btn-copy-export-text" class="btn-primary" style="padding: 4px 12px;">コピー</button>
+            </div>
+          </div>
+          <textarea id="export-output-textarea" class="export-textarea" readonly></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="button" id="btn-close-export-modal-footer" class="btn-secondary" style="padding: 6px 14px;">閉じる</button>
+        </div>
+      </div>
     </div>
 
     <!-- URL編集モーダルダイアログ -->
@@ -2527,11 +2740,21 @@
       return buildRoundedKeyPath(fullPts, 18);
     }
 
+    function getBaseEdgeStyle(style = 'bezier') {
+      if (!style) return 'bezier';
+      return style.endsWith('-dashed') ? style.slice(0, -7) : style;
+    }
+
+    function isDashedEdgeStyle(style = '') {
+      return typeof style === 'string' && style.endsWith('-dashed');
+    }
+
     function buildEdgePath(p1, a1, p2, a2, style = 'bezier', srcNodeId = null, tgtNodeId = null) {
-      if (style === 'straight') {
+      const baseStyle = getBaseEdgeStyle(style);
+      if (baseStyle === 'straight') {
         return `M ${p1.x} ${p1.y} L ${p2.x} ${p2.y}`;
       }
-      if (style === 'avoid') {
+      if (baseStyle === 'avoid') {
         return findObstacleAvoidingPath(p1, a1, p2, a2, state.nodes, srcNodeId, tgtNodeId);
       }
       const dist = Math.max(45, Math.hypot(p2.x - p1.x, p2.y - p1.y) * 0.4);
@@ -2640,6 +2863,9 @@
         visPath.setAttribute('class', 'edge-visible-path');
         visPath.setAttribute('stroke', strokeColor);
         visPath.setAttribute('stroke-width', isSelected ? '3.2' : '2.2');
+        if (isDashedEdgeStyle(edge.style)) {
+          visPath.setAttribute('stroke-dasharray', '7,6');
+        }
         if (edge.arrow !== false) {
           const markerId = getArrowMarkerIdForColor(strokeColor);
           visPath.setAttribute('marker-end', `url(#${markerId})`);
@@ -2883,12 +3109,591 @@
       updatePropertyBar();
     }
 
+    // ===== 色履歴（各4枠固定・履歴順）＆ カスタムカラーピッカー管理 =====
+    const COLOR_HISTORY_KEY = 'canvasflow_color_history_v1';
+    const colorHistory = {
+      fill: ['#ffffff', '#eff6ff', '#f0fdf4'],
+      stroke: ['#64748b', '#2563eb', '#059669'],
+      edge: ['#2563eb', '#059669', '#d97706']
+    };
+
+    try {
+      const savedHist = JSON.parse(localStorage.getItem(COLOR_HISTORY_KEY) || 'null');
+      if (savedHist) {
+        if (Array.isArray(savedHist.fill) && savedHist.fill.length > 0) {
+          colorHistory.fill = savedHist.fill.slice(0, 3);
+        }
+        if (Array.isArray(savedHist.stroke) && savedHist.stroke.length > 0) {
+          colorHistory.stroke = savedHist.stroke.slice(0, 3);
+        }
+        if (Array.isArray(savedHist.edge) && savedHist.edge.length > 0) {
+          colorHistory.edge = savedHist.edge.slice(0, 3);
+        }
+      }
+    } catch (_) {}
+
+    function saveColorHistory() {
+      try {
+        localStorage.setItem(COLOR_HISTORY_KEY, JSON.stringify({
+          fill: colorHistory.fill.slice(0, 3),
+          stroke: colorHistory.stroke.slice(0, 3),
+          edge: colorHistory.edge.slice(0, 3)
+        }));
+      } catch (_) {}
+    }
+
+    function recordColorHistory(kind, color) {
+      if (!color || color === 'transparent' || color === 'none') return;
+      const list = colorHistory[kind];
+      const normalized = color.trim();
+      const idx = list.findIndex(c => c.toLowerCase() === normalized.toLowerCase());
+      if (idx !== -1) {
+        list.splice(idx, 1);
+      }
+      list.unshift(normalized);
+      if (list.length > 3) {
+        list.length = 3;
+      }
+      saveColorHistory();
+    }
+
+    function parseColorToRgba(colorStr) {
+      if (!colorStr || colorStr === 'transparent' || colorStr === 'none') {
+        return { r: 255, g: 255, b: 255, a: 0 };
+      }
+      const tmp = document.createElement('div');
+      tmp.style.color = '';
+      tmp.style.color = colorStr;
+      document.body.appendChild(tmp);
+      const computed = getComputedStyle(tmp).color;
+      document.body.removeChild(tmp);
+
+      const m = computed.match(/rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)(?:\s*,\s*([\d.]+))?\s*\)/i);
+      if (!m) {
+        return { r: 37, g: 99, b: 235, a: 1 };
+      }
+      return {
+        r: Math.round(Number(m[1])),
+        g: Math.round(Number(m[2])),
+        b: Math.round(Number(m[3])),
+        a: m[4] !== undefined ? Math.max(0, Math.min(1, Number(m[4]))) : 1
+      };
+    }
+
+    function rgbaToCss(r, g, b, a) {
+      const cr = Math.max(0, Math.min(255, Math.round(r)));
+      const cg = Math.max(0, Math.min(255, Math.round(g)));
+      const cb = Math.max(0, Math.min(255, Math.round(b)));
+      const ca = Math.max(0, Math.min(1, Number(a)));
+      if (ca >= 0.999) {
+        return '#' + [cr, cg, cb].map(v => v.toString(16).padStart(2, '0')).join('');
+      }
+      const alphaRounded = Math.round(ca * 100) / 100;
+      return `rgba(${cr}, ${cg}, ${cb}, ${alphaRounded})`;
+    }
+
+    function rgbToHsv(r, g, b) {
+      r /= 255; g /= 255; b /= 255;
+      const max = Math.max(r, g, b);
+      const min = Math.min(r, g, b);
+      const d = max - min;
+      let h = 0;
+      const s = max === 0 ? 0 : d / max;
+      const v = max;
+      if (d !== 0) {
+        switch (max) {
+          case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+          case g: h = (b - r) / d + 2; break;
+          case b: h = (r - g) / d + 4; break;
+        }
+        h *= 60;
+      }
+      return { h, s, v };
+    }
+
+    function hsvToRgb(h, s, v) {
+      h = ((h % 360) + 360) % 360;
+      const c = v * s;
+      const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+      const m = v - c;
+      let rp = 0, gp = 0, bp = 0;
+      if (h < 60) { rp = c; gp = x; }
+      else if (h < 120) { rp = x; gp = c; }
+      else if (h < 180) { gp = c; bp = x; }
+      else if (h < 240) { gp = x; bp = c; }
+      else if (h < 300) { rp = x; bp = c; }
+      else { rp = c; bp = x; }
+      return {
+        r: Math.round((rp + m) * 255),
+        g: Math.round((gp + m) * 255),
+        b: Math.round((bp + m) * 255)
+      };
+    }
+
+    function getSelectedTargetIds() {
+      if (state.selectedNodeIds.size > 0) return Array.from(state.selectedNodeIds);
+      if (state.selectedNodeId) return [state.selectedNodeId];
+      return [];
+    }
+
+    function getCurrentSelectedColor(kind) {
+      const ids = getSelectedTargetIds();
+      if (ids.length === 0) return null;
+      const firstNode = state.nodes.find(n => n.id === ids[0]);
+      if (!firstNode) return null;
+      return kind === 'fill' ? (firstNode.fill ?? '#ffffff') : (firstNode.stroke ?? '#64748b');
+    }
+
+    function getCurrentSelectedEdgeColor() {
+      if (!state.selectedEdgeId) return null;
+      const edge = state.edges.find(ed => ed.id === state.selectedEdgeId);
+      return edge ? (edge.color || '#64748b') : null;
+    }
+
+    function applyColorToSelected(kind, colorValue) {
+      if (kind === 'edge') {
+        const edge = state.edges.find(ed => ed.id === state.selectedEdgeId);
+        if (!edge) return;
+        pushHistory();
+        edge.color = colorValue;
+        if (colorValue && colorValue !== 'transparent') {
+          recordColorHistory('edge', colorValue);
+        }
+        renderEdges();
+        renderEdgeColorSlots();
+        syncColorPickerWithCurrent(false);
+        persistToLocalStorage();
+        return;
+      }
+
+      const ids = getSelectedTargetIds();
+      if (ids.length === 0) return;
+      pushHistory();
+      ids.forEach(id => {
+        const node = state.nodes.find(n => n.id === id);
+        if (node) {
+          node[kind] = colorValue;
+        }
+      });
+      if (colorValue && colorValue !== 'transparent') {
+        recordColorHistory(kind, colorValue);
+      }
+      renderNodes();
+      renderColorSlots();
+      syncColorPickerWithCurrent(false);
+      persistToLocalStorage();
+    }
+
+    function createColorSwatchEl(colorValue, kind, isActive) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = `swatch-btn ${isActive ? 'active' : ''}`;
+      if (!colorValue || colorValue === 'transparent') {
+        btn.style.background = '#f1f5f9';
+        btn.style.border = '1px solid #cbd5e1';
+        btn.textContent = '無';
+        btn.title = '透明（無）';
+      } else {
+        const rgba = parseColorToRgba(colorValue);
+        if (rgba.a < 1) {
+          btn.style.background = `linear-gradient(135deg, ${rgbaToCss(rgba.r, rgba.g, rgba.b, rgba.a)} 50%, #e2e8f0 50%)`;
+        } else {
+          btn.style.background = colorValue;
+        }
+        btn.style.border = '1px solid rgba(15, 23, 42, 0.18)';
+        btn.title = colorValue;
+      }
+      btn.addEventListener('click', () => {
+        applyColorToSelected(kind, colorValue || 'transparent');
+      });
+      return btn;
+    }
+
+    function renderColorSlots() {
+      const currentFill = getCurrentSelectedColor('fill');
+      const currentStroke = getCurrentSelectedColor('stroke');
+
+      const fillHistEl = document.getElementById('fill-history-slots');
+      const fillActiveEl = document.getElementById('fill-active-slot');
+      const fillNoneBtn = document.getElementById('fill-none-btn');
+
+      if (fillHistEl) {
+        fillHistEl.innerHTML = '';
+        for (let i = 0; i < 3; i++) {
+          const histColor = colorHistory.fill[i];
+          if (histColor) {
+            fillHistEl.appendChild(createColorSwatchEl(histColor, 'fill', false));
+          } else {
+            const emptySlot = document.createElement('span');
+            emptySlot.className = 'swatch-btn';
+            emptySlot.style.background = '#f8fafc';
+            emptySlot.style.border = '1px dashed #cbd5e1';
+            emptySlot.style.cursor = 'default';
+            emptySlot.style.boxShadow = 'none';
+            fillHistEl.appendChild(emptySlot);
+          }
+        }
+      }
+
+      if (fillActiveEl) {
+        fillActiveEl.innerHTML = '';
+        if (currentFill && currentFill !== 'transparent') {
+          fillActiveEl.appendChild(createColorSwatchEl(currentFill, 'fill', true));
+        }
+      }
+
+      if (fillNoneBtn) {
+        fillNoneBtn.classList.toggle('active', currentFill === 'transparent');
+      }
+
+      const strokeHistEl = document.getElementById('stroke-history-slots');
+      const strokeActiveEl = document.getElementById('stroke-active-slot');
+      const strokeNoneBtn = document.getElementById('stroke-none-btn');
+
+      if (strokeHistEl) {
+        strokeHistEl.innerHTML = '';
+        for (let i = 0; i < 3; i++) {
+          const histColor = colorHistory.stroke[i];
+          if (histColor) {
+            strokeHistEl.appendChild(createColorSwatchEl(histColor, 'stroke', false));
+          } else {
+            const emptySlot = document.createElement('span');
+            emptySlot.className = 'swatch-btn';
+            emptySlot.style.background = '#f8fafc';
+            emptySlot.style.border = '1px dashed #cbd5e1';
+            emptySlot.style.cursor = 'default';
+            emptySlot.style.boxShadow = 'none';
+            strokeHistEl.appendChild(emptySlot);
+          }
+        }
+      }
+
+      if (strokeActiveEl) {
+        strokeActiveEl.innerHTML = '';
+        if (currentStroke && currentStroke !== 'transparent') {
+          strokeActiveEl.appendChild(createColorSwatchEl(currentStroke, 'stroke', true));
+        }
+      }
+
+      if (strokeNoneBtn) {
+        strokeNoneBtn.classList.toggle('active', currentStroke === 'transparent');
+      }
+    }
+
+    function renderEdgeColorSlots() {
+      const currentEdge = getCurrentSelectedEdgeColor();
+      const edgeHistEl = document.getElementById('edge-history-slots');
+      const edgeActiveEl = document.getElementById('edge-active-slot');
+
+      if (edgeHistEl) {
+        edgeHistEl.innerHTML = '';
+        for (let i = 0; i < 3; i++) {
+          const histColor = colorHistory.edge[i];
+          if (histColor) {
+            edgeHistEl.appendChild(createColorSwatchEl(histColor, 'edge', false));
+          } else {
+            const emptySlot = document.createElement('span');
+            emptySlot.className = 'swatch-btn';
+            emptySlot.style.background = '#f8fafc';
+            emptySlot.style.border = '1px dashed #cbd5e1';
+            emptySlot.style.cursor = 'default';
+            emptySlot.style.boxShadow = 'none';
+            edgeHistEl.appendChild(emptySlot);
+          }
+        }
+      }
+
+      if (edgeActiveEl) {
+        edgeActiveEl.innerHTML = '';
+        if (currentEdge) {
+          edgeActiveEl.appendChild(createColorSwatchEl(currentEdge, 'edge', true));
+        }
+      }
+    }
+
+    // カスタムカラーピッカー（SVグラデーション＋色相スライダー＋不透明度スライダー）
+    const pickerState = {
+      activeKind: null, // 'fill' | 'stroke' | null
+      h: 145,
+      s: 0.9,
+      v: 0.75,
+      a: 1,
+      isDraggingSv: false,
+      isFirstCommitInSession: true
+    };
+
+    const pickerPanel = document.getElementById('custom-color-picker-panel');
+    const pickerTargetLabel = document.getElementById('picker-target-label');
+    const pickerReadout = document.getElementById('picker-rgba-readout');
+    const pickerSvCanvas = document.getElementById('picker-sv-canvas');
+    const pickerSvCtx = pickerSvCanvas ? pickerSvCanvas.getContext('2d') : null;
+    const pickerPreviewCircle = document.getElementById('picker-preview-circle');
+    const pickerHueSlider = document.getElementById('picker-hue-slider');
+    const pickerAlphaSlider = document.getElementById('picker-alpha-slider');
+    const pickerHexInput = document.getElementById('picker-hex-input');
+
+    function drawSvCanvas() {
+      if (!pickerSvCtx || !pickerSvCanvas) return;
+      const w = pickerSvCanvas.width;
+      const h = pickerSvCanvas.height;
+      const pureHue = hsvToRgb(pickerState.h, 1, 1);
+
+      pickerSvCtx.clearRect(0, 0, w, h);
+      pickerSvCtx.fillStyle = `rgb(${pureHue.r}, ${pureHue.g}, ${pureHue.b})`;
+      pickerSvCtx.fillRect(0, 0, w, h);
+
+      const whiteGrad = pickerSvCtx.createLinearGradient(0, 0, w, 0);
+      whiteGrad.addColorStop(0, 'rgba(255, 255, 255, 1)');
+      whiteGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+      pickerSvCtx.fillStyle = whiteGrad;
+      pickerSvCtx.fillRect(0, 0, w, h);
+
+      const blackGrad = pickerSvCtx.createLinearGradient(0, 0, 0, h);
+      blackGrad.addColorStop(0, 'rgba(0, 0, 0, 0)');
+      blackGrad.addColorStop(1, 'rgba(0, 0, 0, 1)');
+      pickerSvCtx.fillStyle = blackGrad;
+      pickerSvCtx.fillRect(0, 0, w, h);
+
+      // 現在位置の円形インジケーター
+      const cx = pickerState.s * w;
+      const cy = (1 - pickerState.v) * h;
+      pickerSvCtx.beginPath();
+      pickerSvCtx.arc(cx, cy, 7, 0, Math.PI * 2);
+      pickerSvCtx.lineWidth = 2.5;
+      pickerSvCtx.strokeStyle = '#ffffff';
+      pickerSvCtx.stroke();
+
+      pickerSvCtx.beginPath();
+      pickerSvCtx.arc(cx, cy, 8.5, 0, Math.PI * 2);
+      pickerSvCtx.lineWidth = 1;
+      pickerSvCtx.strokeStyle = 'rgba(0,0,0,0.45)';
+      pickerSvCtx.stroke();
+    }
+
+    function updateAlphaSliderTrack() {
+      if (!pickerAlphaSlider) return;
+      const rgb = hsvToRgb(pickerState.h, pickerState.s, pickerState.v);
+      pickerAlphaSlider.style.background = `linear-gradient(to right, rgba(${rgb.r},${rgb.g},${rgb.b},0) 0%, rgba(${rgb.r},${rgb.g},${rgb.b},1) 100%)`;
+    }
+
+    function syncColorPickerWithCurrent(resetSession = true) {
+      if (!pickerState.activeKind) return;
+      const curColor = pickerState.activeKind === 'edge'
+        ? getCurrentSelectedEdgeColor()
+        : getCurrentSelectedColor(pickerState.activeKind);
+      const rgba = parseColorToRgba(curColor && curColor !== 'transparent' ? curColor : '#2563eb');
+      const hsv = rgbToHsv(rgba.r, rgba.g, rgba.b);
+      if (hsv.s > 0.02) {
+        pickerState.h = hsv.h;
+      }
+      pickerState.s = hsv.s;
+      pickerState.v = hsv.v;
+      pickerState.a = curColor === 'transparent' ? 0 : rgba.a;
+      if (resetSession) {
+        pickerState.isFirstCommitInSession = true;
+      }
+
+      if (pickerHueSlider) pickerHueSlider.value = String(Math.round(pickerState.h));
+      if (pickerAlphaSlider) pickerAlphaSlider.value = String(Math.round(pickerState.a * 100));
+      drawSvCanvas();
+      updateAlphaSliderTrack();
+      refreshPickerReadoutOnly();
+    }
+
+    function refreshPickerReadoutOnly() {
+      const rgb = hsvToRgb(pickerState.h, pickerState.s, pickerState.v);
+      const cssColor = rgbaToCss(rgb.r, rgb.g, rgb.b, pickerState.a);
+      if (pickerPreviewCircle) {
+        pickerPreviewCircle.style.background = cssColor;
+      }
+      if (pickerReadout) {
+        pickerReadout.textContent = `${Math.round(pickerState.a * 100)}%`;
+      }
+      if (pickerHexInput && document.activeElement !== pickerHexInput) {
+        pickerHexInput.value = cssColor;
+      }
+    }
+
+    function commitPickerColor(recordHist = false) {
+      if (!pickerState.activeKind) return;
+      const rgb = hsvToRgb(pickerState.h, pickerState.s, pickerState.v);
+      const cssColor = pickerState.a <= 0.01 ? 'transparent' : rgbaToCss(rgb.r, rgb.g, rgb.b, pickerState.a);
+
+      if (pickerState.activeKind === 'edge') {
+        const edge = state.edges.find(ed => ed.id === state.selectedEdgeId);
+        if (!edge) return;
+        if (pickerState.isFirstCommitInSession) {
+          pushHistory();
+          pickerState.isFirstCommitInSession = false;
+        }
+        edge.color = cssColor === 'transparent' ? '#64748b' : cssColor;
+        if (recordHist && edge.color !== 'transparent') {
+          recordColorHistory('edge', edge.color);
+        }
+        refreshPickerReadoutOnly();
+        renderEdges();
+        renderEdgeColorSlots();
+        persistToLocalStorage();
+        return;
+      }
+
+      const ids = getSelectedTargetIds();
+      if (ids.length === 0) return;
+
+      if (pickerState.isFirstCommitInSession) {
+        pushHistory();
+        pickerState.isFirstCommitInSession = false;
+      }
+
+      ids.forEach(id => {
+        const node = state.nodes.find(n => n.id === id);
+        if (node) {
+          node[pickerState.activeKind] = cssColor;
+        }
+      });
+
+      if (recordHist && cssColor !== 'transparent') {
+        recordColorHistory(pickerState.activeKind, cssColor);
+      }
+
+      refreshPickerReadoutOnly();
+      renderNodes();
+      renderColorSlots();
+      persistToLocalStorage();
+    }
+
+    function toggleColorPicker(kind) {
+      const btnFill = document.getElementById('btn-toggle-fill-picker');
+      const btnStroke = document.getElementById('btn-toggle-stroke-picker');
+      const btnEdge = document.getElementById('btn-toggle-edge-picker');
+
+      if (pickerState.activeKind === kind && pickerPanel && !pickerPanel.classList.contains('hidden')) {
+        pickerState.activeKind = null;
+        pickerPanel.classList.add('hidden');
+        if (btnFill) btnFill.classList.remove('open');
+        if (btnStroke) btnStroke.classList.remove('open');
+        if (btnEdge) btnEdge.classList.remove('open');
+        return;
+      }
+
+      pickerState.activeKind = kind;
+      if (pickerTargetLabel) {
+        if (kind === 'fill') pickerTargetLabel.textContent = '塗り — カラー選択';
+        else if (kind === 'stroke') pickerTargetLabel.textContent = '枠線 — カラー選択';
+        else pickerTargetLabel.textContent = '線色 — カラー選択';
+      }
+      if (btnFill) btnFill.classList.toggle('open', kind === 'fill');
+      if (btnStroke) btnStroke.classList.toggle('open', kind === 'stroke');
+      if (btnEdge) btnEdge.classList.toggle('open', kind === 'edge');
+      if (pickerPanel) pickerPanel.classList.remove('hidden');
+      syncColorPickerWithCurrent(true);
+    }
+
+    if (pickerSvCanvas) {
+      const updateSvFromPointer = (e, finalize = false) => {
+        const rect = pickerSvCanvas.getBoundingClientRect();
+        const nx = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+        const ny = Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height));
+        pickerState.s = nx;
+        pickerState.v = 1 - ny;
+        drawSvCanvas();
+        updateAlphaSliderTrack();
+        commitPickerColor(finalize);
+      };
+
+      pickerSvCanvas.addEventListener('pointerdown', (e) => {
+        e.stopPropagation();
+        pickerState.isDraggingSv = true;
+        pickerSvCanvas.setPointerCapture(e.pointerId);
+        updateSvFromPointer(e, false);
+      });
+
+      pickerSvCanvas.addEventListener('pointermove', (e) => {
+        if (!pickerState.isDraggingSv) return;
+        updateSvFromPointer(e, false);
+      });
+
+      pickerSvCanvas.addEventListener('pointerup', (e) => {
+        if (!pickerState.isDraggingSv) return;
+        pickerState.isDraggingSv = false;
+        updateSvFromPointer(e, true);
+      });
+    }
+
+    if (pickerHueSlider) {
+      pickerHueSlider.addEventListener('input', (e) => {
+        pickerState.h = Number(e.target.value);
+        drawSvCanvas();
+        updateAlphaSliderTrack();
+        commitPickerColor(false);
+      });
+      pickerHueSlider.addEventListener('change', () => {
+        commitPickerColor(true);
+      });
+    }
+
+    if (pickerAlphaSlider) {
+      pickerAlphaSlider.addEventListener('input', (e) => {
+        pickerState.a = Number(e.target.value) / 100;
+        commitPickerColor(false);
+      });
+      pickerAlphaSlider.addEventListener('change', () => {
+        commitPickerColor(true);
+      });
+    }
+
+    if (pickerHexInput) {
+      pickerHexInput.addEventListener('change', (e) => {
+        const val = e.target.value.trim();
+        if (!val) return;
+        const rgba = parseColorToRgba(val);
+        const hsv = rgbToHsv(rgba.r, rgba.g, rgba.b);
+        pickerState.h = hsv.h;
+        pickerState.s = hsv.s;
+        pickerState.v = hsv.v;
+        pickerState.a = rgba.a;
+        if (pickerHueSlider) pickerHueSlider.value = String(Math.round(pickerState.h));
+        if (pickerAlphaSlider) pickerAlphaSlider.value = String(Math.round(pickerState.a * 100));
+        drawSvCanvas();
+        updateAlphaSliderTrack();
+        commitPickerColor(true);
+      });
+    }
+
+    document.getElementById('btn-toggle-fill-picker').addEventListener('click', () => {
+      document.getElementById('node-props')?.appendChild(pickerPanel);
+      toggleColorPicker('fill');
+    });
+    document.getElementById('btn-toggle-stroke-picker').addEventListener('click', () => {
+      document.getElementById('node-props')?.appendChild(pickerPanel);
+      toggleColorPicker('stroke');
+    });
+    document.getElementById('btn-toggle-edge-picker').addEventListener('click', () => {
+      document.getElementById('edge-props')?.appendChild(pickerPanel);
+      toggleColorPicker('edge');
+    });
+    document.getElementById('fill-none-btn').addEventListener('click', () => applyColorToSelected('fill', 'transparent'));
+    document.getElementById('stroke-none-btn').addEventListener('click', () => applyColorToSelected('stroke', 'transparent'));
+    document.getElementById('btn-close-color-picker').addEventListener('click', () => {
+      if (pickerState.activeKind) {
+        commitPickerColor(true);
+      }
+      pickerState.activeKind = null;
+      if (pickerPanel) pickerPanel.classList.add('hidden');
+      document.getElementById('btn-toggle-fill-picker')?.classList.remove('open');
+      document.getElementById('btn-toggle-stroke-picker')?.classList.remove('open');
+    });
+
     function updatePropertyBar() {
       const hasNodeSelection = state.selectedNodeIds.size > 0 || !!state.selectedNodeId;
       if (hasNodeSelection) {
         propertyBar.classList.remove('hidden');
         nodeProps.classList.remove('hidden');
         edgeProps.classList.add('hidden');
+        renderColorSlots();
+        if (pickerState.activeKind && pickerPanel && !pickerPanel.classList.contains('hidden')) {
+          syncColorPickerWithCurrent(true);
+        }
         const btnEditText = document.getElementById('btn-edit-text');
         if (btnEditText) btnEditText.classList.remove('hidden');
 
@@ -2916,11 +3721,16 @@
           if (btnEditText) btnEditText.classList.add('hidden');
           nodeProps.classList.add('hidden');
           edgeProps.classList.remove('hidden');
+          renderEdgeColorSlots();
+          if (pickerState.activeKind === 'edge' && pickerPanel && !pickerPanel.classList.contains('hidden')) {
+            syncColorPickerWithCurrent(true);
+          }
           document.getElementById('edge-style-select').value = edge.style || 'bezier';
           document.getElementById('edge-arrow-check').checked = edge.arrow !== false;
         }
       } else {
         propertyBar.classList.add('hidden');
+        if (pickerPanel) pickerPanel.classList.add('hidden');
       }
     }
 
@@ -3919,11 +4729,13 @@
         const t = nodeMap.get(e.target);
         if (!s || !t) continue;
         minimapCtx.strokeStyle = e.color || '#94a3b8';
+        minimapCtx.setLineDash(isDashedEdgeStyle(e.style) ? [3, 3] : []);
         minimapCtx.beginPath();
         minimapCtx.moveTo((s.x + s.width / 2 - minX) * scale + offsetX, (s.y + s.height / 2 - minY) * scale + offsetY);
         minimapCtx.lineTo((t.x + t.width / 2 - minX) * scale + offsetX, (t.y + t.height / 2 - minY) * scale + offsetY);
         minimapCtx.stroke();
       }
+      minimapCtx.setLineDash([]);
 
       for (const n of state.nodes) {
         const nx = (n.x - minX) * scale + offsetX;
@@ -4048,7 +4860,29 @@
       }
     });
 
-    // ローカルJSONファイル保存
+    // エクスポート出力を画面モーダルに表示する共通関数
+    const exportOutputModal = document.getElementById('export-output-modal');
+    const exportModalTitle = document.getElementById('export-modal-title');
+    const exportModalDesc = document.getElementById('export-modal-desc');
+    const exportOutputTextarea = document.getElementById('export-output-textarea');
+
+    function showExportModal(contentText, title = 'エクスポート出力 (JSON)', desc = 'ダウンロードせずに画面上で内容を確認・コピーできます。') {
+      if (!exportOutputModal || !exportOutputTextarea) return;
+      if (exportModalTitle) exportModalTitle.textContent = title;
+      if (exportModalDesc) exportModalDesc.textContent = desc;
+      exportOutputTextarea.value = contentText;
+      exportOutputModal.classList.remove('hidden');
+      setTimeout(() => {
+        exportOutputTextarea.focus();
+        exportOutputTextarea.select();
+      }, 40);
+    }
+
+    function closeExportModal() {
+      if (exportOutputModal) exportOutputModal.classList.add('hidden');
+    }
+
+    // ローカルJSONエクスポート（画面上にテキスト表示）
     async function saveToLocalJsonFile() {
       const exportData = {
         app: 'InMyMind',
@@ -4059,41 +4893,12 @@
         edges: state.edges
       };
       const jsonStr = JSON.stringify(exportData, null, 2);
-
-      if ('showSaveFilePicker' in window) {
-        try {
-          if (!state.fileHandle) {
-            state.fileHandle = await window.showSaveFilePicker({
-              suggestedName: `project-diagram-${new Date().toISOString().slice(0, 10)}.json`,
-              types: [{
-                description: 'Diagram JSON File',
-                accept: { 'application/json': ['.json'] }
-              }]
-            });
-          }
-          const writable = await state.fileHandle.createWritable();
-          await writable.write(jsonStr);
-          await writable.close();
-          fileStatusLabel.textContent = `保存済: ${state.fileHandle.name}`;
-          showToast(`ローカルファイル「${state.fileHandle.name}」に保存しました`);
-          return;
-        } catch (err) {
-          if (err.name === 'AbortError') return;
-          state.fileHandle = null;
-        }
-      }
-
-      const blob = new Blob([jsonStr], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      const fileName = `project-diagram-${new Date().toISOString().slice(0, 10)}.json`;
-      a.href = url;
-      a.download = fileName;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      showToast(`「${fileName}」をダウンロードしました`);
+      showExportModal(
+        jsonStr,
+        'エクスポート出力（JSON）',
+        'ダウンロードせずに画面上に表示しています。コピーしてJSONファイルやメモに貼り付けてください。'
+      );
+      showToast('エクスポートデータを画面に表示しました');
     }
 
     // ローカルJSONファイル読み込み
@@ -4277,7 +5082,10 @@
       if (!edge) return;
       pushHistory();
       edge.color = getRandomEdgeColor(edge.color);
+      recordColorHistory('edge', edge.color);
       renderEdges();
+      renderEdgeColorSlots();
+      syncColorPickerWithCurrent(false);
       persistToLocalStorage();
     });
 
@@ -4470,6 +5278,7 @@
     // キーボードショートカット
     window.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
+        closeExportModal();
         closeImageUploadModal();
         closeUrlEditModal();
         closeUrlMenu();
@@ -4585,6 +5394,30 @@
 
     window.addEventListener('resize', renderMinimap);
 
+    document.getElementById('btn-close-export-modal')?.addEventListener('click', closeExportModal);
+    document.getElementById('btn-close-export-modal-footer')?.addEventListener('click', closeExportModal);
+    exportOutputModal?.addEventListener('pointerdown', (e) => {
+      if (e.target === exportOutputModal) closeExportModal();
+    });
+    document.getElementById('btn-select-all-export')?.addEventListener('click', () => {
+      if (!exportOutputTextarea) return;
+      exportOutputTextarea.focus();
+      exportOutputTextarea.select();
+    });
+    document.getElementById('btn-copy-export-text')?.addEventListener('click', async () => {
+      if (!exportOutputTextarea) return;
+      const txt = exportOutputTextarea.value;
+      try {
+        await navigator.clipboard.writeText(txt);
+        showToast('エクスポート内容をクリップボードにコピーしました');
+      } catch (_) {
+        exportOutputTextarea.focus();
+        exportOutputTextarea.select();
+        document.execCommand('copy');
+        showToast('エクスポート内容をコピーしました');
+      }
+    });
+
     window.addEventListener('DOMContentLoaded', async () => {
       const restored = await loadFromLocalStorage();
       if (!restored) {
@@ -4594,6 +5427,13 @@
         state.viewport = sample.viewport;
         persistToLocalStorage();
       }
+      state.nodes.forEach(n => {
+        if (n.fill && n.fill !== 'transparent') recordColorHistory('fill', n.fill);
+        if (n.stroke && n.stroke !== 'transparent') recordColorHistory('stroke', n.stroke);
+      });
+      state.edges.forEach(ed => {
+        if (ed.color && ed.color !== 'transparent') recordColorHistory('edge', ed.color);
+      });
       renderAll();
       updateHistoryButtons();
     });
