@@ -21,6 +21,7 @@
       searchQuery: '',
       searchMatches: [],
       searchMatchIndex: 0,
+      hiddenTags: new Set(),
       fileHandle: null,
       clipboard: {
         nodes: [],

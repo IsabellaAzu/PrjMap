@@ -5,6 +5,7 @@
         nodeProps.classList.remove('hidden');
         edgeProps.classList.add('hidden');
         renderColorSlots();
+        renderNodeTagEditor();
         if (pickerState.activeKind && pickerPanel && !pickerPanel.classList.contains('hidden')) {
           syncColorPickerWithCurrent(true);
         }

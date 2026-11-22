@@ -302,12 +302,13 @@
     }
 
     function fitToScreen() {
-      if (state.nodes.length === 0) {
+      const visibleNodes = state.nodes.filter(isNodeVisibleByTags);
+      if (visibleNodes.length === 0) {
         animateViewportTo(100, 100, 1);
         return;
       }
       let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-      for (const n of state.nodes) {
+      for (const n of visibleNodes) {
         minX = Math.min(minX, n.x);
         minY = Math.min(minY, n.y);
         maxX = Math.max(maxX, n.x + n.width);
@@ -332,11 +333,12 @@
       const cw = minimapCanvas.width;
       const ch = minimapCanvas.height;
       minimapCtx.clearRect(0, 0, cw, ch);
+      const visibleNodes = state.nodes.filter(isNodeVisibleByTags);
 
-      if (state.nodes.length === 0) return;
+      if (visibleNodes.length === 0) return;
 
       let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-      for (const n of state.nodes) {
+      for (const n of visibleNodes) {
         minX = Math.min(minX, n.x);
         minY = Math.min(minY, n.y);
         maxX = Math.max(maxX, n.x + n.width);
@@ -360,7 +362,7 @@
       const offsetX = (cw - worldW * scale) / 2;
       const offsetY = (ch - worldH * scale) / 2;
 
-      const nodeMap = new Map(state.nodes.map(n => [n.id, n]));
+      const nodeMap = new Map(visibleNodes.map(n => [n.id, n]));
       minimapCtx.lineWidth = 1.2;
       for (const e of state.edges) {
         const s = nodeMap.get(e.source);

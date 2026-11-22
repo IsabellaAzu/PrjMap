@@ -313,6 +313,108 @@
       color: #2563eb;
     }
 
+    .tag-filter-wrap {
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .tag-filter-button {
+      white-space: nowrap;
+      padding: 6px 8px;
+      font-size: 11px;
+    }
+
+    .tag-filter-count {
+      color: #2563eb;
+      font-weight: 700;
+    }
+
+    .tag-filter-panel {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      width: min(280px, 86vw);
+      max-height: 360px;
+      overflow-y: auto;
+      padding: 12px;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      box-shadow: 0 12px 28px rgba(15, 23, 42, 0.16);
+      z-index: 60;
+    }
+
+    .tag-filter-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 8px;
+      font-size: 12px;
+    }
+
+    .tag-filter-reset {
+      color: #2563eb;
+      font-size: 11px;
+      padding: 4px;
+    }
+
+    .tag-filter-list {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .tag-filter-option {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 5px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .tag-filter-option:hover {
+      background: #f8fafc;
+    }
+
+    .tag-filter-option input {
+      margin: 0;
+    }
+
+    .tag-filter-name {
+      flex: 1;
+      overflow-wrap: anywhere;
+    }
+
+    .tag-filter-node-count {
+      color: #94a3b8;
+      font-size: 10px;
+    }
+
+    .tag-filter-empty {
+      padding: 8px 4px;
+      color: #64748b;
+      font-size: 11px;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 639px) {
+      .search-wrapper {
+        min-width: 70px;
+      }
+
+      .tag-filter-button {
+        padding: 6px;
+        font-size: 10px;
+      }
+
+      .tag-filter-count {
+        display: none;
+      }
+    }
+
     .search-dropdown {
       position: absolute;
       left: 0;
@@ -655,6 +757,75 @@
       font-size: 12px;
       font-weight: 600;
       color: #64748b;
+    }
+
+    .tag-editor-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+      min-height: 28px;
+    }
+
+    .node-tag-list {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+
+    .node-tag-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      max-width: 180px;
+      padding: 3px 7px;
+      border-radius: 999px;
+      background: #eff6ff;
+      color: #1d4ed8;
+      font-size: 11px;
+      line-height: 1.3;
+    }
+
+    .node-tag-chip.partial {
+      border: 1px dashed #93c5fd;
+      background: #f8fafc;
+    }
+
+    .node-tag-chip span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .node-tag-remove {
+      flex-shrink: 0;
+      color: #64748b;
+      font-size: 14px;
+      line-height: 1;
+    }
+
+    .node-tag-remove:hover {
+      color: #dc2626;
+    }
+
+    .node-tag-input {
+      width: 110px;
+      padding: 4px 7px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      outline: none;
+      font-size: 11px;
+      user-select: text;
+    }
+
+    .node-tag-input:focus {
+      border-color: #60a5fa;
+    }
+
+    .tag-add-button {
+      padding: 4px 8px;
+      font-size: 11px;
     }
 
     .palette-row {
@@ -1488,6 +1659,19 @@
       <div id="search-dropdown" class="search-dropdown custom-scroll hidden"></div>
     </div>
 
+    <div class="tag-filter-wrap">
+      <button id="btn-tag-filter" class="btn-secondary tag-filter-button" type="button" aria-expanded="false">
+        表示タグ <span id="tag-filter-active-count" class="tag-filter-count">全て</span>
+      </button>
+      <div id="tag-filter-panel" class="tag-filter-panel hidden" role="group" aria-label="タグごとの表示切り替え">
+        <div class="tag-filter-heading">
+          <strong>タグ表示</strong>
+          <button id="btn-show-all-tags" type="button" class="tag-filter-reset">すべて表示</button>
+        </div>
+        <div id="tag-filter-list" class="tag-filter-list"></div>
+      </div>
+    </div>
+
     <!-- 右側：ズーム・全体俯瞰ボタン -->
     <div class="btn-group">
       <button id="btn-zoom-out" title="縮小 (-)" class="btn-icon">
@@ -1668,6 +1852,12 @@
               <span>削除</span>
             </button>
           </div>
+        </div>
+        <div class="tag-editor-row">
+          <span class="prop-label">タグ:</span>
+          <div id="node-tag-list" class="node-tag-list"></div>
+          <input id="node-tag-input" class="node-tag-input" type="text" maxlength="32" placeholder="タグを追加" aria-label="追加するタグ" />
+          <button id="btn-add-node-tag" class="btn-secondary tag-add-button" type="button">追加</button>
         </div>
       </div>
 
@@ -1936,6 +2126,7 @@
       searchQuery: '',
       searchMatches: [],
       searchMatchIndex: 0,
+      hiddenTags: new Set(),
       fileHandle: null,
       clipboard: {
         nodes: [],
@@ -2816,6 +3007,7 @@
     }
 
     function renderEdges() {
+      rebuildTagVisibilityCache();
       const nodeMap = new Map(state.nodes.map(n => [n.id, n]));
       edgesContainer.innerHTML = '';
 
@@ -2823,6 +3015,7 @@
         const srcNode = nodeMap.get(edge.source);
         const tgtNode = nodeMap.get(edge.target);
         if (!srcNode || !tgtNode) continue;
+        if (!isNodeVisibleByTags(srcNode) || !isNodeVisibleByTags(tgtNode)) continue;
 
         const p1 = getAnchorPoint(srcNode, edge.sourceAnchor || 'right');
         const p2 = getAnchorPoint(tgtNode, edge.targetAnchor || 'left');
@@ -2876,10 +3069,12 @@
     }
 
     function renderNodes() {
+      rebuildTagVisibilityCache();
       nodesContainer.innerHTML = '';
       const matchedSet = new Set(state.searchMatches);
 
       for (const node of state.nodes) {
+        if (!isNodeVisibleByTags(node)) continue;
         const el = document.createElement('div');
         el.dataset.nodeId = node.id;
 
@@ -3090,7 +3285,10 @@
         nodesContainer.appendChild(el);
       }
 
-      nodeCountLabel.textContent = `${state.nodes.length}要素`;
+      const visibleCount = state.nodes.filter(isNodeVisibleByTags).length;
+      nodeCountLabel.textContent = visibleCount === state.nodes.length
+        ? `${state.nodes.length}要素`
+        : `${visibleCount}/${state.nodes.length}要素`;
       renderMinimap();
     }
 
@@ -3105,6 +3303,7 @@
       renderEdges();
       renderNodes();
       updatePropertyBar();
+      renderTagFilter();
     }
 
     // ===== 色履歴（各4枠固定・履歴順）＆ カスタムカラーピッカー管理 =====
@@ -3689,6 +3888,7 @@
         nodeProps.classList.remove('hidden');
         edgeProps.classList.add('hidden');
         renderColorSlots();
+        renderNodeTagEditor();
         if (pickerState.activeKind && pickerPanel && !pickerPanel.classList.contains('hidden')) {
           syncColorPickerWithCurrent(true);
         }
@@ -4662,12 +4862,13 @@
     }
 
     function fitToScreen() {
-      if (state.nodes.length === 0) {
+      const visibleNodes = state.nodes.filter(isNodeVisibleByTags);
+      if (visibleNodes.length === 0) {
         animateViewportTo(100, 100, 1);
         return;
       }
       let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-      for (const n of state.nodes) {
+      for (const n of visibleNodes) {
         minX = Math.min(minX, n.x);
         minY = Math.min(minY, n.y);
         maxX = Math.max(maxX, n.x + n.width);
@@ -4692,11 +4893,12 @@
       const cw = minimapCanvas.width;
       const ch = minimapCanvas.height;
       minimapCtx.clearRect(0, 0, cw, ch);
+      const visibleNodes = state.nodes.filter(isNodeVisibleByTags);
 
-      if (state.nodes.length === 0) return;
+      if (visibleNodes.length === 0) return;
 
       let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-      for (const n of state.nodes) {
+      for (const n of visibleNodes) {
         minX = Math.min(minX, n.x);
         minY = Math.min(minY, n.y);
         maxX = Math.max(maxX, n.x + n.width);
@@ -4720,7 +4922,7 @@
       const offsetX = (cw - worldW * scale) / 2;
       const offsetY = (ch - worldH * scale) / 2;
 
-      const nodeMap = new Map(state.nodes.map(n => [n.id, n]));
+      const nodeMap = new Map(visibleNodes.map(n => [n.id, n]));
       minimapCtx.lineWidth = 1.2;
       for (const e of state.edges) {
         const s = nodeMap.get(e.source);
@@ -4795,6 +4997,7 @@
       }
 
       const matches = state.nodes.filter(n => {
+        if (!isNodeVisibleByTags(n)) return false;
         const searchable = `${n.text || ''} ${n.alt || ''}`.toLowerCase();
         return searchable.includes(state.searchQuery);
       });
@@ -4931,6 +5134,7 @@
         pushHistory();
         state.nodes = parsed.nodes;
         state.edges = parsed.edges;
+        state.hiddenTags.clear();
         if (parsed.viewport) {
           state.viewport = parsed.viewport;
         }
@@ -4975,6 +5179,7 @@
       const sample = getSampleData();
       state.nodes = sample.nodes;
       state.edges = sample.edges;
+      state.hiddenTags.clear();
       state.viewport = sample.viewport;
       state.selectedNodeId = null;
       state.selectedNodeIds.clear();
@@ -5435,6 +5640,221 @@
       renderAll();
       updateHistoryButtons();
     });
+
+    // タグ編集とタグ別表示フィルター
+    const hiddenTagNames = state.hiddenTags;
+    const tagFilterButton = document.getElementById('btn-tag-filter');
+    const tagFilterPanel = document.getElementById('tag-filter-panel');
+    const tagFilterList = document.getElementById('tag-filter-list');
+    const tagFilterActiveCount = document.getElementById('tag-filter-active-count');
+    const nodeTagList = document.getElementById('node-tag-list');
+    const nodeTagInput = document.getElementById('node-tag-input');
+    let tagVisibilityCache = new Map();
+
+    function getNodeTags(node) {
+      const source = Array.isArray(node.tags) ? node.tags : (typeof node.tags === 'string' ? [node.tags] : []);
+      return [...new Set(source.map(tag => String(tag).trim()).filter(Boolean))];
+    }
+
+    function rebuildTagVisibilityCache() {
+      const groupTags = new Map();
+      for (const node of state.nodes) {
+        if (!node.groupId) continue;
+        if (!groupTags.has(node.groupId)) groupTags.set(node.groupId, new Set());
+        getNodeTags(node).forEach(tag => groupTags.get(node.groupId).add(tag));
+      }
+
+      tagVisibilityCache = new Map();
+      for (const node of state.nodes) {
+        const tags = node.groupId
+          ? [...(groupTags.get(node.groupId) || [])]
+          : getNodeTags(node);
+        tagVisibilityCache.set(node.id, tags.length === 0 || tags.some(tag => !hiddenTagNames.has(tag)));
+      }
+    }
+
+    function isNodeVisibleByTags(node) {
+      if (tagVisibilityCache.has(node.id)) return tagVisibilityCache.get(node.id);
+      const tags = getNodeTags(node);
+      return tags.length === 0 || tags.some(tag => !hiddenTagNames.has(tag));
+    }
+
+    function getAllTags() {
+      const tags = new Set();
+      state.nodes.forEach(node => getNodeTags(node).forEach(tag => tags.add(tag)));
+      return [...tags].sort((a, b) => a.localeCompare(b, 'ja'));
+    }
+
+    function renderTagFilter() {
+      if (!tagFilterList) return;
+      const tags = getAllTags();
+      for (const hiddenTag of [...hiddenTagNames]) {
+        if (!tags.includes(hiddenTag)) hiddenTagNames.delete(hiddenTag);
+      }
+
+      tagFilterList.innerHTML = '';
+      if (tags.length === 0) {
+        tagFilterList.innerHTML = '<div class="tag-filter-empty">図形を選択してタグを追加すると、ここで表示を切り替えられます。</div>';
+      } else {
+        for (const tag of tags) {
+          const count = state.nodes.filter(node => getNodeTags(node).includes(tag)).length;
+          const label = document.createElement('label');
+          label.className = 'tag-filter-option';
+          const checkbox = document.createElement('input');
+          checkbox.type = 'checkbox';
+          checkbox.checked = !hiddenTagNames.has(tag);
+          checkbox.addEventListener('change', () => {
+            if (checkbox.checked) hiddenTagNames.delete(tag);
+            else hiddenTagNames.add(tag);
+            refreshTagVisibility();
+          });
+          const name = document.createElement('span');
+          name.className = 'tag-filter-name';
+          name.textContent = tag;
+          const nodeCount = document.createElement('span');
+          nodeCount.className = 'tag-filter-node-count';
+          nodeCount.textContent = `${count}要素`;
+          label.append(checkbox, name, nodeCount);
+          tagFilterList.appendChild(label);
+        }
+      }
+
+      const visibleTags = tags.length - tags.filter(tag => hiddenTagNames.has(tag)).length;
+      if (tagFilterActiveCount) {
+        tagFilterActiveCount.textContent = hiddenTagNames.size === 0 ? '全て' : `${visibleTags}/${tags.length}`;
+      }
+      rebuildTagVisibilityCache();
+    }
+
+    function refreshTagVisibility() {
+      rebuildTagVisibilityCache();
+      state.selectedNodeIds = new Set([...state.selectedNodeIds].filter(id => {
+        const node = state.nodes.find(item => item.id === id);
+        return node && isNodeVisibleByTags(node);
+      }));
+      if (state.selectedNodeId) {
+        const selected = state.nodes.find(node => node.id === state.selectedNodeId);
+        if (!selected || !isNodeVisibleByTags(selected)) state.selectedNodeId = null;
+      }
+      if (!state.selectedNodeId && state.selectedNodeIds.size > 0) {
+        state.selectedNodeId = state.selectedNodeIds.values().next().value;
+      }
+      if (state.selectedNodeIds.size === 0) state.selectedNodeId = null;
+
+      if (state.selectedEdgeId) {
+        const edge = state.edges.find(item => item.id === state.selectedEdgeId);
+        const source = edge && state.nodes.find(node => node.id === edge.source);
+        const target = edge && state.nodes.find(node => node.id === edge.target);
+        if (!source || !target || !isNodeVisibleByTags(source) || !isNodeVisibleByTags(target)) {
+          state.selectedEdgeId = null;
+        }
+      }
+
+      renderAll();
+      if (searchInput.value.trim()) performSearch(searchInput.value);
+      renderTagFilter();
+    }
+
+    function getSelectedNodesForTagEdit() {
+      const ids = new Set(state.selectedNodeIds);
+      if (state.selectedNodeId) ids.add(state.selectedNodeId);
+      return state.nodes.filter(node => ids.has(node.id));
+    }
+
+    function renderNodeTagEditor() {
+      if (!nodeTagList) return;
+      const selectedNodes = getSelectedNodesForTagEdit();
+      nodeTagList.innerHTML = '';
+      if (selectedNodes.length === 0) return;
+
+      const tagCounts = new Map();
+      selectedNodes.forEach(node => getNodeTags(node).forEach(tag => {
+        tagCounts.set(tag, (tagCounts.get(tag) || 0) + 1);
+      }));
+      for (const [tag, count] of [...tagCounts].sort(([a], [b]) => a.localeCompare(b, 'ja'))) {
+        const chip = document.createElement('span');
+        chip.className = `node-tag-chip ${count < selectedNodes.length ? 'partial' : ''}`;
+        chip.title = count < selectedNodes.length ? '選択中の一部の要素に設定されています' : tag;
+        const name = document.createElement('span');
+        name.textContent = tag;
+        const remove = document.createElement('button');
+        remove.type = 'button';
+        remove.className = 'node-tag-remove';
+        remove.textContent = '×';
+        remove.title = `選択中の要素から「${tag}」を削除`;
+        remove.addEventListener('click', () => updateSelectedNodeTag(tag, false));
+        chip.append(name, remove);
+        nodeTagList.appendChild(chip);
+      }
+    }
+
+    function updateSelectedNodeTag(rawTag, add) {
+      const tag = String(rawTag || '').trim();
+      if (!tag) return;
+      if (tag.length > 32) {
+        showToast('タグは32文字以内で入力してください');
+        return;
+      }
+      const selectedNodes = getSelectedNodesForTagEdit();
+      if (selectedNodes.length === 0) return;
+      const hasChange = selectedNodes.some(node => add
+        ? !getNodeTags(node).includes(tag)
+        : getNodeTags(node).includes(tag));
+      if (!hasChange) return;
+
+      pushHistory();
+      if (add) hiddenTagNames.delete(tag);
+      for (const node of selectedNodes) {
+        const tags = getNodeTags(node);
+        if (add && !tags.includes(tag)) tags.push(tag);
+        if (!add && tags.includes(tag)) node.tags = tags.filter(item => item !== tag);
+        else if (add) node.tags = tags;
+        if (!Array.isArray(node.tags) || node.tags.length === 0) delete node.tags;
+      }
+      rebuildTagVisibilityCache();
+      refreshTagVisibility();
+      persistToLocalStorage();
+    }
+
+    function addTagFromInput() {
+      const value = nodeTagInput.value.trim();
+      if (!value) return;
+      updateSelectedNodeTag(value, true);
+      nodeTagInput.value = '';
+      nodeTagInput.focus();
+    }
+
+    tagFilterButton?.addEventListener('click', () => {
+      const open = tagFilterPanel.classList.contains('hidden');
+      tagFilterPanel.classList.toggle('hidden', !open);
+      tagFilterButton.setAttribute('aria-expanded', String(open));
+      if (open) renderTagFilter();
+    });
+
+    document.getElementById('btn-show-all-tags')?.addEventListener('click', () => {
+      hiddenTagNames.clear();
+      refreshTagVisibility();
+    });
+
+    document.getElementById('btn-add-node-tag')?.addEventListener('click', addTagFromInput);
+    nodeTagInput?.addEventListener('keydown', event => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        addTagFromInput();
+      }
+      event.stopPropagation();
+    });
+    nodeTagInput?.addEventListener('pointerdown', event => event.stopPropagation());
+
+    document.addEventListener('click', event => {
+      if (!tagFilterPanel || tagFilterPanel.classList.contains('hidden')) return;
+      if (!tagFilterPanel.contains(event.target) && !tagFilterButton.contains(event.target)) {
+        tagFilterPanel.classList.add('hidden');
+        tagFilterButton.setAttribute('aria-expanded', 'false');
+      }
+    });
+
+    renderTagFilter();
   </script>
 </body>
 </html>

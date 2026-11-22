@@ -276,6 +276,75 @@
       color: #64748b;
     }
 
+    .tag-editor-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+      min-height: 28px;
+    }
+
+    .node-tag-list {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+
+    .node-tag-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      max-width: 180px;
+      padding: 3px 7px;
+      border-radius: 999px;
+      background: #eff6ff;
+      color: #1d4ed8;
+      font-size: 11px;
+      line-height: 1.3;
+    }
+
+    .node-tag-chip.partial {
+      border: 1px dashed #93c5fd;
+      background: #f8fafc;
+    }
+
+    .node-tag-chip span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .node-tag-remove {
+      flex-shrink: 0;
+      color: #64748b;
+      font-size: 14px;
+      line-height: 1;
+    }
+
+    .node-tag-remove:hover {
+      color: #dc2626;
+    }
+
+    .node-tag-input {
+      width: 110px;
+      padding: 4px 7px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      outline: none;
+      font-size: 11px;
+      user-select: text;
+    }
+
+    .node-tag-input:focus {
+      border-color: #60a5fa;
+    }
+
+    .tag-add-button {
+      padding: 4px 8px;
+      font-size: 11px;
+    }
+
     .palette-row {
       display: flex;
       align-items: center;

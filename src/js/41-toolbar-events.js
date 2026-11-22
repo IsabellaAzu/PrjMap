@@ -15,6 +15,7 @@
       const sample = getSampleData();
       state.nodes = sample.nodes;
       state.edges = sample.edges;
+      state.hiddenTags.clear();
       state.viewport = sample.viewport;
       state.selectedNodeId = null;
       state.selectedNodeIds.clear();

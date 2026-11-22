@@ -16,6 +16,7 @@
       }
 
       const matches = state.nodes.filter(n => {
+        if (!isNodeVisibleByTags(n)) return false;
         const searchable = `${n.text || ''} ${n.alt || ''}`.toLowerCase();
         return searchable.includes(state.searchQuery);
       });
@@ -152,6 +153,7 @@
         pushHistory();
         state.nodes = parsed.nodes;
         state.edges = parsed.edges;
+        state.hiddenTags.clear();
         if (parsed.viewport) {
           state.viewport = parsed.viewport;
         }

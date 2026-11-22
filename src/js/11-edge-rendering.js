@@ -44,6 +44,7 @@
     }
 
     function renderEdges() {
+      rebuildTagVisibilityCache();
       const nodeMap = new Map(state.nodes.map(n => [n.id, n]));
       edgesContainer.innerHTML = '';
 
@@ -51,6 +52,7 @@
         const srcNode = nodeMap.get(edge.source);
         const tgtNode = nodeMap.get(edge.target);
         if (!srcNode || !tgtNode) continue;
+        if (!isNodeVisibleByTags(srcNode) || !isNodeVisibleByTags(tgtNode)) continue;
 
         const p1 = getAnchorPoint(srcNode, edge.sourceAnchor || 'right');
         const p2 = getAnchorPoint(tgtNode, edge.targetAnchor || 'left');
@@ -104,10 +106,12 @@
     }
 
     function renderNodes() {
+      rebuildTagVisibilityCache();
       nodesContainer.innerHTML = '';
       const matchedSet = new Set(state.searchMatches);
 
       for (const node of state.nodes) {
+        if (!isNodeVisibleByTags(node)) continue;
         const el = document.createElement('div');
         el.dataset.nodeId = node.id;
 
@@ -318,7 +322,10 @@
         nodesContainer.appendChild(el);
       }
 
-      nodeCountLabel.textContent = `${state.nodes.length}要素`;
+      const visibleCount = state.nodes.filter(isNodeVisibleByTags).length;
+      nodeCountLabel.textContent = visibleCount === state.nodes.length
+        ? `${state.nodes.length}要素`
+        : `${visibleCount}/${state.nodes.length}要素`;
       renderMinimap();
     }
 
@@ -333,4 +340,5 @@
       renderEdges();
       renderNodes();
       updatePropertyBar();
+      renderTagFilter();
     }

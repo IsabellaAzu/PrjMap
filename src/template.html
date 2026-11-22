@@ -86,6 +86,19 @@
       <div id="search-dropdown" class="search-dropdown custom-scroll hidden"></div>
     </div>
 
+    <div class="tag-filter-wrap">
+      <button id="btn-tag-filter" class="btn-secondary tag-filter-button" type="button" aria-expanded="false">
+        表示タグ <span id="tag-filter-active-count" class="tag-filter-count">全て</span>
+      </button>
+      <div id="tag-filter-panel" class="tag-filter-panel hidden" role="group" aria-label="タグごとの表示切り替え">
+        <div class="tag-filter-heading">
+          <strong>タグ表示</strong>
+          <button id="btn-show-all-tags" type="button" class="tag-filter-reset">すべて表示</button>
+        </div>
+        <div id="tag-filter-list" class="tag-filter-list"></div>
+      </div>
+    </div>
+
     <!-- 右側：ズーム・全体俯瞰ボタン -->
     <div class="btn-group">
       <button id="btn-zoom-out" title="縮小 (-)" class="btn-icon">
@@ -266,6 +279,12 @@
               <span>削除</span>
             </button>
           </div>
+        </div>
+        <div class="tag-editor-row">
+          <span class="prop-label">タグ:</span>
+          <div id="node-tag-list" class="node-tag-list"></div>
+          <input id="node-tag-input" class="node-tag-input" type="text" maxlength="32" placeholder="タグを追加" aria-label="追加するタグ" />
+          <button id="btn-add-node-tag" class="btn-secondary tag-add-button" type="button">追加</button>
         </div>
       </div>
 

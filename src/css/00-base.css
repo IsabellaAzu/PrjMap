@@ -305,6 +305,108 @@
       color: #2563eb;
     }
 
+    .tag-filter-wrap {
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .tag-filter-button {
+      white-space: nowrap;
+      padding: 6px 8px;
+      font-size: 11px;
+    }
+
+    .tag-filter-count {
+      color: #2563eb;
+      font-weight: 700;
+    }
+
+    .tag-filter-panel {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      width: min(280px, 86vw);
+      max-height: 360px;
+      overflow-y: auto;
+      padding: 12px;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      box-shadow: 0 12px 28px rgba(15, 23, 42, 0.16);
+      z-index: 60;
+    }
+
+    .tag-filter-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 8px;
+      font-size: 12px;
+    }
+
+    .tag-filter-reset {
+      color: #2563eb;
+      font-size: 11px;
+      padding: 4px;
+    }
+
+    .tag-filter-list {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .tag-filter-option {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 5px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .tag-filter-option:hover {
+      background: #f8fafc;
+    }
+
+    .tag-filter-option input {
+      margin: 0;
+    }
+
+    .tag-filter-name {
+      flex: 1;
+      overflow-wrap: anywhere;
+    }
+
+    .tag-filter-node-count {
+      color: #94a3b8;
+      font-size: 10px;
+    }
+
+    .tag-filter-empty {
+      padding: 8px 4px;
+      color: #64748b;
+      font-size: 11px;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 639px) {
+      .search-wrapper {
+        min-width: 70px;
+      }
+
+      .tag-filter-button {
+        padding: 6px;
+        font-size: 10px;
+      }
+
+      .tag-filter-count {
+        display: none;
+      }
+    }
+
     .search-dropdown {
       position: absolute;
       left: 0;
