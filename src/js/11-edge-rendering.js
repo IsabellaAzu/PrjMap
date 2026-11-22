@@ -195,6 +195,7 @@
             textarea.className = 'node-textarea';
             textarea.value = node.text || '';
             textarea.placeholder = 'テキストやURLを入力...';
+            if (node.textColor) textarea.style.color = node.textColor;
             textarea.addEventListener('pointerdown', (e) => e.stopPropagation());
             textarea.addEventListener('keydown', (e) => {
               e.stopPropagation();
@@ -215,6 +216,7 @@
             textDiv.className = 'node-text-display';
             const displayText = getTextWithoutUrls(node.text);
             textDiv.textContent = displayText || '';
+            if (node.textColor) textDiv.style.color = node.textColor;
             if (displayText) {
               content.appendChild(textDiv);
             }

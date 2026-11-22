@@ -3,6 +3,7 @@
     const colorHistory = {
       fill: ['#ffffff', '#eff6ff', '#f0fdf4'],
       stroke: ['#64748b', '#2563eb', '#059669'],
+      text: ['#1e293b', '#0f172a', '#ffffff'],
       edge: ['#2563eb', '#059669', '#d97706']
     };
 
@@ -15,6 +16,9 @@
         if (Array.isArray(savedHist.stroke) && savedHist.stroke.length > 0) {
           colorHistory.stroke = savedHist.stroke.slice(0, 3);
         }
+        if (Array.isArray(savedHist.text) && savedHist.text.length > 0) {
+          colorHistory.text = savedHist.text.slice(0, 3);
+        }
         if (Array.isArray(savedHist.edge) && savedHist.edge.length > 0) {
           colorHistory.edge = savedHist.edge.slice(0, 3);
         }
@@ -26,6 +30,7 @@
         localStorage.setItem(COLOR_HISTORY_KEY, JSON.stringify({
           fill: colorHistory.fill.slice(0, 3),
           stroke: colorHistory.stroke.slice(0, 3),
+          text: colorHistory.text.slice(0, 3),
           edge: colorHistory.edge.slice(0, 3)
         }));
       } catch (_) {}
@@ -130,7 +135,9 @@
       if (ids.length === 0) return null;
       const firstNode = state.nodes.find(n => n.id === ids[0]);
       if (!firstNode) return null;
-      return kind === 'fill' ? (firstNode.fill ?? '#ffffff') : (firstNode.stroke ?? '#64748b');
+      if (kind === 'fill') return firstNode.fill ?? '#ffffff';
+      if (kind === 'stroke') return firstNode.stroke ?? '#64748b';
+      return firstNode.textColor ?? '#1e293b';
     }
 
     function getCurrentSelectedEdgeColor() {
@@ -161,7 +168,9 @@
       ids.forEach(id => {
         const node = state.nodes.find(n => n.id === id);
         if (node) {
-          node[kind] = colorValue;
+          const property = kind === 'text' ? 'textColor' : kind;
+          if (kind === 'text' && colorValue === 'transparent') delete node[property];
+          else node[property] = colorValue;
         }
       });
       if (colorValue && colorValue !== 'transparent') {
@@ -201,6 +210,7 @@
     function renderColorSlots() {
       const currentFill = getCurrentSelectedColor('fill');
       const currentStroke = getCurrentSelectedColor('stroke');
+      const currentText = getCurrentSelectedColor('text');
 
       const fillHistEl = document.getElementById('fill-history-slots');
       const fillActiveEl = document.getElementById('fill-active-slot');
@@ -267,6 +277,34 @@
       if (strokeNoneBtn) {
         strokeNoneBtn.classList.toggle('active', currentStroke === 'transparent');
       }
+
+      const textHistEl = document.getElementById('text-color-history-slots');
+      const textActiveEl = document.getElementById('text-color-active-slot');
+      const textDefaultBtn = document.getElementById('text-color-default-btn');
+      if (textHistEl) {
+        textHistEl.innerHTML = '';
+        for (let i = 0; i < 3; i++) {
+          const histColor = colorHistory.text[i];
+          if (histColor) {
+            textHistEl.appendChild(createColorSwatchEl(histColor, 'text', false));
+          } else {
+            const emptySlot = document.createElement('span');
+            emptySlot.className = 'swatch-btn';
+            emptySlot.style.background = '#f8fafc';
+            emptySlot.style.border = '1px dashed #cbd5e1';
+            emptySlot.style.cursor = 'default';
+            emptySlot.style.boxShadow = 'none';
+            textHistEl.appendChild(emptySlot);
+          }
+        }
+      }
+      if (textActiveEl) {
+        textActiveEl.innerHTML = '';
+        if (currentText && currentText !== 'transparent') {
+          textActiveEl.appendChild(createColorSwatchEl(currentText, 'text', true));
+        }
+      }
+      if (textDefaultBtn) textDefaultBtn.classList.toggle('active', currentText === '#1e293b');
     }
 
     function renderEdgeColorSlots() {
@@ -302,7 +340,7 @@
 
     // カスタムカラーピッカー（SVグラデーション＋色相スライダー＋不透明度スライダー）
     const pickerState = {
-      activeKind: null, // 'fill' | 'stroke' | null
+      activeKind: null, // 'fill' | 'stroke' | 'text' | 'edge' | null
       h: 145,
       s: 0.9,
       v: 0.75,
@@ -437,7 +475,8 @@
       ids.forEach(id => {
         const node = state.nodes.find(n => n.id === id);
         if (node) {
-          node[pickerState.activeKind] = cssColor;
+          const property = pickerState.activeKind === 'text' ? 'textColor' : pickerState.activeKind;
+          node[property] = cssColor;
         }
       });
 
@@ -454,6 +493,7 @@
     function toggleColorPicker(kind) {
       const btnFill = document.getElementById('btn-toggle-fill-picker');
       const btnStroke = document.getElementById('btn-toggle-stroke-picker');
+      const btnText = document.getElementById('btn-toggle-text-color-picker');
       const btnEdge = document.getElementById('btn-toggle-edge-picker');
 
       if (pickerState.activeKind === kind && pickerPanel && !pickerPanel.classList.contains('hidden')) {
@@ -461,6 +501,7 @@
         pickerPanel.classList.add('hidden');
         if (btnFill) btnFill.classList.remove('open');
         if (btnStroke) btnStroke.classList.remove('open');
+        if (btnText) btnText.classList.remove('open');
         if (btnEdge) btnEdge.classList.remove('open');
         return;
       }
@@ -469,10 +510,12 @@
       if (pickerTargetLabel) {
         if (kind === 'fill') pickerTargetLabel.textContent = '塗り — カラー選択';
         else if (kind === 'stroke') pickerTargetLabel.textContent = '枠線 — カラー選択';
+        else if (kind === 'text') pickerTargetLabel.textContent = '文字色 — カラー選択';
         else pickerTargetLabel.textContent = '線色 — カラー選択';
       }
       if (btnFill) btnFill.classList.toggle('open', kind === 'fill');
       if (btnStroke) btnStroke.classList.toggle('open', kind === 'stroke');
+      if (btnText) btnText.classList.toggle('open', kind === 'text');
       if (btnEdge) btnEdge.classList.toggle('open', kind === 'edge');
       if (pickerPanel) pickerPanel.classList.remove('hidden');
       syncColorPickerWithCurrent(true);
@@ -557,12 +600,17 @@
       document.getElementById('node-props')?.appendChild(pickerPanel);
       toggleColorPicker('stroke');
     });
+    document.getElementById('btn-toggle-text-color-picker').addEventListener('click', () => {
+      document.getElementById('node-props')?.appendChild(pickerPanel);
+      toggleColorPicker('text');
+    });
     document.getElementById('btn-toggle-edge-picker').addEventListener('click', () => {
       document.getElementById('edge-props')?.appendChild(pickerPanel);
       toggleColorPicker('edge');
     });
     document.getElementById('fill-none-btn').addEventListener('click', () => applyColorToSelected('fill', 'transparent'));
     document.getElementById('stroke-none-btn').addEventListener('click', () => applyColorToSelected('stroke', 'transparent'));
+    document.getElementById('text-color-default-btn').addEventListener('click', () => applyColorToSelected('text', 'transparent'));
     document.getElementById('btn-close-color-picker').addEventListener('click', () => {
       if (pickerState.activeKind) {
         commitPickerColor(true);
@@ -571,4 +619,5 @@
       if (pickerPanel) pickerPanel.classList.add('hidden');
       document.getElementById('btn-toggle-fill-picker')?.classList.remove('open');
       document.getElementById('btn-toggle-stroke-picker')?.classList.remove('open');
+      document.getElementById('btn-toggle-text-color-picker')?.classList.remove('open');
     });
