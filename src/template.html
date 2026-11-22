@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>InMyMind - 完全オフラインマップ作成ツール</title>
+  <!-- @styles -->
+</head>
+
+<body>
+
+  <!-- トップヘッダー：ファイル操作・履歴・検索・俯瞰コントロール -->
+  <header class="app-header">
+    <!-- 左側：ロゴ＆ローカルファイル保存/読込＆Undo/Redo -->
+    <div class="header-group">
+      <div class="brand-wrap">
+        <div class="brand-logo" aria-hidden="true">
+          <svg class="icon-md" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <rect x="3" y="3" width="7" height="7" rx="1.5" />
+            <rect x="14" y="14" width="7" height="7" rx="1.5" />
+            <path d="M10 6.5h4a2 2 0 0 1 2 2v5.5" />
+          </svg>
+        </div>
+        <div class="brand-info">
+          <h1 class="brand-title">InMyMind</h1>
+          <p class="brand-subtitle" id="file-status-label">完全オフライン・自動保存済</p>
+        </div>
+      </div>
+
+      <div class="v-divider"></div>
+
+      <!-- ローカルJSON保存／読込ボタン -->
+      <div class="btn-group">
+        <button id="btn-open-file" title="PC上のJSONファイルを開く" class="btn-secondary">
+          <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+          </svg>
+          <span>開く</span>
+        </button>
+        <button id="btn-save-file" title="JSONファイルとしてPCに保存（上書きまたは新規保存）" class="btn-primary">
+          <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+          </svg>
+          <span>保存</span>
+        </button>
+        <button id="btn-reset-sample" title="サンプルデータにリセット" class="btn-ghost">
+          <span>サンプル復元</span>
+        </button>
+        <input type="file" id="hidden-file-input" accept=".json,application/json" class="hidden" />
+      </div>
+
+      <div class="v-divider"></div>
+
+      <!-- 元に戻す / やり直すボタン -->
+      <div class="btn-group">
+        <button id="btn-undo" title="元に戻す (Cmd+Z / Ctrl+Z)" disabled class="btn-icon">
+          <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a5 5 0 0 1 5 5v2M3 10l5-5m-5 5l5 5" />
+          </svg>
+        </button>
+        <button id="btn-redo" title="やり直す (Cmd+Shift+Z / Ctrl+Y)" disabled class="btn-icon">
+          <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 10H11a5 5 0 0 0-5 5v2m15-7l-5-5m5 5l-5 5" />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- 中央：検索＆カメラ移動ボックス -->
+    <div class="search-wrapper">
+      <div class="search-input-box">
+        <svg class="search-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <circle cx="11" cy="11" r="8" />
+          <path stroke-linecap="round" d="M21 21l-4.35-4.35" />
+        </svg>
+        <input id="search-input" type="text" placeholder="図形・テキスト・URLを検索して移動 (Enter)..." class="search-input" />
+        <div id="search-counter" class="search-counter hidden">
+          <span id="search-count-text">0/0</span>
+          <button id="btn-search-next" title="次の一致へ移動" class="search-next-btn">▼</button>
+        </div>
+      </div>
+      <!-- 検索結果ドロップダウン -->
+      <div id="search-dropdown" class="search-dropdown custom-scroll hidden"></div>
+    </div>
+
+    <!-- 右側：ズーム・全体俯瞰ボタン -->
+    <div class="btn-group">
+      <button id="btn-zoom-out" title="縮小 (-)" class="btn-icon">
+        <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" d="M20 12H4" />
+        </svg>
+      </button>
+      <span id="zoom-level-label" class="zoom-label">100%</span>
+      <button id="btn-zoom-in" title="拡大 (+)" class="btn-icon">
+        <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" d="M12 4v16m8-8H4" />
+        </svg>
+      </button>
+      <button id="btn-fit-view" title="プロジェクト全体を俯瞰表示" class="btn-icon" style="color: #2563eb;">
+        <svg class="icon-md" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+        </svg>
+      </button>
+      <button id="btn-toggle-minimap" title="俯瞰マップの表示/非表示" class="btn-icon" aria-pressed="true">
+        <svg class="icon-md" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- メイン作業領域 -->
+  <div class="workspace">
+
+    <!-- 左側フローティングツールバー：図形・テキスト追加 -->
+    <aside class="left-toolbar">
+      <div class="toolbar-heading">追加</div>
+
+      <button data-add-shape="rect" title="四角形を追加" class="tool-btn">
+        <svg class="icon-md" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <rect x="3" y="5" width="18" height="14" />
+        </svg>
+      </button>
+
+      <button data-add-shape="roundRect" title="角丸四角形を追加" class="tool-btn">
+        <svg class="icon-md" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <rect x="3" y="5" width="18" height="14" rx="4" />
+        </svg>
+      </button>
+
+      <button data-add-shape="ellipse" title="円・楕円を追加" class="tool-btn">
+        <svg class="icon-md" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <ellipse cx="12" cy="12" rx="9" ry="7" />
+        </svg>
+      </button>
+
+      <button data-add-shape="diamond" title="ひし形（条件分岐）を追加" class="tool-btn">
+        <svg class="icon-md" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <polygon points="12 3 21 12 12 21 3 12 12 3" />
+        </svg>
+      </button>
+
+      <button data-add-shape="sticky" title="付箋メモを追加" class="tool-btn">
+        <svg class="icon-md" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 4h16v11l-5 5H4V4Z" />
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 20v-5h5" />
+        </svg>
+      </button>
+
+      <button data-add-shape="text" title="自由テキストを追加（キャンバスダブルクリックでも作成可）" class="tool-btn">
+        <svg class="icon-md" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 7V4h16v3M9 20h6M12 4v16" />
+        </svg>
+      </button>
+
+      <button id="btn-add-image" title="画像を挿入（クリックでアップロード / 画面へドラッグ＆ドロップでも可）" class="tool-btn">
+        <svg class="icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="4" width="18" height="16" rx="3" />
+          <text x="12" y="14.5" font-size="8" font-weight="700" text-anchor="middle" fill="currentColor" stroke="none"
+            font-family="system-ui, sans-serif">img</text>
+        </svg>
+      </button>
+    </aside>
+
+    <!-- 上部中央フローティングプロパティバー（選択中の図形／線のスタイル編集） -->
+    <div id="property-bar" class="property-bar hidden">
+      <!-- 図形用プロパティ（1行目：塗り・枠線、2行目：配置・編集・右寄せ削除） -->
+      <div id="node-props" class="prop-section">
+        <div class="prop-row">
+          <div class="prop-row-main" style="gap: 14px;">
+            <div class="palette-row" id="fill-color-palette">
+              <span class="prop-label">塗り:</span>
+              <button type="button" data-fill="transparent" id="fill-none-btn" class="swatch-btn"
+                style="background:#f1f5f9; border:1px solid #cbd5e1;" title="透明（無）">無</button>
+              <div id="fill-history-slots" class="color-slot-group" title="過去に使用した色（履歴順・最大3個）"></div>
+              <div id="fill-active-slot" class="color-slot-group" title="選択中オブジェクトの現在の塗り色"></div>
+              <button type="button" id="btn-toggle-fill-picker" class="custom-picker-btn"
+                title="詳細な色を選択（カラーピッカー）">+</button>
+            </div>
+
+            <div class="palette-row" id="stroke-color-palette">
+              <span class="prop-label">枠線:</span>
+              <button type="button" data-stroke="transparent" id="stroke-none-btn" class="swatch-btn"
+                style="background:#f1f5f9; border:1px solid #cbd5e1;" title="枠なし（無）">無</button>
+              <div id="stroke-history-slots" class="color-slot-group" title="過去に使用した色（履歴順・最大3個）"></div>
+              <div id="stroke-active-slot" class="color-slot-group" title="選択中オブジェクトの現在の枠線色"></div>
+              <button type="button" id="btn-toggle-stroke-picker" class="custom-picker-btn"
+                title="詳細な色を選択（カラーピッカー）">+</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 下部展開カラーピッカー（塗り / 枠線 切替） -->
+        <div id="custom-color-picker-panel" class="color-picker-popover hidden">
+          <div class="picker-top-row">
+            <span id="picker-target-label">塗り カラー選択</span>
+            <span id="picker-rgba-readout" style="color:#64748b; font-size:11px;">100%</span>
+          </div>
+          <canvas id="picker-sv-canvas" class="picker-sv-canvas" width="320" height="148"></canvas>
+          <div class="picker-controls-row">
+            <div id="picker-preview-circle" class="picker-preview-circle"></div>
+            <div class="picker-sliders">
+              <input id="picker-hue-slider" type="range" min="0" max="360" value="145" class="hue-slider"
+                aria-label="色相" />
+              <input id="picker-alpha-slider" type="range" min="0" max="100" value="100" class="alpha-slider"
+                aria-label="不透明度" />
+            </div>
+          </div>
+          <div class="picker-footer-row">
+            <input id="picker-hex-input" type="text" class="picker-hex-input" placeholder="#059669" />
+            <button type="button" id="btn-close-color-picker" class="picker-close-btn">閉じる</button>
+          </div>
+        </div>
+
+        <div class="prop-row">
+          <div class="prop-row-main">
+            <!-- グループ化／解除ボタン -->
+            <button id="btn-group-nodes" class="btn-secondary hidden" style="padding: 4px 8px;"
+              title="選択中の図形をグループ化 (Ctrl+G / Cmd+G)">
+              <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <rect x="3" y="3" width="7" height="7" rx="1" />
+                <rect x="14" y="3" width="7" height="7" rx="1" />
+                <rect x="14" y="14" width="7" height="7" rx="1" />
+                <rect x="3" y="14" width="7" height="7" rx="1" />
+              </svg>
+              <span>グループ化</span>
+            </button>
+            <button id="btn-ungroup-nodes" class="btn-secondary hidden" style="padding: 4px 8px;"
+              title="グループを解除 (Ctrl+Shift+G / Cmd+Shift+G)">
+              <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8 8h8v8H8zM3 3h4v4H3zM17 17h4v4h-4z" />
+              </svg>
+              <span>グループ解除</span>
+            </button>
+
+            <!-- レイヤー順序（最前面／最背面） -->
+            <button id="btn-bring-front" class="btn-secondary" style="padding: 4px 8px;" title="最前面へ移動">
+              <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 11l7-7 7 7M5 19l7-7 7 7" />
+              </svg>
+              <span class="hide-xs">最前面</span>
+            </button>
+            <button id="btn-send-back" class="btn-secondary" style="padding: 4px 8px;" title="最背面へ移動">
+              <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 13l-7 7-7-7m14-8l-7 7-7-7" />
+              </svg>
+              <span class="hide-xs">最背面</span>
+            </button>
+
+          </div>
+
+          <div class="prop-row-actions" style="width:100%; justify-content:space-between; margin-left:0;">
+            <button id="btn-edit-text" class="btn-secondary" style="padding: 4px 8px;">
+              テキスト編集
+            </button>
+            <button id="btn-delete-selected" title="選択中の要素を削除 (Delete)" class="btn-delete">
+              <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+              <span>削除</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 接続線用プロパティ（1行目：線色・ランダム、2行目：「種類」から開始＋右寄せ削除） -->
+      <div id="edge-props" class="prop-section hidden">
+        <div class="prop-row">
+          <div class="palette-row" id="edge-color-palette">
+            <span class="prop-label">線色:</span>
+            <div id="edge-history-slots" class="color-slot-group" title="過去に使用した線色（履歴順・最大3個）"></div>
+            <div id="edge-active-slot" class="color-slot-group" title="選択中接続線の現在の線色"></div>
+            <button type="button" id="btn-toggle-edge-picker" class="custom-picker-btn"
+              title="詳細な線色を選択（カラーピッカー）">+</button>
+            <button id="btn-edge-random-color" type="button" class="btn-secondary" style="padding: 2px 8px; font-size: 11px; margin-left: 2px;" title="別のランダム色に変更">🎲 ランダム</button>
+          </div>
+        </div>
+
+        <div class="prop-row">
+          <div class="prop-row-main">
+            <span class="prop-label">種類:</span>
+            <select id="edge-style-select" class="prop-select">
+              <option value="avoid">自動迂回（カギ線）</option>
+              <option value="straight">直線</option>
+              <option value="avoid-dashed">自動迂回（点線）</option>
+              <option value="straight-dashed">直線（点線）</option>
+            </select>
+            <label class="prop-checkbox-label">
+              <input type="checkbox" id="edge-arrow-check" checked />
+              <span>矢印あり</span>
+            </label>
+          </div>
+
+          <div class="prop-row-actions">
+            <button id="btn-delete-edge" title="選択中の線を削除 (Delete)" class="btn-delete">
+              <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+              <span>削除</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- メイン無限キャンバス -->
+    <div id="canvas-viewport">
+      <div id="canvas-world">
+        <!-- 接続線SVGレイヤー -->
+        <svg id="edges-svg">
+          <defs id="edges-defs">
+            <marker id="arrowhead" markerWidth="12" markerHeight="9" refX="10.5" refY="4.5" orient="auto" markerUnits="userSpaceOnUse">
+              <polygon points="0 0.8, 11.5 4.5, 0 8.2" fill="#64748b" />
+            </marker>
+            <marker id="arrowhead-selected" markerWidth="12" markerHeight="9" refX="10.5" refY="4.5" orient="auto" markerUnits="userSpaceOnUse">
+              <polygon points="0 0.8, 11.5 4.5, 0 8.2" fill="#2563eb" />
+            </marker>
+          </defs>
+          <g id="edges-container"></g>
+          <!-- ドラッグ中の仮接続線 -->
+          <path id="temp-edge-path" d="" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-dasharray="6,4"
+            class="hidden" />
+        </svg>
+
+        <!-- 範囲選択（ラバーバンド）矩形 -->
+        <div id="selection-marquee" class="selection-marquee hidden"></div>
+
+        <!-- 図形・ノードレイヤー -->
+        <div id="nodes-container"></div>
+      </div>
+    </div>
+
+    <!-- 左下操作ガイドチップ（同一枠内で💡クリックにより詳細テキストを開閉） -->
+    <div id="guide-chip" class="guide-chip">
+      <button id="btn-toggle-guide" type="button" title="操作ガイド詳細の表示/非表示" class="guide-bulb-btn"
+        aria-expanded="false">💡</button>
+      <div id="guide-body" class="guide-list hidden">
+        <span><strong>ドラッグ:</strong> キャンバス移動 / 図形移動</span>
+        <span><strong>Shift+ドラッグ:</strong> 範囲選択</span>
+        <span><strong>Shift+クリック:</strong> 複数選択</span>
+        <span><strong>Ctrl+G:</strong> グループ化</span>
+        <span><strong>Ctrl+C / V:</strong> コピー・貼り付け</span>
+        <span><strong>ダブルクリック:</strong> テキスト作成・編集</span>
+        <span><strong>画像ドロップ:</strong> 画面へ直接挿入</span>
+        <span><strong>Cmd+Z:</strong> 元に戻す</span>
+      </div>
+    </div>
+
+    <!-- 右下ミニマップ（プロジェクト俯瞰ナビゲーター） -->
+    <div id="minimap-wrapper" class="minimap-box">
+      <div class="minimap-header">
+        <span class="minimap-title">俯瞰マップ</span>
+        <span class="minimap-count" id="node-count-label">0要素</span>
+      </div>
+      <canvas id="minimap-canvas" width="180" height="120"></canvas>
+    </div>
+
+    <!-- トースト通知メッセージボックス（alert不使用） -->
+    <div id="toast-box" class="toast-box"></div>
+
+    <!-- URL操作コンテキストメニュー（縦3点ドットクリック時に表示） -->
+    <div id="url-context-menu" class="url-context-menu hidden">
+      <button class="context-item" id="ctx-edit-url">
+        <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+        </svg>
+        <span>リンクURLを編集...</span>
+      </button>
+      <button class="context-item" id="ctx-copy-url">
+        <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+        </svg>
+        <span>URLをコピー</span>
+      </button>
+      <button class="context-item danger" id="ctx-delete-url">
+        <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+        </svg>
+        <span>リンクを削除</span>
+      </button>
+    </div>
+
+    <!-- オブジェクト操作コンテキストメニュー（図形右クリック時に表示） -->
+    <div id="node-context-menu" class="url-context-menu hidden">
+      <button class="context-item" id="ctx-bring-front">
+        <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 11l7-7 7 7M5 19l7-7 7 7" />
+        </svg>
+        <span>最前面へ移動</span>
+      </button>
+      <button class="context-item" id="ctx-send-back">
+        <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M19 13l-7 7-7-7m14-8l-7 7-7-7" />
+        </svg>
+        <span>最背面へ移動</span>
+      </button>
+      <div class="context-divider"></div>
+      <button class="context-item" id="ctx-node-group">
+        <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <rect x="3" y="3" width="7" height="7" rx="1" />
+          <rect x="14" y="3" width="7" height="7" rx="1" />
+          <rect x="14" y="14" width="7" height="7" rx="1" />
+          <rect x="3" y="14" width="7" height="7" rx="1" />
+        </svg>
+        <span>グループ化 (Ctrl+G)</span>
+      </button>
+      <button class="context-item" id="ctx-node-ungroup">
+        <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M8 8h8v8H8zM3 3h4v4H3zM17 17h4v4h-4z" />
+        </svg>
+        <span>グループ解除 (Ctrl+Shift+G)</span>
+      </button>
+      <div class="context-divider"></div>
+      <button class="context-item danger" id="ctx-node-delete">
+        <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+        </svg>
+        <span>削除 (Delete)</span>
+      </button>
+    </div>
+
+    <!-- エクスポート出力表示モーダル -->
+    <div id="export-output-modal" class="modal-overlay hidden">
+      <div class="modal-card export-modal-card">
+        <div class="modal-header">
+          <h3 id="export-modal-title" class="modal-title">エクスポート出力</h3>
+          <button id="btn-close-export-modal" class="modal-close-btn" title="閉じる">✕</button>
+        </div>
+        <div class="modal-body" style="gap: 10px;">
+          <div class="export-toolbar-row">
+            <span id="export-modal-desc" style="font-size: 12px; color: #64748b;">下のテキストを選択・コピーして利用できます。</span>
+            <div style="display: flex; gap: 6px;">
+              <button type="button" id="btn-select-all-export" class="btn-secondary" style="padding: 4px 10px;">全選択</button>
+              <button type="button" id="btn-copy-export-text" class="btn-primary" style="padding: 4px 12px;">コピー</button>
+            </div>
+          </div>
+          <textarea id="export-output-textarea" class="export-textarea" readonly></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="button" id="btn-close-export-modal-footer" class="btn-secondary" style="padding: 6px 14px;">閉じる</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- URL編集モーダルダイアログ -->
+    <div id="url-edit-modal" class="modal-overlay hidden">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3 class="modal-title">リンクURLの編集</h3>
+          <button id="btn-close-url-modal" class="modal-close-btn" title="閉じる">✕</button>
+        </div>
+        <div class="modal-body">
+          <label class="modal-label" for="modal-url-input">URL (http:// または https://):</label>
+          <input type="url" id="modal-url-input" class="modal-input" placeholder="https://example.com/..."
+            autocomplete="off" />
+        </div>
+        <div class="modal-footer">
+          <button id="btn-cancel-url-modal" class="btn-secondary" style="padding: 6px 12px;">キャンセル</button>
+          <button id="btn-save-url-modal" class="btn-primary" style="padding: 6px 14px;">保存する</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 画面全体ドラッグ＆ドロップ案内オーバーレイ -->
+    <div id="drop-overlay" class="drop-overlay hidden" aria-hidden="true">
+      <div id="drop-zone-card" class="drop-zone-card">
+        <svg class="drop-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+        <div class="drop-title">ここに画像をドロップして追加</div>
+        <div class="drop-desc">ドラッグ＆ドロップ専用レイヤー・最前面の図形として配置されます（PNG, JPG, WebP, GIF対応）</div>
+      </div>
+    </div>
+
+    <!-- 画像アップロードモーダルダイアログ（左メニューのimgボタンから開く） -->
+    <div id="image-upload-modal" class="modal-overlay hidden">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3 class="modal-title">画像の挿入</h3>
+          <button id="btn-close-image-modal" class="modal-close-btn" title="閉じる">✕</button>
+        </div>
+        <div class="modal-body">
+          <div id="modal-drop-zone" class="modal-drop-area">
+            <svg class="icon-lg" style="width: 48px; height: 48px; color: #2563eb; margin-bottom: 10px;" fill="none"
+              stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <p style="font-size: 14px; font-weight: 600; color: #1e293b; margin-bottom: 4px;">ここに画像をドラッグ＆ドロップ</p>
+            <p style="font-size: 12px; color: #64748b; margin-bottom: 14px;">または枠内をクリックしてPCから選択</p>
+            <button type="button" class="btn-primary"
+              style="pointer-events: none; padding: 6px 14px; font-size: 12px;">画像ファイルを選択...</button>
+          </div>
+          <input type="file" id="image-file-input" accept="image/*" class="hidden" />
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- @scripts -->
+</body>
+</html>
