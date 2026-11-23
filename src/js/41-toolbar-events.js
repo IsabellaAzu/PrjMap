@@ -1,3 +1,33 @@
+    // テーマ設定はこの端末内だけに保存する。
+    const THEME_STORAGE_KEY = 'inmymind_theme';
+    const themeToggleButton = document.getElementById('btn-theme-toggle');
+    let currentTheme = 'light';
+    try {
+      currentTheme = localStorage.getItem(THEME_STORAGE_KEY) === 'dark' ? 'dark' : 'light';
+    } catch (error) {
+      // localStorageが使えない環境でもライトテーマで起動する。
+    }
+
+    function applyTheme(theme) {
+      currentTheme = theme;
+      document.documentElement.dataset.theme = theme;
+      const isDark = theme === 'dark';
+      themeToggleButton.textContent = isDark ? '☀' : '☾';
+      themeToggleButton.title = isDark ? 'ライトモードに切り替え' : 'ダークモードに切り替え';
+      themeToggleButton.setAttribute('aria-label', themeToggleButton.title);
+      themeToggleButton.setAttribute('aria-pressed', String(isDark));
+      try {
+        localStorage.setItem(THEME_STORAGE_KEY, theme);
+      } catch (error) {
+        // テーマ切り替え自体は保存できなくても反映する。
+      }
+    }
+
+    applyTheme(currentTheme);
+    themeToggleButton.addEventListener('click', () => {
+      applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
+    });
+
     // ツールバー・ボタンイベント登録
     document.querySelectorAll('[data-add-shape]').forEach(btn => {
       btn.addEventListener('click', () => {

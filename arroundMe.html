@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="ja" data-theme="light">
 
 <head>
   <meta charset="UTF-8" />
@@ -1669,6 +1669,158 @@
       align-items: center;
       gap: 4px 10px;
     }
+
+    /* VS Code系の暖色ダークテーマ。ライトテーマは既存スタイルを使う。 */
+    html[data-theme="dark"] body {
+      background-color: #211b12;
+      color: #d8cdbb;
+      color-scheme: dark;
+    }
+
+    html[data-theme="dark"] .app-header,
+    html[data-theme="dark"] .property-bar,
+    html[data-theme="dark"] .color-picker-popover,
+    html[data-theme="dark"] .search-dropdown,
+    html[data-theme="dark"] .tag-filter-panel,
+    html[data-theme="dark"] .url-context-menu,
+    html[data-theme="dark"] .node-context-menu,
+    html[data-theme="dark"] .modal-card,
+    html[data-theme="dark"] .minimap-box {
+      background-color: #302519;
+      color: #d8cdbb;
+      border-color: #584832;
+    }
+
+    html[data-theme="dark"] .app-header {
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    }
+
+    html[data-theme="dark"] .brand-title,
+    html[data-theme="dark"] .picker-top-row,
+    html[data-theme="dark"] .modal-title,
+    html[data-theme="dark"] .tag-filter-heading,
+    html[data-theme="dark"] .search-item-text,
+    html[data-theme="dark"] .context-item,
+    html[data-theme="dark"] .tool-btn,
+    html[data-theme="dark"] .btn-icon,
+    html[data-theme="dark"] .zoom-label,
+    html[data-theme="dark"] .prop-label,
+    html[data-theme="dark"] .tag-filter-name,
+    html[data-theme="dark"] .modal-label {
+      color: #d8cdbb;
+    }
+
+    html[data-theme="dark"] .brand-subtitle,
+    html[data-theme="dark"] .toolbar-heading,
+    html[data-theme="dark"] .search-icon,
+    html[data-theme="dark"] .tag-filter-node-count,
+    html[data-theme="dark"] .tag-filter-empty,
+    html[data-theme="dark"] .modal-close-btn,
+    html[data-theme="dark"] .modal-body {
+      color: #aa9a80;
+    }
+
+    html[data-theme="dark"] .btn-secondary,
+    html[data-theme="dark"] .btn-icon:hover:not(:disabled),
+    html[data-theme="dark"] .tool-btn:hover,
+    html[data-theme="dark"] .tag-filter-option:hover,
+    html[data-theme="dark"] .context-item:hover,
+    html[data-theme="dark"] .search-dropdown-item:hover,
+    html[data-theme="dark"] .modal-close-btn:hover,
+    html[data-theme="dark"] .picker-close-btn {
+      background-color: #443522;
+      color: #e8dcc8;
+    }
+
+    html[data-theme="dark"] .btn-secondary:hover,
+    html[data-theme="dark"] .tool-btn:hover {
+      background-color: #51412b;
+    }
+
+    html[data-theme="dark"] .search-input-box,
+    html[data-theme="dark"] .search-input,
+    html[data-theme="dark"] .node-tag-input,
+    html[data-theme="dark"] .modal-input,
+    html[data-theme="dark"] .picker-hex-input,
+    html[data-theme="dark"] .prop-select {
+      background-color: #211b12;
+      color: #e5d9c6;
+      border-color: #66543a;
+    }
+
+    html[data-theme="dark"] .search-input::placeholder,
+    html[data-theme="dark"] .node-tag-input::placeholder,
+    html[data-theme="dark"] .modal-input::placeholder,
+    html[data-theme="dark"] .picker-hex-input::placeholder {
+      color: #95846a;
+    }
+
+    html[data-theme="dark"] .left-toolbar,
+    html[data-theme="dark"] .search-counter,
+    html[data-theme="dark"] .tag-filter-count,
+    html[data-theme="dark"] .modal-footer,
+    html[data-theme="dark"] .search-dropdown-item,
+    html[data-theme="dark"] .modal-header {
+      background-color: #302519;
+      border-color: #584832;
+    }
+
+    html[data-theme="dark"] .tag-filter-count {
+      color: #d8cdbb;
+    }
+
+    html[data-theme="dark"] #canvas-viewport {
+      background-color: #211b12;
+      background-image: radial-gradient(#423625 1.25px, transparent 1.25px);
+    }
+
+    html[data-theme="dark"] .modal-drop-area {
+      background-color: #282014;
+      border-color: #78603a;
+      color: #d8cdbb;
+    }
+
+    html[data-theme="dark"] .modal-drop-area:hover,
+    html[data-theme="dark"] .modal-drop-area.drag-over {
+      background-color: #3d301e;
+      border-color: #d4a44b;
+    }
+
+    html[data-theme="dark"] .context-divider,
+    html[data-theme="dark"] .search-dropdown-item {
+      border-color: #584832;
+    }
+
+    html[data-theme="dark"] .tag-filter-option input,
+    html[data-theme="dark"] #object-opacity-slider {
+      accent-color: #d4a44b;
+    }
+
+    html[data-theme="dark"] .node-tag-chip {
+      background: #49391f;
+      border-color: #78603a;
+      color: #ead7b6;
+    }
+
+    html[data-theme="dark"] .picker-close-btn:hover,
+    html[data-theme="dark"] .url-dots-btn:hover {
+      background-color: #51412b;
+      color: #f0e5d3;
+    }
+
+    html[data-theme="dark"] .theme-toggle {
+      color: #e3b45a;
+      font-size: 20px;
+    }
+
+    html[data-theme="dark"] .theme-toggle:hover {
+      background-color: #443522;
+    }
+
+    html[data-theme="dark"] #image-upload-modal p[style],
+    html[data-theme="dark"] #image-upload-modal svg[style] {
+      color: #d8cdbb !important;
+    }
   </style>
 </head>
 
@@ -1700,6 +1852,7 @@
         <option value="undo">戻る (⌘Z / Ctrl+Z)</option>
         <option value="redo">進む (⌘⇧Z / Ctrl+Shift+Z)</option>
       </select>
+      <button id="btn-theme-toggle" class="btn-icon theme-toggle" type="button" aria-label="ダークモードに切り替え" title="ダークモードに切り替え">☾</button>
       <input type="file" id="hidden-file-input" accept=".json,application/json" class="hidden" />
     </div>
 
@@ -5387,6 +5540,36 @@
       reader.onload = (ev) => applyImportedJson(ev.target.result, file.name, null);
       reader.readAsText(file);
       e.target.value = '';
+    });
+
+    // テーマ設定はこの端末内だけに保存する。
+    const THEME_STORAGE_KEY = 'inmymind_theme';
+    const themeToggleButton = document.getElementById('btn-theme-toggle');
+    let currentTheme = 'light';
+    try {
+      currentTheme = localStorage.getItem(THEME_STORAGE_KEY) === 'dark' ? 'dark' : 'light';
+    } catch (error) {
+      // localStorageが使えない環境でもライトテーマで起動する。
+    }
+
+    function applyTheme(theme) {
+      currentTheme = theme;
+      document.documentElement.dataset.theme = theme;
+      const isDark = theme === 'dark';
+      themeToggleButton.textContent = isDark ? '☀' : '☾';
+      themeToggleButton.title = isDark ? 'ライトモードに切り替え' : 'ダークモードに切り替え';
+      themeToggleButton.setAttribute('aria-label', themeToggleButton.title);
+      themeToggleButton.setAttribute('aria-pressed', String(isDark));
+      try {
+        localStorage.setItem(THEME_STORAGE_KEY, theme);
+      } catch (error) {
+        // テーマ切り替え自体は保存できなくても反映する。
+      }
+    }
+
+    applyTheme(currentTheme);
+    themeToggleButton.addEventListener('click', () => {
+      applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
     });
 
     // ツールバー・ボタンイベント登録
