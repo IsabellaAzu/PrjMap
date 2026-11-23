@@ -16,6 +16,16 @@
       themeToggleButton.title = isDark ? 'ライトモードに切り替え' : 'ダークモードに切り替え';
       themeToggleButton.setAttribute('aria-label', themeToggleButton.title);
       themeToggleButton.setAttribute('aria-pressed', String(isDark));
+      const mapToggle = document.getElementById('btn-toggle-minimap');
+      if (mapToggle) {
+        const isMapVisible = mapToggle.getAttribute('aria-pressed') === 'true';
+        mapToggle.style.color = isDark
+          ? (isMapVisible ? '#e6c27a' : '#aa9a80')
+          : (isMapVisible ? '#2563eb' : '#64748b');
+        mapToggle.style.backgroundColor = isMapVisible
+          ? (isDark ? '#49391f' : '#eff6ff')
+          : '';
+      }
       try {
         localStorage.setItem(THEME_STORAGE_KEY, theme);
       } catch (error) {
@@ -423,8 +433,12 @@
       }
       if (btnToggleMinimap) {
         btnToggleMinimap.setAttribute('aria-pressed', String(visible));
-        btnToggleMinimap.style.color = visible ? '#2563eb' : '#64748b';
-        btnToggleMinimap.style.backgroundColor = visible ? '#eff6ff' : '';
+        btnToggleMinimap.style.color = currentTheme === 'dark'
+          ? (visible ? '#e6c27a' : '#aa9a80')
+          : (visible ? '#2563eb' : '#64748b');
+        btnToggleMinimap.style.backgroundColor = visible
+          ? (currentTheme === 'dark' ? '#49391f' : '#eff6ff')
+          : '';
       }
       if (visible) {
         renderMinimap();

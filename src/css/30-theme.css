@@ -19,6 +19,29 @@
       border-color: #584832;
     }
 
+    html[data-theme="dark"] .guide-chip {
+      background-color: rgba(48, 37, 25, 0.97);
+      color: #c9b99e;
+      border-color: #584832;
+    }
+
+    html[data-theme="dark"] .guide-list strong {
+      color: #e6c27a;
+    }
+
+    html[data-theme="dark"] .guide-bulb-btn:hover {
+      background-color: #49391f;
+    }
+
+    html[data-theme="dark"] .guide-bulb-btn.active {
+      background-color: #60491f;
+    }
+
+    html[data-theme="dark"] #minimap-canvas {
+      background-color: #211b12;
+      border-color: #584832;
+    }
+
     html[data-theme="dark"] .app-header {
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
     }
