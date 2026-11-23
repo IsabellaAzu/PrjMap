@@ -459,6 +459,7 @@
 
     window.addEventListener('DOMContentLoaded', async () => {
       const restored = await loadFromLocalStorage();
+      const migratedTextOpacity = restored && migrateLegacyTextOpacity(state.nodes);
       if (!restored) {
         const sample = getSampleData();
         state.nodes = sample.nodes;
@@ -474,5 +475,6 @@
         if (ed.color && ed.color !== 'transparent') recordColorHistory('edge', ed.color);
       });
       renderAll();
+      if (migratedTextOpacity) persistToLocalStorage();
       updateHistoryButtons();
     });

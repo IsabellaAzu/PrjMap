@@ -126,13 +126,6 @@
       flex-shrink: 0;
     }
 
-    .v-divider-sm {
-      height: 16px;
-      width: 1px;
-      background-color: #e2e8f0;
-      flex-shrink: 0;
-    }
-
     /* ボタンスタイル */
     .btn-group {
       display: flex;

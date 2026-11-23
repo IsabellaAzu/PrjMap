@@ -210,7 +210,7 @@
         </div>
 
         <div class="prop-row color-opacity-row">
-          <div class="palette-row" id="text-color-palette">
+          <div class="palette-row">
             <span class="prop-label">文字</span>
             <button type="button" id="text-color-default-btn" class="swatch-btn"
               style="background:#f1f5f9; border:1px solid #cbd5e1;" title="基準の文字色に戻す">基</button>
@@ -221,7 +221,7 @@
           </div>
           <div class="object-opacity-control">
             <label for="object-opacity-slider">全体透明度</label>
-            <input id="object-opacity-slider" type="range" min="0" max="100" step="10" value="100" aria-label="オブジェクトの透明度" />
+            <input id="object-opacity-slider" type="range" min="10" max="100" step="10" value="100" aria-label="オブジェクトの透明度" />
             <output id="object-opacity-value" for="object-opacity-slider">100%</output>
           </div>
         </div>
@@ -353,12 +353,6 @@
         <!-- 接続線SVGレイヤー -->
         <svg id="edges-svg">
           <defs id="edges-defs">
-            <marker id="arrowhead" markerWidth="12" markerHeight="9" refX="10.5" refY="4.5" orient="auto" markerUnits="userSpaceOnUse">
-              <polygon points="0 0.8, 11.5 4.5, 0 8.2" fill="#64748b" />
-            </marker>
-            <marker id="arrowhead-selected" markerWidth="12" markerHeight="9" refX="10.5" refY="4.5" orient="auto" markerUnits="userSpaceOnUse">
-              <polygon points="0 0.8, 11.5 4.5, 0 8.2" fill="#2563eb" />
-            </marker>
           </defs>
           <g id="edges-container"></g>
           <!-- ドラッグ中の仮接続線 -->

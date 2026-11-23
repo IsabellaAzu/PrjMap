@@ -152,6 +152,7 @@
         }
         pushHistory();
         state.nodes = parsed.nodes;
+        migrateLegacyTextOpacity(state.nodes);
         state.edges = parsed.edges;
         state.hiddenTags.clear();
         if (parsed.viewport) {

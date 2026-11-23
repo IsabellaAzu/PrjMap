@@ -17,7 +17,7 @@
           colorHistory.stroke = savedHist.stroke.slice(0, 3);
         }
         if (Array.isArray(savedHist.text) && savedHist.text.length > 0) {
-          colorHistory.text = savedHist.text.slice(0, 3);
+          colorHistory.text = savedHist.text.slice(0, 3).map(getOpaqueColor);
         }
         if (Array.isArray(savedHist.edge) && savedHist.edge.length > 0) {
           colorHistory.edge = savedHist.edge.slice(0, 3);
@@ -38,6 +38,7 @@
 
     function recordColorHistory(kind, color) {
       if (!color || color === 'transparent' || color === 'none') return;
+      if (kind === 'text') color = getOpaqueColor(color);
       const list = colorHistory[kind];
       const normalized = color.trim();
       const idx = list.findIndex(c => c.toLowerCase() === normalized.toLowerCase());
@@ -84,6 +85,43 @@
       }
       const alphaRounded = Math.round(ca * 100) / 100;
       return `rgba(${cr}, ${cg}, ${cb}, ${alphaRounded})`;
+    }
+
+    function getOpaqueColor(color) {
+      const rgba = parseColorToRgba(color);
+      return rgbaToCss(rgba.r, rgba.g, rgba.b, 1);
+    }
+
+    function migrateLegacyTextOpacity(nodes) {
+      let migrated = false;
+      for (const node of nodes) {
+        if (!node || typeof node !== 'object') continue;
+        if (node.type !== 'image' && node.textColor) {
+          const rgba = node.textColor === 'transparent'
+            ? { r: 30, g: 41, b: 59, a: 0 }
+            : parseColorToRgba(node.textColor);
+          if (rgba.a < 0.999) {
+            const storedOpacity = node.opacity == null ? 1 : Number(node.opacity);
+            const currentOpacity = Number.isFinite(storedOpacity)
+              ? Math.max(0, Math.min(1, storedOpacity))
+              : 1;
+            node.opacity = Math.round(currentOpacity * rgba.a * 100) / 100;
+            node.textColor = rgbaToCss(rgba.r, rgba.g, rgba.b, 1);
+            migrated = true;
+          }
+        }
+        if (node.opacity != null) {
+          const storedOpacity = Number(node.opacity);
+          if (!Number.isFinite(storedOpacity)) {
+            delete node.opacity;
+            migrated = true;
+          } else if (storedOpacity < 0.1 || storedOpacity > 1) {
+            node.opacity = Math.max(0.1, Math.min(1, storedOpacity));
+            migrated = true;
+          }
+        }
+      }
+      return migrated;
     }
 
     function rgbToHsv(r, g, b) {
@@ -169,13 +207,16 @@
         .filter(node => node && (kind !== 'text' || node.type !== 'image'));
       if (nodes.length === 0) return;
       pushHistory();
+      const appliedColor = kind === 'text' && colorValue !== 'transparent'
+        ? getOpaqueColor(colorValue)
+        : colorValue;
       nodes.forEach(node => {
         const property = kind === 'text' ? 'textColor' : kind;
         if (kind === 'text' && colorValue === 'transparent') delete node[property];
-        else node[property] = colorValue;
+        else node[property] = appliedColor;
       });
-      if (colorValue && colorValue !== 'transparent') {
-        recordColorHistory(kind, colorValue);
+      if (appliedColor && appliedColor !== 'transparent') {
+        recordColorHistory(kind, appliedColor);
       }
       renderNodes();
       renderColorSlots();
@@ -317,7 +358,7 @@
       const selectedNode = getSelectedTargetIds()
         .map(id => state.nodes.find(node => node.id === id))
         .find(Boolean);
-      const percent = Math.round((selectedNode?.opacity ?? 1) * 10) * 10;
+      const percent = Math.max(10, Math.round((selectedNode?.opacity ?? 1) * 10) * 10);
       slider.value = String(percent);
       if (value) value.value = `${percent}%`;
     }
@@ -327,7 +368,7 @@
     function applyObjectOpacityFromSlider(commit = false) {
       const slider = document.getElementById('object-opacity-slider');
       if (!slider) return;
-      const opacity = Number(slider.value) / 100;
+      const opacity = Math.max(0.1, Number(slider.value) / 100);
       const nodes = getSelectedTargetIds()
         .map(id => state.nodes.find(node => node.id === id))
         .filter(Boolean);
@@ -461,7 +502,9 @@
       }
       pickerState.s = hsv.s;
       pickerState.v = hsv.v;
-      pickerState.a = curColor === 'transparent' ? 0 : Math.round(rgba.a * 10) / 10;
+      pickerState.a = pickerState.activeKind === 'text'
+        ? 1
+        : (curColor === 'transparent' ? 0 : Math.round(rgba.a * 10) / 10);
       if (resetSession) {
         pickerState.isFirstCommitInSession = true;
       }
@@ -490,7 +533,8 @@
     function commitPickerColor(recordHist = false) {
       if (!pickerState.activeKind) return;
       const rgb = hsvToRgb(pickerState.h, pickerState.s, pickerState.v);
-      const cssColor = pickerState.a <= 0.01 ? 'transparent' : rgbaToCss(rgb.r, rgb.g, rgb.b, pickerState.a);
+      const alpha = pickerState.activeKind === 'text' ? 1 : pickerState.a;
+      const cssColor = alpha <= 0.01 ? 'transparent' : rgbaToCss(rgb.r, rgb.g, rgb.b, alpha);
 
       if (pickerState.activeKind === 'edge') {
         const edge = state.edges.find(ed => ed.id === state.selectedEdgeId);
@@ -552,6 +596,11 @@
       }
 
       pickerState.activeKind = kind;
+      if (pickerAlphaSlider) {
+        pickerAlphaSlider.classList.toggle('hidden', kind === 'text');
+        pickerAlphaSlider.disabled = kind === 'text';
+      }
+      if (pickerReadout) pickerReadout.classList.toggle('hidden', kind === 'text');
       if (pickerTargetLabel) {
         if (kind === 'fill') pickerTargetLabel.textContent = '塗り — カラー選択';
         else if (kind === 'stroke') pickerTargetLabel.textContent = '枠線 — カラー選択';
@@ -632,7 +681,7 @@
         pickerState.h = hsv.h;
         pickerState.s = hsv.s;
         pickerState.v = hsv.v;
-        pickerState.a = rgba.a;
+        pickerState.a = pickerState.activeKind === 'text' ? 1 : rgba.a;
         if (pickerHueSlider) pickerHueSlider.value = String(Math.round(pickerState.h));
         if (pickerAlphaSlider) pickerAlphaSlider.value = String(Math.round(pickerState.a * 100));
         drawSvCanvas();
