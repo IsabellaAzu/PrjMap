@@ -5,12 +5,7 @@
       });
     });
 
-    document.getElementById('btn-save-file').addEventListener('click', saveToLocalJsonFile);
-    document.getElementById('btn-open-file').addEventListener('click', openLocalJsonFile);
-    document.getElementById('btn-undo').addEventListener('click', undo);
-    document.getElementById('btn-redo').addEventListener('click', redo);
-
-    document.getElementById('btn-reset-sample').addEventListener('click', () => {
+    function resetToSample() {
       pushHistory();
       const sample = getSampleData();
       state.nodes = sample.nodes;
@@ -24,6 +19,17 @@
       renderAll();
       persistToLocalStorage();
       showToast('プロジェクト構成サンプルを復元しました');
+    }
+
+    document.getElementById('file-menu').addEventListener('change', async event => {
+      const action = event.target.value;
+      event.target.value = '';
+
+      if (action === 'open') await openLocalJsonFile();
+      else if (action === 'save') await saveToLocalJsonFile();
+      else if (action === 'reset-sample') resetToSample();
+      else if (action === 'undo') undo();
+      else if (action === 'redo') redo();
     });
 
     document.getElementById('btn-zoom-in').addEventListener('click', () => {
@@ -451,5 +457,4 @@
       });
       renderAll();
       if (migratedTextOpacity) persistToLocalStorage();
-      updateHistoryButtons();
     });

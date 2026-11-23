@@ -12,7 +12,7 @@
 
   <!-- トップヘッダー：ファイル操作・履歴・検索・俯瞰コントロール -->
   <header class="app-header">
-    <!-- 左側：ロゴ＆ローカルファイル保存/読込＆Undo/Redo -->
+    <!-- 左側：ロゴ＆ファイル操作 -->
     <div class="header-group">
       <div class="brand-wrap">
         <div class="brand-logo" aria-hidden="true">
@@ -28,45 +28,15 @@
         </div>
       </div>
 
-      <div class="v-divider"></div>
-
-      <!-- ローカルJSON保存／読込ボタン -->
-      <div class="btn-group">
-        <button id="btn-open-file" title="PC上のJSONファイルを開く" class="btn-secondary">
-          <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-          </svg>
-          <span>開く</span>
-        </button>
-        <button id="btn-save-file" title="JSONファイルとしてPCに保存（上書きまたは新規保存）" class="btn-primary">
-          <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
-          </svg>
-          <span>保存</span>
-        </button>
-        <button id="btn-reset-sample" title="サンプルデータにリセット" class="btn-ghost">
-          <span>サンプル復元</span>
-        </button>
-        <input type="file" id="hidden-file-input" accept=".json,application/json" class="hidden" />
-      </div>
-
-      <div class="v-divider"></div>
-
-      <!-- 元に戻す / やり直すボタン -->
-      <div class="btn-group">
-        <button id="btn-undo" title="元に戻す (Cmd+Z / Ctrl+Z)" disabled class="btn-icon">
-          <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a5 5 0 0 1 5 5v2M3 10l5-5m-5 5l5 5" />
-          </svg>
-        </button>
-        <button id="btn-redo" title="やり直す (Cmd+Shift+Z / Ctrl+Y)" disabled class="btn-icon">
-          <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M21 10H11a5 5 0 0 0-5 5v2m15-7l-5-5m5 5l-5 5" />
-          </svg>
-        </button>
-      </div>
+      <select id="file-menu" class="btn-secondary file-menu-select" aria-label="ファイル操作">
+        <option value="" selected>ファイル</option>
+        <option value="open">開く</option>
+        <option value="save">保存 (⌘S / Ctrl+S)</option>
+        <option value="reset-sample">サンプル復元</option>
+        <option value="undo">戻る (⌘Z / Ctrl+Z)</option>
+        <option value="redo">進む (⌘⇧Z / Ctrl+Shift+Z)</option>
+      </select>
+      <input type="file" id="hidden-file-input" accept=".json,application/json" class="hidden" />
     </div>
 
     <!-- 中央：検索＆カメラ移動ボックス -->

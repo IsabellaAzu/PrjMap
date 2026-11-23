@@ -60,7 +60,7 @@
       padding: 0 12px;
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      justify-content: flex-start;
       gap: 8px;
       z-index: 40;
       box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
@@ -126,14 +126,6 @@
       line-height: 1.2;
     }
 
-    .v-divider {
-      height: 24px;
-      width: 1px;
-      background-color: #e2e8f0;
-      margin: 0 2px;
-      flex-shrink: 0;
-    }
-
     /* ボタンスタイル */
     .btn-group {
       display: flex;
@@ -156,6 +148,12 @@
 
     .btn-secondary:hover {
       background-color: #e2e8f0;
+    }
+
+    .file-menu-select {
+      display: block;
+      border: 0;
+      cursor: pointer;
     }
 
     .btn-primary {
@@ -243,9 +241,14 @@
     /* 検索ボックス */
     .search-wrapper {
       position: relative;
-      flex: 1;
+      flex: 0 1 440px;
       max-width: 440px;
       margin: 0 6px;
+      min-width: 70px;
+    }
+
+    .app-header > .btn-group:last-child {
+      margin-left: auto;
     }
 
     .search-input-box {
@@ -1673,7 +1676,7 @@
 
   <!-- トップヘッダー：ファイル操作・履歴・検索・俯瞰コントロール -->
   <header class="app-header">
-    <!-- 左側：ロゴ＆ローカルファイル保存/読込＆Undo/Redo -->
+    <!-- 左側：ロゴ＆ファイル操作 -->
     <div class="header-group">
       <div class="brand-wrap">
         <div class="brand-logo" aria-hidden="true">
@@ -1689,45 +1692,15 @@
         </div>
       </div>
 
-      <div class="v-divider"></div>
-
-      <!-- ローカルJSON保存／読込ボタン -->
-      <div class="btn-group">
-        <button id="btn-open-file" title="PC上のJSONファイルを開く" class="btn-secondary">
-          <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-          </svg>
-          <span>開く</span>
-        </button>
-        <button id="btn-save-file" title="JSONファイルとしてPCに保存（上書きまたは新規保存）" class="btn-primary">
-          <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
-          </svg>
-          <span>保存</span>
-        </button>
-        <button id="btn-reset-sample" title="サンプルデータにリセット" class="btn-ghost">
-          <span>サンプル復元</span>
-        </button>
-        <input type="file" id="hidden-file-input" accept=".json,application/json" class="hidden" />
-      </div>
-
-      <div class="v-divider"></div>
-
-      <!-- 元に戻す / やり直すボタン -->
-      <div class="btn-group">
-        <button id="btn-undo" title="元に戻す (Cmd+Z / Ctrl+Z)" disabled class="btn-icon">
-          <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a5 5 0 0 1 5 5v2M3 10l5-5m-5 5l5 5" />
-          </svg>
-        </button>
-        <button id="btn-redo" title="やり直す (Cmd+Shift+Z / Ctrl+Y)" disabled class="btn-icon">
-          <svg class="icon-sm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M21 10H11a5 5 0 0 0-5 5v2m15-7l-5-5m5 5l-5 5" />
-          </svg>
-        </button>
-      </div>
+      <select id="file-menu" class="btn-secondary file-menu-select" aria-label="ファイル操作">
+        <option value="" selected>ファイル</option>
+        <option value="open">開く</option>
+        <option value="save">保存 (⌘S / Ctrl+S)</option>
+        <option value="reset-sample">サンプル復元</option>
+        <option value="undo">戻る (⌘Z / Ctrl+Z)</option>
+        <option value="redo">進む (⌘⇧Z / Ctrl+Shift+Z)</option>
+      </select>
+      <input type="file" id="hidden-file-input" accept=".json,application/json" class="hidden" />
     </div>
 
     <!-- 中央：検索＆カメラ移動ボックス -->
@@ -2232,13 +2205,6 @@
       });
     }
 
-    function updateHistoryButtons() {
-      const btnUndo = document.getElementById('btn-undo');
-      const btnRedo = document.getElementById('btn-redo');
-      if (btnUndo) btnUndo.disabled = history.past.length === 0;
-      if (btnRedo) btnRedo.disabled = history.future.length === 0;
-    }
-
     function pushHistory(snapshotStr = createSnapshot()) {
       if (history.past.length > 0 && history.past[history.past.length - 1] === snapshotStr) {
         return;
@@ -2248,7 +2214,6 @@
         history.past.shift();
       }
       history.future = [];
-      updateHistoryButtons();
     }
 
     function undo() {
@@ -2266,7 +2231,6 @@
 
       renderAll();
       persistToLocalStorage();
-      updateHistoryButtons();
       showToast('1つ前の状態に戻しました');
     }
 
@@ -2285,7 +2249,6 @@
 
       renderAll();
       persistToLocalStorage();
-      updateHistoryButtons();
       showToast('操作をやり直しました');
     }
 
@@ -4066,22 +4029,32 @@
     objectOpacitySlider?.addEventListener('input', () => applyObjectOpacityFromSlider(false));
     objectOpacitySlider?.addEventListener('change', () => applyObjectOpacityFromSlider(true));
 
+    function applyPickerHexInput() {
+      if (!pickerHexInput) return;
+      const val = pickerHexInput.value.trim();
+      if (!val) return;
+      const colorProbe = document.createElement('span');
+      colorProbe.style.color = val;
+      if (!colorProbe.style.color) return;
+
+      const rgba = parseColorToRgba(val);
+      const hsv = rgbToHsv(rgba.r, rgba.g, rgba.b);
+      pickerState.h = hsv.h;
+      pickerState.s = hsv.s;
+      pickerState.v = hsv.v;
+      pickerState.a = pickerState.activeKind === 'text' ? 1 : rgba.a;
+      if (pickerHueSlider) pickerHueSlider.value = String(Math.round(pickerState.h));
+      if (pickerAlphaSlider) pickerAlphaSlider.value = String(Math.round(pickerState.a * 100));
+      drawSvCanvas();
+      updateAlphaSliderTrack();
+      commitPickerColor(true);
+    }
+
     if (pickerHexInput) {
-      pickerHexInput.addEventListener('change', (e) => {
-        const val = e.target.value.trim();
-        if (!val) return;
-        const rgba = parseColorToRgba(val);
-        const hsv = rgbToHsv(rgba.r, rgba.g, rgba.b);
-        pickerState.h = hsv.h;
-        pickerState.s = hsv.s;
-        pickerState.v = hsv.v;
-        pickerState.a = pickerState.activeKind === 'text' ? 1 : rgba.a;
-        if (pickerHueSlider) pickerHueSlider.value = String(Math.round(pickerState.h));
-        if (pickerAlphaSlider) pickerAlphaSlider.value = String(Math.round(pickerState.a * 100));
-        drawSvCanvas();
-        updateAlphaSliderTrack();
-        commitPickerColor(true);
+      pickerHexInput.addEventListener('paste', () => {
+        setTimeout(applyPickerHexInput, 0);
       });
+      pickerHexInput.addEventListener('change', applyPickerHexInput);
     }
 
     document.getElementById('btn-toggle-fill-picker').addEventListener('click', () => {
@@ -5423,12 +5396,7 @@
       });
     });
 
-    document.getElementById('btn-save-file').addEventListener('click', saveToLocalJsonFile);
-    document.getElementById('btn-open-file').addEventListener('click', openLocalJsonFile);
-    document.getElementById('btn-undo').addEventListener('click', undo);
-    document.getElementById('btn-redo').addEventListener('click', redo);
-
-    document.getElementById('btn-reset-sample').addEventListener('click', () => {
+    function resetToSample() {
       pushHistory();
       const sample = getSampleData();
       state.nodes = sample.nodes;
@@ -5442,6 +5410,17 @@
       renderAll();
       persistToLocalStorage();
       showToast('プロジェクト構成サンプルを復元しました');
+    }
+
+    document.getElementById('file-menu').addEventListener('change', async event => {
+      const action = event.target.value;
+      event.target.value = '';
+
+      if (action === 'open') await openLocalJsonFile();
+      else if (action === 'save') await saveToLocalJsonFile();
+      else if (action === 'reset-sample') resetToSample();
+      else if (action === 'undo') undo();
+      else if (action === 'redo') redo();
     });
 
     document.getElementById('btn-zoom-in').addEventListener('click', () => {
@@ -5869,7 +5848,6 @@
       });
       renderAll();
       if (migratedTextOpacity) persistToLocalStorage();
-      updateHistoryButtons();
     });
 
     // タグ編集とタグ別表示フィルター

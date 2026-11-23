@@ -44,13 +44,6 @@
       });
     }
 
-    function updateHistoryButtons() {
-      const btnUndo = document.getElementById('btn-undo');
-      const btnRedo = document.getElementById('btn-redo');
-      if (btnUndo) btnUndo.disabled = history.past.length === 0;
-      if (btnRedo) btnRedo.disabled = history.future.length === 0;
-    }
-
     function pushHistory(snapshotStr = createSnapshot()) {
       if (history.past.length > 0 && history.past[history.past.length - 1] === snapshotStr) {
         return;
@@ -60,7 +53,6 @@
         history.past.shift();
       }
       history.future = [];
-      updateHistoryButtons();
     }
 
     function undo() {
@@ -78,7 +70,6 @@
 
       renderAll();
       persistToLocalStorage();
-      updateHistoryButtons();
       showToast('1つ前の状態に戻しました');
     }
 
@@ -97,7 +88,6 @@
 
       renderAll();
       persistToLocalStorage();
-      updateHistoryButtons();
       showToast('操作をやり直しました');
     }
 

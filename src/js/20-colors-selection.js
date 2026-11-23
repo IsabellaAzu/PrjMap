@@ -672,22 +672,32 @@
     objectOpacitySlider?.addEventListener('input', () => applyObjectOpacityFromSlider(false));
     objectOpacitySlider?.addEventListener('change', () => applyObjectOpacityFromSlider(true));
 
+    function applyPickerHexInput() {
+      if (!pickerHexInput) return;
+      const val = pickerHexInput.value.trim();
+      if (!val) return;
+      const colorProbe = document.createElement('span');
+      colorProbe.style.color = val;
+      if (!colorProbe.style.color) return;
+
+      const rgba = parseColorToRgba(val);
+      const hsv = rgbToHsv(rgba.r, rgba.g, rgba.b);
+      pickerState.h = hsv.h;
+      pickerState.s = hsv.s;
+      pickerState.v = hsv.v;
+      pickerState.a = pickerState.activeKind === 'text' ? 1 : rgba.a;
+      if (pickerHueSlider) pickerHueSlider.value = String(Math.round(pickerState.h));
+      if (pickerAlphaSlider) pickerAlphaSlider.value = String(Math.round(pickerState.a * 100));
+      drawSvCanvas();
+      updateAlphaSliderTrack();
+      commitPickerColor(true);
+    }
+
     if (pickerHexInput) {
-      pickerHexInput.addEventListener('change', (e) => {
-        const val = e.target.value.trim();
-        if (!val) return;
-        const rgba = parseColorToRgba(val);
-        const hsv = rgbToHsv(rgba.r, rgba.g, rgba.b);
-        pickerState.h = hsv.h;
-        pickerState.s = hsv.s;
-        pickerState.v = hsv.v;
-        pickerState.a = pickerState.activeKind === 'text' ? 1 : rgba.a;
-        if (pickerHueSlider) pickerHueSlider.value = String(Math.round(pickerState.h));
-        if (pickerAlphaSlider) pickerAlphaSlider.value = String(Math.round(pickerState.a * 100));
-        drawSvCanvas();
-        updateAlphaSliderTrack();
-        commitPickerColor(true);
+      pickerHexInput.addEventListener('paste', () => {
+        setTimeout(applyPickerHexInput, 0);
       });
+      pickerHexInput.addEventListener('change', applyPickerHexInput);
     }
 
     document.getElementById('btn-toggle-fill-picker').addEventListener('click', () => {
