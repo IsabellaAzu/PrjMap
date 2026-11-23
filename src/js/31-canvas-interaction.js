@@ -77,6 +77,20 @@
       tempEdgePath.classList.remove('hidden');
     }
 
+    function startReconnectingEdge(edgeId, endpoint, e) {
+      const edge = state.edges.find(item => item.id === edgeId);
+      if (!edge) return;
+      e.preventDefault();
+      e.stopPropagation();
+      interaction = {
+        mode: 'rewire-edge',
+        edgeId,
+        endpoint,
+        beforeSnapshot: createSnapshot()
+      };
+      document.body.classList.add('rewiring-edge');
+    }
+
     viewportEl.addEventListener('pointerdown', (e) => {
       if (e.target !== viewportEl && e.target !== worldEl && e.target.id !== 'edges-svg') return;
 
@@ -190,6 +204,22 @@
         const p2 = screenToWorld(e.clientX, e.clientY);
         const d = buildEdgePath(p1, interaction.sourceAnchor, p2, 'left', 'avoid', srcNode.id, null);
         tempEdgePath.setAttribute('d', d);
+      } else if (interaction.mode === 'rewire-edge') {
+        const edge = state.edges.find(item => item.id === interaction.edgeId);
+        if (!edge) return;
+        const worldPoint = screenToWorld(e.clientX, e.clientY);
+        const fixedNodeId = interaction.endpoint === 'source' ? edge.target : edge.source;
+        const fixedAnchor = interaction.endpoint === 'source' ? edge.targetAnchor : edge.sourceAnchor;
+        const fixedNode = state.nodes.find(node => node.id === fixedNodeId);
+        if (!fixedNode) return;
+        const fixedPoint = getAnchorPoint(fixedNode, fixedAnchor || (interaction.endpoint === 'source' ? 'left' : 'right'));
+        const d = interaction.endpoint === 'source'
+          ? `M ${worldPoint.x} ${worldPoint.y} L ${fixedPoint.x} ${fixedPoint.y}`
+          : `M ${fixedPoint.x} ${fixedPoint.y} L ${worldPoint.x} ${worldPoint.y}`;
+        tempEdgePath.setAttribute('stroke', edge.color || '#64748b');
+        tempEdgePath.setAttribute('stroke-dasharray', '5,5');
+        tempEdgePath.setAttribute('d', d);
+        tempEdgePath.classList.remove('hidden');
       }
     });
 
@@ -239,6 +269,39 @@
             persistToLocalStorage();
             showToast('図形同士を線で接続しました');
           }
+        }
+      } else if (interaction.mode === 'rewire-edge') {
+        document.body.classList.remove('rewiring-edge');
+        tempEdgePath.classList.add('hidden');
+        tempEdgePath.removeAttribute('stroke-dasharray');
+
+        const edge = state.edges.find(item => item.id === interaction.edgeId);
+        const worldPoint = screenToWorld(e.clientX, e.clientY);
+        const targetNode = state.nodes
+          .filter(node => worldPoint.x >= node.x && worldPoint.x <= node.x + node.width &&
+            worldPoint.y >= node.y && worldPoint.y <= node.y + node.height)
+          .sort((a, b) => {
+            const distA = Math.hypot(a.x + a.width / 2 - worldPoint.x, a.y + a.height / 2 - worldPoint.y);
+            const distB = Math.hypot(b.x + b.width / 2 - worldPoint.x, b.y + b.height / 2 - worldPoint.y);
+            return distA - distB;
+          })[0];
+        const targetId = targetNode && targetNode.id;
+        const oppositeId = edge && (interaction.endpoint === 'source' ? edge.target : edge.source);
+        if (edge && targetNode && targetId !== oppositeId) {
+          const targetAnchor = findClosestAnchor(targetNode, worldPoint.x, worldPoint.y);
+          pushHistory(interaction.beforeSnapshot);
+          if (interaction.endpoint === 'source') {
+            edge.source = targetId;
+            edge.sourceAnchor = targetAnchor;
+          } else {
+            edge.target = targetId;
+            edge.targetAnchor = targetAnchor;
+          }
+          selectEdge(edge.id);
+          persistToLocalStorage();
+          showToast('線の接続先を変更しました');
+        } else {
+          renderEdges();
         }
       }
 

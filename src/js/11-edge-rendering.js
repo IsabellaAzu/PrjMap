@@ -73,18 +73,16 @@
           selectEdge(edge.id);
         });
 
-        // 選択時は背景に淡いハロー線を描画して、線自体の色を保ったまま選択状態を分かりやすく表示
-        if (isSelected) {
-          const haloPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-          haloPath.setAttribute('d', d);
-          haloPath.setAttribute('fill', 'none');
-          haloPath.setAttribute('stroke', strokeColor);
-          haloPath.setAttribute('stroke-opacity', '0.24');
-          haloPath.setAttribute('stroke-width', '8');
-          haloPath.setAttribute('stroke-linecap', 'round');
-          haloPath.style.pointerEvents = 'none';
-          g.appendChild(haloPath);
-        }
+        // 選択時・ホバー時の目印を用意し、線色に関わらず見分けやすくする。
+        const outlinePath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        outlinePath.setAttribute('d', d);
+        outlinePath.setAttribute('class', 'edge-selection-outline');
+        g.appendChild(outlinePath);
+
+        const haloPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        haloPath.setAttribute('d', d);
+        haloPath.setAttribute('class', 'edge-selection-halo');
+        g.appendChild(haloPath);
 
         const visPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
         visPath.setAttribute('d', d);
@@ -101,6 +99,25 @@
 
         g.appendChild(hitPath);
         g.appendChild(visPath);
+
+        if (isSelected) {
+          [
+            { endpoint: 'source', point: p1 },
+            { endpoint: 'target', point: p2 }
+          ].forEach(({ endpoint, point }) => {
+            const handle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            handle.setAttribute('class', 'edge-endpoint-handle');
+            handle.setAttribute('cx', point.x);
+            handle.setAttribute('cy', point.y);
+            handle.setAttribute('r', '8');
+            const handleLabel = endpoint === 'source' ? 'ドラッグして線の起点をつなぎ直す' : 'ドラッグして線の終点をつなぎ直す';
+            handle.setAttribute('aria-label', handleLabel);
+            handle.setAttribute('title', handleLabel);
+            handle.addEventListener('pointerdown', event => startReconnectingEdge(edge.id, endpoint, event));
+            g.appendChild(handle);
+          });
+        }
+
         edgesContainer.appendChild(g);
       }
     }

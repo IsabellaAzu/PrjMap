@@ -416,7 +416,7 @@
     .edge-hit-area {
       fill: none;
       stroke: transparent;
-      stroke-width: 16px;
+      stroke-width: 26px;
       pointer-events: stroke;
       cursor: pointer;
     }
@@ -428,13 +428,85 @@
       pointer-events: none;
     }
 
+    .edge-selection-outline,
+    .edge-selection-halo {
+      fill: none;
+      stroke-linecap: round;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.12s;
+    }
+
+    .edge-selection-outline {
+      stroke: #ffffff;
+      stroke-width: 11px;
+    }
+
+    .edge-selection-halo {
+      stroke: #2563eb;
+      stroke-width: 7px;
+    }
+
     .edge-group:hover .edge-visible-path {
       stroke-width: 3.2px !important;
-      filter: brightness(0.92);
+    }
+
+    .edge-group:hover .edge-selection-outline,
+    .edge-group:hover .edge-selection-halo {
+      opacity: 0.62;
     }
 
     .edge-group.selected .edge-visible-path {
-      stroke-width: 3.4px !important;
+      stroke-width: 3.2px !important;
+    }
+
+    .edge-group.selected .edge-selection-outline,
+    .edge-group.selected .edge-selection-halo {
+      opacity: 1;
+    }
+
+    .edge-endpoint-handle {
+      fill: #ffffff;
+      stroke: #2563eb;
+      stroke-width: 3px;
+      pointer-events: all;
+      cursor: grab;
+    }
+
+    .edge-endpoint-handle:hover {
+      r: 10px;
+      fill: #dbeafe;
+    }
+
+    .rewiring-edge .anchor-handle {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .rewiring-edge .diagram-node {
+      outline: 2px dashed #2563eb;
+      outline-offset: 5px;
+    }
+
+    html[data-theme="dark"] .edge-selection-outline {
+      stroke: #211b12;
+    }
+
+    html[data-theme="dark"] .edge-selection-halo {
+      stroke: #f0b94e;
+    }
+
+    html[data-theme="dark"] .edge-endpoint-handle {
+      fill: #302519;
+      stroke: #f0b94e;
+    }
+
+    html[data-theme="dark"] .edge-endpoint-handle:hover {
+      fill: #594322;
+    }
+
+    html[data-theme="dark"] .rewiring-edge .diagram-node {
+      outline-color: #f0b94e;
     }
 
     .guide-list strong {
