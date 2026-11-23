@@ -386,8 +386,10 @@
         minimapCtx.fillStyle = n.id === state.selectedNodeId ? '#2563eb' : (n.fill && n.fill !== 'transparent' ? n.fill : '#e2e8f0');
         minimapCtx.strokeStyle = n.id === state.selectedNodeId ? '#1d4ed8' : '#64748b';
         minimapCtx.lineWidth = 1;
+        minimapCtx.globalAlpha = n.opacity ?? 1;
         minimapCtx.fillRect(nx, ny, nw, nh);
         minimapCtx.strokeRect(nx, ny, nw, nh);
+        minimapCtx.globalAlpha = 1;
       }
 
       const vx = (vpWorldX - minX) * scale + offsetX;

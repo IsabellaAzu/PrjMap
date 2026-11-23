@@ -133,7 +133,9 @@
     function getCurrentSelectedColor(kind) {
       const ids = getSelectedTargetIds();
       if (ids.length === 0) return null;
-      const firstNode = state.nodes.find(n => n.id === ids[0]);
+      const firstNode = ids
+        .map(id => state.nodes.find(n => n.id === id))
+        .find(node => node && (kind !== 'text' || node.type !== 'image'));
       if (!firstNode) return null;
       if (kind === 'fill') return firstNode.fill ?? '#ffffff';
       if (kind === 'stroke') return firstNode.stroke ?? '#64748b';
@@ -162,22 +164,22 @@
         return;
       }
 
-      const ids = getSelectedTargetIds();
-      if (ids.length === 0) return;
+      const nodes = getSelectedTargetIds()
+        .map(id => state.nodes.find(n => n.id === id))
+        .filter(node => node && (kind !== 'text' || node.type !== 'image'));
+      if (nodes.length === 0) return;
       pushHistory();
-      ids.forEach(id => {
-        const node = state.nodes.find(n => n.id === id);
-        if (node) {
-          const property = kind === 'text' ? 'textColor' : kind;
-          if (kind === 'text' && colorValue === 'transparent') delete node[property];
-          else node[property] = colorValue;
-        }
+      nodes.forEach(node => {
+        const property = kind === 'text' ? 'textColor' : kind;
+        if (kind === 'text' && colorValue === 'transparent') delete node[property];
+        else node[property] = colorValue;
       });
       if (colorValue && colorValue !== 'transparent') {
         recordColorHistory(kind, colorValue);
       }
       renderNodes();
       renderColorSlots();
+      syncObjectOpacityControl();
       syncColorPickerWithCurrent(false);
       persistToLocalStorage();
     }
@@ -305,6 +307,50 @@
         }
       }
       if (textDefaultBtn) textDefaultBtn.classList.toggle('active', currentText === '#1e293b');
+      syncObjectOpacityControl();
+    }
+
+    function syncObjectOpacityControl() {
+      const slider = document.getElementById('object-opacity-slider');
+      const value = document.getElementById('object-opacity-value');
+      if (!slider) return;
+      const selectedNode = getSelectedTargetIds()
+        .map(id => state.nodes.find(node => node.id === id))
+        .find(Boolean);
+      const percent = Math.round((selectedNode?.opacity ?? 1) * 10) * 10;
+      slider.value = String(percent);
+      if (value) value.value = `${percent}%`;
+    }
+
+    let objectOpacityHistoryStarted = false;
+
+    function applyObjectOpacityFromSlider(commit = false) {
+      const slider = document.getElementById('object-opacity-slider');
+      if (!slider) return;
+      const opacity = Number(slider.value) / 100;
+      const nodes = getSelectedTargetIds()
+        .map(id => state.nodes.find(node => node.id === id))
+        .filter(Boolean);
+      if (nodes.length === 0) return;
+
+      const updates = nodes.filter(node => Math.abs((node.opacity ?? 1) - opacity) > 0.001);
+
+      if (updates.length > 0) {
+        if (!objectOpacityHistoryStarted) {
+          pushHistory();
+          objectOpacityHistoryStarted = true;
+        }
+        updates.forEach(node => {
+          if (opacity >= 1) delete node.opacity;
+          else node.opacity = opacity;
+        });
+        renderNodes();
+        persistToLocalStorage();
+      }
+
+      const value = document.getElementById('object-opacity-value');
+      if (value) value.value = `${slider.value}%`;
+      if (commit) objectOpacityHistoryStarted = false;
     }
 
     function renderEdgeColorSlots() {
@@ -415,7 +461,7 @@
       }
       pickerState.s = hsv.s;
       pickerState.v = hsv.v;
-      pickerState.a = curColor === 'transparent' ? 0 : rgba.a;
+      pickerState.a = curColor === 'transparent' ? 0 : Math.round(rgba.a * 10) / 10;
       if (resetSession) {
         pickerState.isFirstCommitInSession = true;
       }
@@ -464,20 +510,19 @@
         return;
       }
 
-      const ids = getSelectedTargetIds();
-      if (ids.length === 0) return;
+      const nodes = getSelectedTargetIds()
+        .map(id => state.nodes.find(n => n.id === id))
+        .filter(node => node && (pickerState.activeKind !== 'text' || node.type !== 'image'));
+      if (nodes.length === 0) return;
 
       if (pickerState.isFirstCommitInSession) {
         pushHistory();
         pickerState.isFirstCommitInSession = false;
       }
 
-      ids.forEach(id => {
-        const node = state.nodes.find(n => n.id === id);
-        if (node) {
-          const property = pickerState.activeKind === 'text' ? 'textColor' : pickerState.activeKind;
-          node[property] = cssColor;
-        }
+      nodes.forEach(node => {
+        const property = pickerState.activeKind === 'text' ? 'textColor' : pickerState.activeKind;
+        node[property] = cssColor;
       });
 
       if (recordHist && cssColor !== 'transparent') {
@@ -573,6 +618,10 @@
         commitPickerColor(true);
       });
     }
+
+    const objectOpacitySlider = document.getElementById('object-opacity-slider');
+    objectOpacitySlider?.addEventListener('input', () => applyObjectOpacityFromSlider(false));
+    objectOpacitySlider?.addEventListener('change', () => applyObjectOpacityFromSlider(true));
 
     if (pickerHexInput) {
       pickerHexInput.addEventListener('change', (e) => {

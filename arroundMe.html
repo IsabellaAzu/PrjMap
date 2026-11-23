@@ -717,8 +717,8 @@
       display: flex;
       flex-direction: column;
       gap: 6px;
-      min-width: 340px;
-      max-width: min(92vw, 740px);
+      width: max-content;
+      max-width: 92vw;
     }
 
     .prop-row {
@@ -727,7 +727,6 @@
       justify-content: space-between;
       gap: 12px;
       flex-wrap: wrap;
-      width: 100%;
     }
 
     .prop-row-main {
@@ -736,6 +735,78 @@
       gap: 10px;
       flex-wrap: wrap;
       flex: 1 1 auto;
+    }
+
+    .color-primary-row {
+      width: 100%;
+      max-width: 100%;
+    }
+
+    .fill-stroke-color-cluster {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      width: 100%;
+      max-width: 100%;
+      flex-wrap: wrap;
+    }
+
+    .color-opacity-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      width: 100%;
+      min-width: 0;
+      flex-wrap: nowrap;
+    }
+
+    .color-opacity-row .palette-row {
+      flex: 0 0 auto;
+    }
+
+    .object-opacity-control {
+      display: grid;
+      grid-template-columns: auto minmax(48px, 1fr) auto;
+      align-items: center;
+      gap: 8px;
+      flex: 1 1 0;
+      min-width: 0;
+      color: #64748b;
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 520px) {
+      .color-opacity-row {
+        gap: 6px;
+      }
+
+      .color-opacity-row .palette-row {
+        gap: 4px;
+      }
+
+      .color-opacity-row .color-slot-group {
+        gap: 4px;
+      }
+
+      .object-opacity-control {
+        gap: 4px;
+      }
+    }
+
+    #object-opacity-slider {
+      width: 100%;
+      min-width: 0;
+      margin: 0;
+      accent-color: #2563eb;
+    }
+
+    #object-opacity-value {
+      min-width: 34px;
+      text-align: right;
+      color: #334155;
+      font-variant-numeric: tabular-nums;
     }
 
     .prop-row-actions {
@@ -750,7 +821,11 @@
       display: flex;
       flex-direction: column;
       gap: 7px;
-      width: 100%;
+    }
+
+    #node-props {
+      width: 422px;
+      max-width: 100%;
     }
 
     .prop-label {
@@ -765,6 +840,8 @@
       gap: 6px;
       flex-wrap: wrap;
       min-height: 28px;
+      width: 100%;
+      min-width: 0;
     }
 
     .node-tag-list {
@@ -772,6 +849,8 @@
       align-items: center;
       gap: 4px;
       flex-wrap: wrap;
+      min-width: 0;
+      flex: 1 1 auto;
     }
 
     .node-tag-chip {
@@ -1757,10 +1836,10 @@
     <div id="property-bar" class="property-bar hidden">
       <!-- 図形用プロパティ（1行目：塗り・枠線、2行目：配置・編集・右寄せ削除） -->
       <div id="node-props" class="prop-section">
-        <div class="prop-row">
-          <div class="prop-row-main" style="gap: 14px;">
+        <div class="prop-row color-primary-row">
+          <div class="fill-stroke-color-cluster">
             <div class="palette-row" id="fill-color-palette">
-              <span class="prop-label">塗り:</span>
+              <span class="prop-label">塗り</span>
               <button type="button" data-fill="transparent" id="fill-none-btn" class="swatch-btn"
                 style="background:#f1f5f9; border:1px solid #cbd5e1;" title="透明（無）">無</button>
               <div id="fill-history-slots" class="color-slot-group" title="過去に使用した色（履歴順・最大3個）"></div>
@@ -1770,7 +1849,7 @@
             </div>
 
             <div class="palette-row" id="stroke-color-palette">
-              <span class="prop-label">枠線:</span>
+              <span class="prop-label">枠線</span>
               <button type="button" data-stroke="transparent" id="stroke-none-btn" class="swatch-btn"
                 style="background:#f1f5f9; border:1px solid #cbd5e1;" title="枠なし（無）">無</button>
               <div id="stroke-history-slots" class="color-slot-group" title="過去に使用した色（履歴順・最大3個）"></div>
@@ -1779,15 +1858,23 @@
                 title="詳細な色を選択（カラーピッカー）">+</button>
             </div>
 
-            <div class="palette-row" id="text-color-palette">
-              <span class="prop-label">文字色:</span>
-              <button type="button" id="text-color-default-btn" class="swatch-btn"
-                style="background:#f1f5f9; border:1px solid #cbd5e1;" title="標準の文字色に戻す">標準</button>
-              <div id="text-color-history-slots" class="color-slot-group" title="過去に使用した文字色（履歴順・最大3個）"></div>
-              <div id="text-color-active-slot" class="color-slot-group" title="選択中オブジェクトの現在の文字色"></div>
-              <button type="button" id="btn-toggle-text-color-picker" class="custom-picker-btn"
-                title="詳細な文字色を選択（カラーピッカー）">+</button>
-            </div>
+          </div>
+        </div>
+
+        <div class="prop-row color-opacity-row">
+          <div class="palette-row" id="text-color-palette">
+            <span class="prop-label">文字</span>
+            <button type="button" id="text-color-default-btn" class="swatch-btn"
+              style="background:#f1f5f9; border:1px solid #cbd5e1;" title="基準の文字色に戻す">基</button>
+            <div id="text-color-history-slots" class="color-slot-group" title="過去に使用した文字色（履歴順・最大3個）"></div>
+            <div id="text-color-active-slot" class="color-slot-group" title="選択中オブジェクトの現在の文字色"></div>
+            <button type="button" id="btn-toggle-text-color-picker" class="custom-picker-btn"
+              title="詳細な文字色を選択（カラーピッカー）">+</button>
+          </div>
+          <div class="object-opacity-control">
+            <label for="object-opacity-slider">全体透明度</label>
+            <input id="object-opacity-slider" type="range" min="0" max="100" step="10" value="100" aria-label="オブジェクトの透明度" />
+            <output id="object-opacity-value" for="object-opacity-slider">100%</output>
           </div>
         </div>
 
@@ -1803,7 +1890,7 @@
             <div class="picker-sliders">
               <input id="picker-hue-slider" type="range" min="0" max="360" value="145" class="hue-slider"
                 aria-label="色相" />
-              <input id="picker-alpha-slider" type="range" min="0" max="100" value="100" class="alpha-slider"
+              <input id="picker-alpha-slider" type="range" min="0" max="100" step="10" value="100" class="alpha-slider"
                 aria-label="不透明度" />
             </div>
           </div>
@@ -3098,6 +3185,7 @@
         el.style.top = `${node.y}px`;
         el.style.width = `${node.width}px`;
         el.style.height = `${node.height}px`;
+        el.style.opacity = String(node.opacity ?? 1);
 
         if (node.type === 'image') {
           el.classList.add('image-node');
@@ -3453,7 +3541,9 @@
     function getCurrentSelectedColor(kind) {
       const ids = getSelectedTargetIds();
       if (ids.length === 0) return null;
-      const firstNode = state.nodes.find(n => n.id === ids[0]);
+      const firstNode = ids
+        .map(id => state.nodes.find(n => n.id === id))
+        .find(node => node && (kind !== 'text' || node.type !== 'image'));
       if (!firstNode) return null;
       if (kind === 'fill') return firstNode.fill ?? '#ffffff';
       if (kind === 'stroke') return firstNode.stroke ?? '#64748b';
@@ -3482,22 +3572,22 @@
         return;
       }
 
-      const ids = getSelectedTargetIds();
-      if (ids.length === 0) return;
+      const nodes = getSelectedTargetIds()
+        .map(id => state.nodes.find(n => n.id === id))
+        .filter(node => node && (kind !== 'text' || node.type !== 'image'));
+      if (nodes.length === 0) return;
       pushHistory();
-      ids.forEach(id => {
-        const node = state.nodes.find(n => n.id === id);
-        if (node) {
-          const property = kind === 'text' ? 'textColor' : kind;
-          if (kind === 'text' && colorValue === 'transparent') delete node[property];
-          else node[property] = colorValue;
-        }
+      nodes.forEach(node => {
+        const property = kind === 'text' ? 'textColor' : kind;
+        if (kind === 'text' && colorValue === 'transparent') delete node[property];
+        else node[property] = colorValue;
       });
       if (colorValue && colorValue !== 'transparent') {
         recordColorHistory(kind, colorValue);
       }
       renderNodes();
       renderColorSlots();
+      syncObjectOpacityControl();
       syncColorPickerWithCurrent(false);
       persistToLocalStorage();
     }
@@ -3625,6 +3715,50 @@
         }
       }
       if (textDefaultBtn) textDefaultBtn.classList.toggle('active', currentText === '#1e293b');
+      syncObjectOpacityControl();
+    }
+
+    function syncObjectOpacityControl() {
+      const slider = document.getElementById('object-opacity-slider');
+      const value = document.getElementById('object-opacity-value');
+      if (!slider) return;
+      const selectedNode = getSelectedTargetIds()
+        .map(id => state.nodes.find(node => node.id === id))
+        .find(Boolean);
+      const percent = Math.round((selectedNode?.opacity ?? 1) * 10) * 10;
+      slider.value = String(percent);
+      if (value) value.value = `${percent}%`;
+    }
+
+    let objectOpacityHistoryStarted = false;
+
+    function applyObjectOpacityFromSlider(commit = false) {
+      const slider = document.getElementById('object-opacity-slider');
+      if (!slider) return;
+      const opacity = Number(slider.value) / 100;
+      const nodes = getSelectedTargetIds()
+        .map(id => state.nodes.find(node => node.id === id))
+        .filter(Boolean);
+      if (nodes.length === 0) return;
+
+      const updates = nodes.filter(node => Math.abs((node.opacity ?? 1) - opacity) > 0.001);
+
+      if (updates.length > 0) {
+        if (!objectOpacityHistoryStarted) {
+          pushHistory();
+          objectOpacityHistoryStarted = true;
+        }
+        updates.forEach(node => {
+          if (opacity >= 1) delete node.opacity;
+          else node.opacity = opacity;
+        });
+        renderNodes();
+        persistToLocalStorage();
+      }
+
+      const value = document.getElementById('object-opacity-value');
+      if (value) value.value = `${slider.value}%`;
+      if (commit) objectOpacityHistoryStarted = false;
     }
 
     function renderEdgeColorSlots() {
@@ -3735,7 +3869,7 @@
       }
       pickerState.s = hsv.s;
       pickerState.v = hsv.v;
-      pickerState.a = curColor === 'transparent' ? 0 : rgba.a;
+      pickerState.a = curColor === 'transparent' ? 0 : Math.round(rgba.a * 10) / 10;
       if (resetSession) {
         pickerState.isFirstCommitInSession = true;
       }
@@ -3784,20 +3918,19 @@
         return;
       }
 
-      const ids = getSelectedTargetIds();
-      if (ids.length === 0) return;
+      const nodes = getSelectedTargetIds()
+        .map(id => state.nodes.find(n => n.id === id))
+        .filter(node => node && (pickerState.activeKind !== 'text' || node.type !== 'image'));
+      if (nodes.length === 0) return;
 
       if (pickerState.isFirstCommitInSession) {
         pushHistory();
         pickerState.isFirstCommitInSession = false;
       }
 
-      ids.forEach(id => {
-        const node = state.nodes.find(n => n.id === id);
-        if (node) {
-          const property = pickerState.activeKind === 'text' ? 'textColor' : pickerState.activeKind;
-          node[property] = cssColor;
-        }
+      nodes.forEach(node => {
+        const property = pickerState.activeKind === 'text' ? 'textColor' : pickerState.activeKind;
+        node[property] = cssColor;
       });
 
       if (recordHist && cssColor !== 'transparent') {
@@ -3893,6 +4026,10 @@
         commitPickerColor(true);
       });
     }
+
+    const objectOpacitySlider = document.getElementById('object-opacity-slider');
+    objectOpacitySlider?.addEventListener('input', () => applyObjectOpacityFromSlider(false));
+    objectOpacitySlider?.addEventListener('change', () => applyObjectOpacityFromSlider(true));
 
     if (pickerHexInput) {
       pickerHexInput.addEventListener('change', (e) => {
@@ -5007,8 +5144,10 @@
         minimapCtx.fillStyle = n.id === state.selectedNodeId ? '#2563eb' : (n.fill && n.fill !== 'transparent' ? n.fill : '#e2e8f0');
         minimapCtx.strokeStyle = n.id === state.selectedNodeId ? '#1d4ed8' : '#64748b';
         minimapCtx.lineWidth = 1;
+        minimapCtx.globalAlpha = n.opacity ?? 1;
         minimapCtx.fillRect(nx, ny, nw, nh);
         minimapCtx.strokeRect(nx, ny, nw, nh);
+        minimapCtx.globalAlpha = 1;
       }
 
       const vx = (vpWorldX - minX) * scale + offsetX;

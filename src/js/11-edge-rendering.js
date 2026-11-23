@@ -125,6 +125,7 @@
         el.style.top = `${node.y}px`;
         el.style.width = `${node.width}px`;
         el.style.height = `${node.height}px`;
+        el.style.opacity = String(node.opacity ?? 1);
 
         if (node.type === 'image') {
           el.classList.add('image-node');

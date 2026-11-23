@@ -184,10 +184,10 @@
     <div id="property-bar" class="property-bar hidden">
       <!-- 図形用プロパティ（1行目：塗り・枠線、2行目：配置・編集・右寄せ削除） -->
       <div id="node-props" class="prop-section">
-        <div class="prop-row">
-          <div class="prop-row-main" style="gap: 14px;">
+        <div class="prop-row color-primary-row">
+          <div class="fill-stroke-color-cluster">
             <div class="palette-row" id="fill-color-palette">
-              <span class="prop-label">塗り:</span>
+              <span class="prop-label">塗り</span>
               <button type="button" data-fill="transparent" id="fill-none-btn" class="swatch-btn"
                 style="background:#f1f5f9; border:1px solid #cbd5e1;" title="透明（無）">無</button>
               <div id="fill-history-slots" class="color-slot-group" title="過去に使用した色（履歴順・最大3個）"></div>
@@ -197,7 +197,7 @@
             </div>
 
             <div class="palette-row" id="stroke-color-palette">
-              <span class="prop-label">枠線:</span>
+              <span class="prop-label">枠線</span>
               <button type="button" data-stroke="transparent" id="stroke-none-btn" class="swatch-btn"
                 style="background:#f1f5f9; border:1px solid #cbd5e1;" title="枠なし（無）">無</button>
               <div id="stroke-history-slots" class="color-slot-group" title="過去に使用した色（履歴順・最大3個）"></div>
@@ -206,15 +206,23 @@
                 title="詳細な色を選択（カラーピッカー）">+</button>
             </div>
 
-            <div class="palette-row" id="text-color-palette">
-              <span class="prop-label">文字色:</span>
-              <button type="button" id="text-color-default-btn" class="swatch-btn"
-                style="background:#f1f5f9; border:1px solid #cbd5e1;" title="標準の文字色に戻す">標準</button>
-              <div id="text-color-history-slots" class="color-slot-group" title="過去に使用した文字色（履歴順・最大3個）"></div>
-              <div id="text-color-active-slot" class="color-slot-group" title="選択中オブジェクトの現在の文字色"></div>
-              <button type="button" id="btn-toggle-text-color-picker" class="custom-picker-btn"
-                title="詳細な文字色を選択（カラーピッカー）">+</button>
-            </div>
+          </div>
+        </div>
+
+        <div class="prop-row color-opacity-row">
+          <div class="palette-row" id="text-color-palette">
+            <span class="prop-label">文字</span>
+            <button type="button" id="text-color-default-btn" class="swatch-btn"
+              style="background:#f1f5f9; border:1px solid #cbd5e1;" title="基準の文字色に戻す">基</button>
+            <div id="text-color-history-slots" class="color-slot-group" title="過去に使用した文字色（履歴順・最大3個）"></div>
+            <div id="text-color-active-slot" class="color-slot-group" title="選択中オブジェクトの現在の文字色"></div>
+            <button type="button" id="btn-toggle-text-color-picker" class="custom-picker-btn"
+              title="詳細な文字色を選択（カラーピッカー）">+</button>
+          </div>
+          <div class="object-opacity-control">
+            <label for="object-opacity-slider">全体透明度</label>
+            <input id="object-opacity-slider" type="range" min="0" max="100" step="10" value="100" aria-label="オブジェクトの透明度" />
+            <output id="object-opacity-value" for="object-opacity-slider">100%</output>
           </div>
         </div>
 
@@ -230,7 +238,7 @@
             <div class="picker-sliders">
               <input id="picker-hue-slider" type="range" min="0" max="360" value="145" class="hue-slider"
                 aria-label="色相" />
-              <input id="picker-alpha-slider" type="range" min="0" max="100" value="100" class="alpha-slider"
+              <input id="picker-alpha-slider" type="range" min="0" max="100" step="10" value="100" class="alpha-slider"
                 aria-label="不透明度" />
             </div>
           </div>
