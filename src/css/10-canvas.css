@@ -354,10 +354,26 @@
     .tag-editor-row {
       display: flex;
       align-items: center;
-      gap: 6px;
-      flex-wrap: wrap;
+      gap: 12px;
+      flex-wrap: nowrap;
       min-height: 28px;
       width: 100%;
+      min-width: 0;
+    }
+
+    .tag-input-group,
+    .tag-list-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .tag-input-group {
+      flex: 0 0 auto;
+    }
+
+    .tag-list-group {
+      flex: 1 1 auto;
       min-width: 0;
     }
 

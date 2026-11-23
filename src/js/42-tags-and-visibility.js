@@ -122,12 +122,17 @@
       if (!nodeTagList) return;
       const selectedNodes = getSelectedNodesForTagEdit();
       nodeTagList.innerHTML = '';
-      if (selectedNodes.length === 0) return;
+      const tagListLabel = document.getElementById('node-tag-list-label');
+      if (selectedNodes.length === 0) {
+        if (tagListLabel) tagListLabel.textContent = 'タグ: 未設定';
+        return;
+      }
 
       const tagCounts = new Map();
       selectedNodes.forEach(node => getNodeTags(node).forEach(tag => {
         tagCounts.set(tag, (tagCounts.get(tag) || 0) + 1);
       }));
+      if (tagListLabel) tagListLabel.textContent = tagCounts.size > 0 ? 'タグ:' : 'タグ: 未設定';
       for (const [tag, count] of [...tagCounts].sort(([a], [b]) => a.localeCompare(b, 'ja'))) {
         const chip = document.createElement('span');
         chip.className = `node-tag-chip ${count < selectedNodes.length ? 'partial' : ''}`;

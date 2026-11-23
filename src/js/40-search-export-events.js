@@ -80,29 +80,7 @@
       }
     });
 
-    // エクスポート出力を画面モーダルに表示する共通関数
-    const exportOutputModal = document.getElementById('export-output-modal');
-    const exportModalTitle = document.getElementById('export-modal-title');
-    const exportModalDesc = document.getElementById('export-modal-desc');
-    const exportOutputTextarea = document.getElementById('export-output-textarea');
-
-    function showExportModal(contentText, title = 'エクスポート出力 (JSON)', desc = 'ダウンロードせずに画面上で内容を確認・コピーできます。') {
-      if (!exportOutputModal || !exportOutputTextarea) return;
-      if (exportModalTitle) exportModalTitle.textContent = title;
-      if (exportModalDesc) exportModalDesc.textContent = desc;
-      exportOutputTextarea.value = contentText;
-      exportOutputModal.classList.remove('hidden');
-      setTimeout(() => {
-        exportOutputTextarea.focus();
-        exportOutputTextarea.select();
-      }, 40);
-    }
-
-    function closeExportModal() {
-      if (exportOutputModal) exportOutputModal.classList.add('hidden');
-    }
-
-    // ローカルJSONエクスポート（画面上にテキスト表示）
+    // JSONファイル保存（開いたファイルがあれば同じファイルへ上書き）
     async function saveToLocalJsonFile() {
       const exportData = {
         app: 'InMyMind',
@@ -113,12 +91,52 @@
         edges: state.edges
       };
       const jsonStr = JSON.stringify(exportData, null, 2);
-      showExportModal(
-        jsonStr,
-        'エクスポート出力（JSON）',
-        'ダウンロードせずに画面上に表示しています。コピーしてJSONファイルやメモに貼り付けてください。'
-      );
-      showToast('エクスポートデータを画面に表示しました');
+
+      try {
+        let handle = state.fileHandle;
+        if (!handle && 'showSaveFilePicker' in window) {
+          handle = await window.showSaveFilePicker({
+            suggestedName: 'diagram.json',
+            types: [{
+              description: 'Diagram JSON File',
+              accept: { 'application/json': ['.json'] }
+            }]
+          });
+        }
+
+        if (handle?.createWritable) {
+          if (handle.requestPermission) {
+            const permission = await handle.requestPermission({ mode: 'readwrite' });
+            if (permission !== 'granted') {
+              showToast('ファイルへの書き込みが許可されていません');
+              return;
+            }
+          }
+          const writable = await handle.createWritable();
+          await writable.write(jsonStr);
+          await writable.close();
+          state.fileHandle = handle;
+          const fileName = handle.name || 'diagram.json';
+          fileStatusLabel.textContent = `保存済: ${fileName}`;
+          showToast(`「${fileName}」に保存しました`);
+          return;
+        }
+
+        const blob = new Blob([jsonStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'diagram.json';
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        showToast('diagram.json をダウンロードしました');
+      } catch (err) {
+        if (err.name === 'AbortError') return;
+        console.error('JSON save failed:', err);
+        showToast('JSONファイルの保存に失敗しました');
+      }
     }
 
     // ローカルJSONファイル読み込み

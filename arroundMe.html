@@ -830,10 +830,26 @@
     .tag-editor-row {
       display: flex;
       align-items: center;
-      gap: 6px;
-      flex-wrap: wrap;
+      gap: 12px;
+      flex-wrap: nowrap;
       min-height: 28px;
       width: 100%;
+      min-width: 0;
+    }
+
+    .tag-input-group,
+    .tag-list-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .tag-input-group {
+      flex: 0 0 auto;
+    }
+
+    .tag-list-group {
+      flex: 1 1 auto;
       min-width: 0;
     }
 
@@ -1930,6 +1946,18 @@
 
           </div>
 
+        </div>
+        <div class="tag-editor-row">
+          <div class="tag-input-group">
+            <input id="node-tag-input" class="node-tag-input" type="text" maxlength="32" placeholder="タグを追加" aria-label="追加するタグ" />
+            <button id="btn-add-node-tag" class="btn-secondary tag-add-button" type="button">追加</button>
+          </div>
+          <div class="tag-list-group">
+            <span id="node-tag-list-label" class="prop-label">タグ: 未設定</span>
+            <div id="node-tag-list" class="node-tag-list"></div>
+          </div>
+        </div>
+        <div class="prop-row">
           <div class="prop-row-actions" style="width:100%; justify-content:space-between; margin-left:0;">
             <button id="btn-edit-text" class="btn-secondary" style="padding: 4px 8px;">
               テキスト編集
@@ -1942,12 +1970,6 @@
               <span>削除</span>
             </button>
           </div>
-        </div>
-        <div class="tag-editor-row">
-          <span class="prop-label">タグ:</span>
-          <div id="node-tag-list" class="node-tag-list"></div>
-          <input id="node-tag-input" class="node-tag-input" type="text" maxlength="32" placeholder="タグを追加" aria-label="追加するタグ" />
-          <button id="btn-add-node-tag" class="btn-secondary tag-add-button" type="button">追加</button>
         </div>
       </div>
 
@@ -2104,29 +2126,6 @@
         </svg>
         <span>削除 (Delete)</span>
       </button>
-    </div>
-
-    <!-- エクスポート出力表示モーダル -->
-    <div id="export-output-modal" class="modal-overlay hidden">
-      <div class="modal-card export-modal-card">
-        <div class="modal-header">
-          <h3 id="export-modal-title" class="modal-title">エクスポート出力</h3>
-          <button id="btn-close-export-modal" class="modal-close-btn" title="閉じる">✕</button>
-        </div>
-        <div class="modal-body" style="gap: 10px;">
-          <div class="export-toolbar-row">
-            <span id="export-modal-desc" style="font-size: 12px; color: #64748b;">下のテキストを選択・コピーして利用できます。</span>
-            <div style="display: flex; gap: 6px;">
-              <button type="button" id="btn-select-all-export" class="btn-secondary" style="padding: 4px 10px;">全選択</button>
-              <button type="button" id="btn-copy-export-text" class="btn-primary" style="padding: 4px 12px;">コピー</button>
-            </div>
-          </div>
-          <textarea id="export-output-textarea" class="export-textarea" readonly></textarea>
-        </div>
-        <div class="modal-footer">
-          <button type="button" id="btn-close-export-modal-footer" class="btn-secondary" style="padding: 6px 14px;">閉じる</button>
-        </div>
-      </div>
     </div>
 
     <!-- URL編集モーダルダイアログ -->
@@ -5297,29 +5296,7 @@
       }
     });
 
-    // エクスポート出力を画面モーダルに表示する共通関数
-    const exportOutputModal = document.getElementById('export-output-modal');
-    const exportModalTitle = document.getElementById('export-modal-title');
-    const exportModalDesc = document.getElementById('export-modal-desc');
-    const exportOutputTextarea = document.getElementById('export-output-textarea');
-
-    function showExportModal(contentText, title = 'エクスポート出力 (JSON)', desc = 'ダウンロードせずに画面上で内容を確認・コピーできます。') {
-      if (!exportOutputModal || !exportOutputTextarea) return;
-      if (exportModalTitle) exportModalTitle.textContent = title;
-      if (exportModalDesc) exportModalDesc.textContent = desc;
-      exportOutputTextarea.value = contentText;
-      exportOutputModal.classList.remove('hidden');
-      setTimeout(() => {
-        exportOutputTextarea.focus();
-        exportOutputTextarea.select();
-      }, 40);
-    }
-
-    function closeExportModal() {
-      if (exportOutputModal) exportOutputModal.classList.add('hidden');
-    }
-
-    // ローカルJSONエクスポート（画面上にテキスト表示）
+    // JSONファイル保存（開いたファイルがあれば同じファイルへ上書き）
     async function saveToLocalJsonFile() {
       const exportData = {
         app: 'InMyMind',
@@ -5330,12 +5307,52 @@
         edges: state.edges
       };
       const jsonStr = JSON.stringify(exportData, null, 2);
-      showExportModal(
-        jsonStr,
-        'エクスポート出力（JSON）',
-        'ダウンロードせずに画面上に表示しています。コピーしてJSONファイルやメモに貼り付けてください。'
-      );
-      showToast('エクスポートデータを画面に表示しました');
+
+      try {
+        let handle = state.fileHandle;
+        if (!handle && 'showSaveFilePicker' in window) {
+          handle = await window.showSaveFilePicker({
+            suggestedName: 'diagram.json',
+            types: [{
+              description: 'Diagram JSON File',
+              accept: { 'application/json': ['.json'] }
+            }]
+          });
+        }
+
+        if (handle?.createWritable) {
+          if (handle.requestPermission) {
+            const permission = await handle.requestPermission({ mode: 'readwrite' });
+            if (permission !== 'granted') {
+              showToast('ファイルへの書き込みが許可されていません');
+              return;
+            }
+          }
+          const writable = await handle.createWritable();
+          await writable.write(jsonStr);
+          await writable.close();
+          state.fileHandle = handle;
+          const fileName = handle.name || 'diagram.json';
+          fileStatusLabel.textContent = `保存済: ${fileName}`;
+          showToast(`「${fileName}」に保存しました`);
+          return;
+        }
+
+        const blob = new Blob([jsonStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'diagram.json';
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        showToast('diagram.json をダウンロードしました');
+      } catch (err) {
+        if (err.name === 'AbortError') return;
+        console.error('JSON save failed:', err);
+        showToast('JSONファイルの保存に失敗しました');
+      }
     }
 
     // ローカルJSONファイル読み込み
@@ -5718,7 +5735,6 @@
     // キーボードショートカット
     window.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
-        closeExportModal();
         closeImageUploadModal();
         closeUrlEditModal();
         closeUrlMenu();
@@ -5833,30 +5849,6 @@
     }
 
     window.addEventListener('resize', renderMinimap);
-
-    document.getElementById('btn-close-export-modal')?.addEventListener('click', closeExportModal);
-    document.getElementById('btn-close-export-modal-footer')?.addEventListener('click', closeExportModal);
-    exportOutputModal?.addEventListener('pointerdown', (e) => {
-      if (e.target === exportOutputModal) closeExportModal();
-    });
-    document.getElementById('btn-select-all-export')?.addEventListener('click', () => {
-      if (!exportOutputTextarea) return;
-      exportOutputTextarea.focus();
-      exportOutputTextarea.select();
-    });
-    document.getElementById('btn-copy-export-text')?.addEventListener('click', async () => {
-      if (!exportOutputTextarea) return;
-      const txt = exportOutputTextarea.value;
-      try {
-        await navigator.clipboard.writeText(txt);
-        showToast('エクスポート内容をクリップボードにコピーしました');
-      } catch (_) {
-        exportOutputTextarea.focus();
-        exportOutputTextarea.select();
-        document.execCommand('copy');
-        showToast('エクスポート内容をコピーしました');
-      }
-    });
 
     window.addEventListener('DOMContentLoaded', async () => {
       const restored = await loadFromLocalStorage();
@@ -6004,12 +5996,17 @@
       if (!nodeTagList) return;
       const selectedNodes = getSelectedNodesForTagEdit();
       nodeTagList.innerHTML = '';
-      if (selectedNodes.length === 0) return;
+      const tagListLabel = document.getElementById('node-tag-list-label');
+      if (selectedNodes.length === 0) {
+        if (tagListLabel) tagListLabel.textContent = 'タグ: 未設定';
+        return;
+      }
 
       const tagCounts = new Map();
       selectedNodes.forEach(node => getNodeTags(node).forEach(tag => {
         tagCounts.set(tag, (tagCounts.get(tag) || 0) + 1);
       }));
+      if (tagListLabel) tagListLabel.textContent = tagCounts.size > 0 ? 'タグ:' : 'タグ: 未設定';
       for (const [tag, count] of [...tagCounts].sort(([a], [b]) => a.localeCompare(b, 'ja'))) {
         const chip = document.createElement('span');
         chip.className = `node-tag-chip ${count < selectedNodes.length ? 'partial' : ''}`;

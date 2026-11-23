@@ -317,7 +317,6 @@
     // キーボードショートカット
     window.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
-        closeExportModal();
         closeImageUploadModal();
         closeUrlEditModal();
         closeUrlMenu();
@@ -432,30 +431,6 @@
     }
 
     window.addEventListener('resize', renderMinimap);
-
-    document.getElementById('btn-close-export-modal')?.addEventListener('click', closeExportModal);
-    document.getElementById('btn-close-export-modal-footer')?.addEventListener('click', closeExportModal);
-    exportOutputModal?.addEventListener('pointerdown', (e) => {
-      if (e.target === exportOutputModal) closeExportModal();
-    });
-    document.getElementById('btn-select-all-export')?.addEventListener('click', () => {
-      if (!exportOutputTextarea) return;
-      exportOutputTextarea.focus();
-      exportOutputTextarea.select();
-    });
-    document.getElementById('btn-copy-export-text')?.addEventListener('click', async () => {
-      if (!exportOutputTextarea) return;
-      const txt = exportOutputTextarea.value;
-      try {
-        await navigator.clipboard.writeText(txt);
-        showToast('エクスポート内容をクリップボードにコピーしました');
-      } catch (_) {
-        exportOutputTextarea.focus();
-        exportOutputTextarea.select();
-        document.execCommand('copy');
-        showToast('エクスポート内容をコピーしました');
-      }
-    });
 
     window.addEventListener('DOMContentLoaded', async () => {
       const restored = await loadFromLocalStorage();
