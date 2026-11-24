@@ -416,7 +416,7 @@
     .edge-hit-area {
       fill: none;
       stroke: transparent;
-      stroke-width: 26px;
+      stroke-width: 36px;
       pointer-events: stroke;
       cursor: pointer;
     }

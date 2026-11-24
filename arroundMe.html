@@ -1531,7 +1531,7 @@
     .edge-hit-area {
       fill: none;
       stroke: transparent;
-      stroke-width: 26px;
+      stroke-width: 36px;
       pointer-events: stroke;
       cursor: pointer;
     }
@@ -3270,6 +3270,38 @@
       '#9333ea'  // パープル
     ];
 
+    let edgeCycleState = { x: 0, y: 0, ids: '', index: -1 };
+
+    // Option/Alt+クリックで、重なっている線やオブジェクトの背面にある線を順番に選ぶ。
+    window.addEventListener('pointerdown', event => {
+      if (!event.altKey || event.button !== 0) return;
+      const edgeIds = [...new Set(document.elementsFromPoint(event.clientX, event.clientY)
+        .map(element => element.closest && element.closest('.edge-group'))
+        .filter(Boolean)
+        .map(group => {
+          const hitArea = group.querySelector('.edge-hit-area');
+          return hitArea ? hitArea.dataset.edgeId : null;
+        })
+        .filter(Boolean))];
+      if (edgeIds.length === 0) return;
+
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      const idKey = edgeIds.join('|');
+      const sameSpot = Math.hypot(event.clientX - edgeCycleState.x, event.clientY - edgeCycleState.y) < 10;
+      const sameCandidates = idKey === edgeCycleState.ids;
+      edgeCycleState.index = sameSpot && sameCandidates
+        ? (edgeCycleState.index + 1) % edgeIds.length
+        : 0;
+      edgeCycleState.x = event.clientX;
+      edgeCycleState.y = event.clientY;
+      edgeCycleState.ids = idKey;
+      selectEdge(edgeIds[edgeCycleState.index]);
+      if (edgeIds.length > 1) {
+        showToast(`重なった線を選択中 ${edgeCycleState.index + 1}/${edgeIds.length}（Option+クリックで切替）`);
+      }
+    }, true);
+
     function getRandomEdgeColor(excludeColor = null) {
       const candidates = excludeColor
         ? EDGE_RANDOM_PALETTE.filter(c => c.toLowerCase() !== excludeColor.toLowerCase())
@@ -3325,6 +3357,7 @@
         const hitPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
         hitPath.setAttribute('d', d);
         hitPath.setAttribute('class', 'edge-hit-area');
+        hitPath.dataset.edgeId = edge.id;
         hitPath.addEventListener('pointerdown', (e) => {
           e.stopPropagation();
           selectEdge(edge.id);
