@@ -209,10 +209,9 @@
         if (!edge) return;
         const worldPoint = screenToWorld(e.clientX, e.clientY);
         const fixedNodeId = interaction.endpoint === 'source' ? edge.target : edge.source;
-        const fixedAnchor = interaction.endpoint === 'source' ? edge.targetAnchor : edge.sourceAnchor;
         const fixedNode = state.nodes.find(node => node.id === fixedNodeId);
         if (!fixedNode) return;
-        const fixedPoint = getAnchorPoint(fixedNode, fixedAnchor || (interaction.endpoint === 'source' ? 'left' : 'right'));
+        const fixedPoint = getEdgeAnchorPoint(fixedNode, edge, interaction.endpoint === 'source' ? 'target' : 'source');
         const d = interaction.endpoint === 'source'
           ? `M ${worldPoint.x} ${worldPoint.y} L ${fixedPoint.x} ${fixedPoint.y}`
           : `M ${fixedPoint.x} ${fixedPoint.y} L ${worldPoint.x} ${worldPoint.y}`;

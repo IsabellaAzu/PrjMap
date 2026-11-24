@@ -51,6 +51,293 @@
       }
     }
 
+    function getEdgeAnchorPoint(node, edge, endpoint) {
+      const anchorKey = `${endpoint}Anchor`;
+      const anchor = edge[anchorKey] || (endpoint === 'source' ? 'right' : 'left');
+      const base = getAnchorPoint(node, anchor);
+      const relatedEdges = state.edges
+        .filter(candidate =>
+          (candidate.source === node.id && (candidate.sourceAnchor || 'right') === anchor) ||
+          (candidate.target === node.id && (candidate.targetAnchor || 'left') === anchor))
+        .sort((a, b) => {
+          const peerA = state.nodes.find(item => item.id === (a.source === node.id ? a.target : a.source));
+          const peerB = state.nodes.find(item => item.id === (b.source === node.id ? b.target : b.source));
+          const horizontalSide = anchor === 'top' || anchor === 'bottom';
+          const coordinateA = peerA ? (horizontalSide ? peerA.x + peerA.width / 2 : peerA.y + peerA.height / 2) : 0;
+          const coordinateB = peerB ? (horizontalSide ? peerB.x + peerB.width / 2 : peerB.y + peerB.height / 2) : 0;
+          return coordinateA - coordinateB || String(a.id).localeCompare(String(b.id));
+        });
+      if (relatedEdges.length < 2) return base;
+
+      const index = relatedEdges.findIndex(candidate => candidate.id === edge.id);
+      const horizontalSide = anchor === 'top' || anchor === 'bottom';
+      const available = (horizontalSide ? node.width : node.height) - 16;
+      const spacing = Math.max(2, Math.min(8, available / (relatedEdges.length - 1)));
+      const offset = (index - (relatedEdges.length - 1) / 2) * spacing;
+      if (horizontalSide) base.x += offset;
+      else base.y += offset;
+      return base;
+    }
+
+    function buildFanOutEdgePath(p1, anchor, p2, edge) {
+      if (getBaseEdgeStyle(edge.style || 'avoid') === 'straight') return null;
+      if (anchor !== 'top' && anchor !== 'bottom' && anchor !== 'left' && anchor !== 'right') return null;
+      const sameSideEdges = state.edges
+        .filter(candidate => candidate.source === edge.source &&
+          (candidate.sourceAnchor || 'right') === (edge.sourceAnchor || 'right'))
+        .sort((a, b) => {
+          const targetA = state.nodes.find(node => node.id === a.target);
+          const targetB = state.nodes.find(node => node.id === b.target);
+          const horizontalSide = anchor === 'top' || anchor === 'bottom';
+          const positionA = targetA ? (horizontalSide ? targetA.x + targetA.width / 2 : targetA.y + targetA.height / 2) : 0;
+          const positionB = targetB ? (horizontalSide ? targetB.x + targetB.width / 2 : targetB.y + targetB.height / 2) : 0;
+          return positionA - positionB || String(a.id).localeCompare(String(b.id));
+        });
+      if (sameSideEdges.length < 2) return null;
+
+      const rank = sameSideEdges.findIndex(candidate => candidate.id === edge.id);
+      const verticalSide = anchor === 'top' || anchor === 'bottom';
+      const direction = anchor === 'bottom' || anchor === 'right' ? 1 : -1;
+      const span = verticalSide ? Math.abs(p2.y - p1.y) : Math.abs(p2.x - p1.x);
+      if (span < 72) return null;
+      const spacing = Math.min(44, (span - 48) / (sameSideEdges.length - 1));
+      const laneOffset = Math.min(span - 24, 24 + rank * spacing);
+      const lane = verticalSide
+        ? { x: null, y: p1.y + direction * laneOffset }
+        : { x: p1.x + direction * laneOffset, y: null };
+      const points = verticalSide
+        ? [p1, { x: p1.x, y: lane.y }, { x: p2.x, y: lane.y }, p2]
+        : [p1, { x: lane.x, y: p1.y }, { x: lane.x, y: p2.y }, p2];
+
+      const sourceId = edge.source;
+      const targetId = edge.target;
+      for (let index = 1; index < points.length; index++) {
+        const start = points[index - 1];
+        const end = points[index];
+        const horizontal = Math.abs(start.y - end.y) < 0.01;
+        const blocked = state.nodes.some(node => {
+          if (node.id === sourceId || node.id === targetId) return false;
+          if (horizontal) {
+            return start.y > node.y - 8 && start.y < node.y + node.height + 8 &&
+              Math.max(start.x, end.x) > node.x - 8 && Math.min(start.x, end.x) < node.x + node.width + 8;
+          }
+          return start.x > node.x - 8 && start.x < node.x + node.width + 8 &&
+            Math.max(start.y, end.y) > node.y - 8 && Math.min(start.y, end.y) < node.y + node.height + 8;
+        });
+        if (blocked) return null;
+      }
+
+      return points.map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`).join(' ');
+    }
+
+    function buildBalancedEdgePath(p1, sourceAnchor, targetAnchor, p2, edge, usedSegments) {
+      if (getBaseEdgeStyle(edge.style || 'avoid') === 'straight') return null;
+      const sourceVertical = sourceAnchor === 'top' || sourceAnchor === 'bottom';
+      const targetVertical = targetAnchor === 'top' || targetAnchor === 'bottom';
+      const sourceDirection = sourceAnchor === 'bottom' || sourceAnchor === 'right' ? 1 : -1;
+      const targetDirection = targetAnchor === 'bottom' || targetAnchor === 'right' ? 1 : -1;
+      const axisDelta = sourceVertical ? p2.y - p1.y : p2.x - p1.x;
+      const span = Math.abs(axisDelta);
+      const alignedPorts = sourceVertical ? Math.abs(p1.x - p2.x) <= 12 : Math.abs(p1.y - p2.y) <= 12;
+      if (sourceVertical === targetVertical && sourceDirection !== targetDirection &&
+        axisDelta * sourceDirection > 0 && alignedPorts) {
+        const coordinate = sourceVertical ? (p1.x + p2.x) / 2 : (p1.y + p2.y) / 2;
+        const points = sourceVertical
+          ? [{ x: coordinate, y: p1.y }, { x: coordinate, y: p2.y }]
+          : [{ x: p1.x, y: coordinate }, { x: p2.x, y: coordinate }];
+        const blockedByNode = state.nodes.some(node => {
+          if (node.id === edge.source || node.id === edge.target) return false;
+          if (sourceVertical) return coordinate > node.x - 8 && coordinate < node.x + node.width + 8 &&
+            Math.max(p1.y, p2.y) > node.y - 8 && Math.min(p1.y, p2.y) < node.y + node.height + 8;
+          return coordinate > node.y - 8 && coordinate < node.y + node.height + 8 &&
+            Math.max(p1.x, p2.x) > node.x - 8 && Math.min(p1.x, p2.x) < node.x + node.width + 8;
+        });
+        const overlapsLine = usedSegments.some(segment => {
+          if (sourceVertical && !segment.horizontal) {
+            const overlap = Math.min(Math.max(p1.y, p2.y), Math.max(segment.y1, segment.y2)) -
+              Math.max(Math.min(p1.y, p2.y), Math.min(segment.y1, segment.y2));
+            return overlap > 4 && Math.abs(coordinate - segment.x) < 8;
+          }
+          if (!sourceVertical && segment.horizontal) {
+            const overlap = Math.min(Math.max(p1.x, p2.x), Math.max(segment.x1, segment.x2)) -
+              Math.max(Math.min(p1.x, p2.x), Math.min(segment.x1, segment.x2));
+            return overlap > 4 && Math.abs(coordinate - segment.y) < 8;
+          }
+          return false;
+        });
+        if (!blockedByNode && !overlapsLine) {
+          return {
+            d: points.map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`).join(' '),
+            points
+          };
+        }
+      }
+      const facing = sourceVertical === targetVertical && sourceDirection !== targetDirection && axisDelta * sourceDirection > 0;
+      const maxOffset = Math.min(320, Math.max(64, span + (facing ? 0 : 120)) - 24);
+      const candidates = [];
+      for (let offset = 24; offset <= maxOffset; offset += 8) candidates.push(offset);
+      if (candidates.length === 0) return null;
+
+      let bestPoints = null;
+      let bestScore = Infinity;
+      for (const offset of candidates) {
+        let points;
+        if (sourceVertical && targetVertical) {
+          const y = p1.y + sourceDirection * offset;
+          points = [p1, { x: p1.x, y }, { x: p2.x, y }, p2];
+        } else if (!sourceVertical && !targetVertical) {
+          const x = p1.x + sourceDirection * offset;
+          points = [p1, { x, y: p1.y }, { x, y: p2.y }, p2];
+        } else if (sourceVertical) {
+          const y = p1.y + sourceDirection * offset;
+          const targetStubX = p2.x + targetDirection * 24;
+          points = [p1, { x: p1.x, y }, { x: targetStubX, y }, { x: targetStubX, y: p2.y }, p2];
+        } else {
+          const x = p1.x + sourceDirection * offset;
+          const targetStubY = p2.y + targetDirection * 24;
+          points = [p1, { x, y: p1.y }, { x, y: targetStubY }, { x: p2.x, y: targetStubY }, p2];
+        }
+
+        let score = Math.abs(offset - Math.max(24, Math.min(maxOffset, span / 2))) * 0.04;
+        for (let index = 1; index < points.length; index++) {
+          const a = points[index - 1];
+          const b = points[index];
+          const horizontal = Math.abs(a.y - b.y) < 0.01;
+          const endpointStub = index === 1 || index === points.length - 1;
+          const nodeBlocked = state.nodes.some(node => {
+            if ((node.id === edge.source && index === 1) ||
+              (node.id === edge.target && index === points.length - 1)) return false;
+            if (horizontal) return a.y > node.y - 8 && a.y < node.y + node.height + 8 &&
+              Math.max(a.x, b.x) > node.x - 8 && Math.min(a.x, b.x) < node.x + node.width + 8;
+            return a.x > node.x - 8 && a.x < node.x + node.width + 8 &&
+              Math.max(a.y, b.y) > node.y - 8 && Math.min(a.y, b.y) < node.y + node.height + 8;
+          });
+          if (nodeBlocked) score += 1000000;
+
+          if (!endpointStub) {
+            for (const segment of usedSegments) {
+              if (horizontal && segment.horizontal) {
+                const overlap = Math.min(Math.max(a.x, b.x), Math.max(segment.x1, segment.x2)) -
+                  Math.max(Math.min(a.x, b.x), Math.min(segment.x1, segment.x2));
+                const gap = Math.abs(a.y - segment.y);
+                if (overlap > 4 && gap < 8) score += 50000 + (8 - gap) * 1000 + overlap * 10;
+              } else if (!horizontal && !segment.horizontal) {
+                const overlap = Math.min(Math.max(a.y, b.y), Math.max(segment.y1, segment.y2)) -
+                  Math.max(Math.min(a.y, b.y), Math.min(segment.y1, segment.y2));
+                const gap = Math.abs(a.x - segment.x);
+                if (overlap > 4 && gap < 8) score += 50000 + (8 - gap) * 1000 + overlap * 10;
+              }
+            }
+          }
+        }
+
+        const length = points.reduce((sum, point, index) => index === 0 ? 0 :
+          sum + Math.abs(point.x - points[index - 1].x) + Math.abs(point.y - points[index - 1].y), 0);
+        const horizontalLength = points.reduce((sum, point, index) => index === 0 ? 0 :
+          sum + (Math.abs(point.y - points[index - 1].y) < 0.01 ? Math.abs(point.x - points[index - 1].x) : 0), 0);
+        score += length * 0.02 - horizontalLength * 0.002;
+        if (score < bestScore) {
+          bestScore = score;
+          bestPoints = points;
+        }
+      }
+
+      if (!bestPoints || bestScore >= 1000000) return null;
+      return {
+        d: bestPoints.map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`).join(' '),
+        points: bestPoints
+      };
+    }
+
+    function buildNonOverlappingEdgePath(p1, anchor, targetAnchor, p2, edge, usedSegments) {
+      if (getBaseEdgeStyle(edge.style || 'avoid') === 'straight') return null;
+      const verticalSide = anchor === 'top' || anchor === 'bottom';
+      if (!verticalSide && anchor !== 'left' && anchor !== 'right') return null;
+      const direction = anchor === 'bottom' || anchor === 'right' ? 1 : -1;
+      const axisDelta = verticalSide ? p2.y - p1.y : p2.x - p1.x;
+      const span = Math.abs(axisDelta);
+
+      const anchorKey = edge.sourceAnchor || 'right';
+      const siblings = state.edges.filter(item => item.source === edge.source && (item.sourceAnchor || 'right') === anchorKey)
+        .sort((a, b) => {
+          const aNode = state.nodes.find(node => node.id === a.target);
+          const bNode = state.nodes.find(node => node.id === b.target);
+          const aPos = aNode ? (verticalSide ? aNode.x + aNode.width / 2 : aNode.y + aNode.height / 2) : 0;
+          const bPos = bNode ? (verticalSide ? bNode.x + bNode.width / 2 : bNode.y + bNode.height / 2) : 0;
+          return aPos - bPos || String(a.id).localeCompare(String(b.id));
+        });
+      const rank = Math.max(0, siblings.findIndex(item => item.id === edge.id));
+      const sameFacingGap = axisDelta * direction >= 0;
+      const laneLimit = sameFacingGap ? Math.max(24, span - 24) : 240;
+      const maxOffset = Math.max(24, Math.min(240, laneLimit));
+      const idealOffset = Math.min(maxOffset, 24 + rank * Math.min(12, Math.max(4, (maxOffset - 24) / Math.max(1, siblings.length - 1))));
+      const candidates = [];
+      for (let offset = 24; offset <= maxOffset; offset += 4) candidates.push(offset);
+      const middleOffset = sameFacingGap ? span / 2 : 40;
+      let bestRoute = null;
+      let bestScore = Infinity;
+
+      for (const offset of candidates) {
+        const lane = verticalSide
+          ? { x: null, y: p1.y + direction * offset }
+          : { x: p1.x + direction * offset, y: null };
+        const points = verticalSide
+          ? [p1, { x: p1.x, y: lane.y }, { x: p2.x, y: lane.y }, p2]
+          : [p1, { x: lane.x, y: p1.y }, { x: lane.x, y: p2.y }, p2];
+        let score = Math.abs(offset - idealOffset) * 0.08 + Math.abs(offset - middleOffset) * 0.015;
+        let blocked = false;
+
+        for (let index = 1; index < points.length; index++) {
+          const start = points[index - 1];
+          const end = points[index];
+          const horizontal = Math.abs(start.y - end.y) < 0.01;
+          if (state.nodes.some(node => {
+            if ((node.id === edge.source && index === 1) ||
+              (node.id === edge.target && index === points.length - 1)) return false;
+            if (horizontal) return start.y > node.y - 8 && start.y < node.y + node.height + 8 &&
+              Math.max(start.x, end.x) > node.x - 8 && Math.min(start.x, end.x) < node.x + node.width + 8;
+            return start.x > node.x - 8 && start.x < node.x + node.width + 8 &&
+              Math.max(start.y, end.y) > node.y - 8 && Math.min(start.y, end.y) < node.y + node.height + 8;
+          })) {
+            score += 100000;
+          }
+
+          if (index === 2) {
+            for (const segment of usedSegments) {
+              if (horizontal && segment.horizontal) {
+                const overlap = Math.min(Math.max(start.x, end.x), Math.max(segment.x1, segment.x2)) -
+                  Math.max(Math.min(start.x, end.x), Math.min(segment.x1, segment.x2));
+                const gap = Math.abs(start.y - segment.y);
+                if (overlap > 8) score += gap < 12 ? 50000 + (12 - gap) * 1000 + overlap * 10 : 0;
+              } else if (!horizontal && !segment.horizontal) {
+                const overlap = Math.min(Math.max(start.y, end.y), Math.max(segment.y1, segment.y2)) -
+                  Math.max(Math.min(start.y, end.y), Math.min(segment.y1, segment.y2));
+                const gap = Math.abs(start.x - segment.x);
+                if (overlap > 8) score += gap < 12 ? 50000 + (12 - gap) * 1000 + overlap * 10 : 0;
+              }
+            }
+          }
+        }
+
+        const routeLength = points.reduce((total, point, index) => index === 0 ? 0 :
+          total + Math.abs(point.x - points[index - 1].x) + Math.abs(point.y - points[index - 1].y), 0);
+        const horizontalLength = points.reduce((total, point, index) => index === 0 ? 0 :
+          total + (Math.abs(point.y - points[index - 1].y) < 0.01 ? Math.abs(point.x - points[index - 1].x) : 0), 0);
+        score += routeLength * 0.02 - horizontalLength * 0.002;
+
+        if (score < bestScore) {
+          bestScore = score;
+          bestRoute = points;
+        }
+      }
+
+      if (!bestRoute || bestScore >= 100000) return null;
+      return {
+        d: bestRoute.map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`).join(' '),
+        points: bestRoute
+      };
+    }
+
     function findClosestAnchor(targetNode, worldX, worldY) {
       const anchors = ['top', 'right', 'bottom', 'left'];
       let bestAnchor = 'left';
@@ -464,7 +751,7 @@
       }
 
       const fullPts = [p1, ...gridPts, p2];
-      return buildRoundedKeyPath(fullPts, 18);
+      return fullPts.map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`).join(' ');
     }
 
     function getBaseEdgeStyle(style = 'bezier') {
@@ -481,7 +768,7 @@
       if (baseStyle === 'straight') {
         return `M ${p1.x} ${p1.y} L ${p2.x} ${p2.y}`;
       }
-      if (baseStyle === 'avoid') {
+      if (baseStyle === 'avoid' || baseStyle === 'bezier') {
         return findObstacleAvoidingPath(p1, a1, p2, a2, state.nodes, srcNodeId, tgtNodeId);
       }
       const dist = Math.max(45, Math.hypot(p2.x - p1.x, p2.y - p1.y) * 0.4);

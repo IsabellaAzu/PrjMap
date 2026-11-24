@@ -78,6 +78,7 @@
     function renderEdges() {
       rebuildTagVisibilityCache();
       const nodeMap = new Map(state.nodes.map(n => [n.id, n]));
+      const usedSegments = [];
       edgesContainer.innerHTML = '';
 
       for (const edge of state.edges) {
@@ -86,9 +87,24 @@
         if (!srcNode || !tgtNode) continue;
         if (!isNodeVisibleByTags(srcNode) || !isNodeVisibleByTags(tgtNode)) continue;
 
-        const p1 = getAnchorPoint(srcNode, edge.sourceAnchor || 'right');
-        const p2 = getAnchorPoint(tgtNode, edge.targetAnchor || 'left');
-        const d = buildEdgePath(p1, edge.sourceAnchor, p2, edge.targetAnchor, edge.style || 'bezier', edge.source, edge.target);
+        const p1 = getEdgeAnchorPoint(srcNode, edge, 'source');
+        const p2 = getEdgeAnchorPoint(tgtNode, edge, 'target');
+        const separatedPath = buildBalancedEdgePath(
+          p1, edge.sourceAnchor || 'right', edge.targetAnchor || 'left', p2, edge, usedSegments
+        );
+        const d = separatedPath
+          ? separatedPath.d
+          : buildEdgePath(p1, edge.sourceAnchor, p2, edge.targetAnchor, edge.style || 'avoid', edge.source, edge.target);
+        const routePoints = separatedPath ? separatedPath.points : d.match(/-?\d+(?:\.\d+)?/g)?.map(Number).reduce((points, value, index, values) => {
+          if (index % 2 === 0) points.push({ x: value, y: values[index + 1] });
+          return points;
+        }, []) || [];
+        for (let index = 1; index < routePoints.length; index++) {
+          const start = routePoints[index - 1];
+          const end = routePoints[index];
+          if (Math.abs(start.y - end.y) < 0.01) usedSegments.push({ horizontal: true, y: start.y, x1: start.x, x2: end.x });
+          else if (Math.abs(start.x - end.x) < 0.01) usedSegments.push({ horizontal: false, x: start.x, y1: start.y, y2: end.y });
+        }
 
         const isSelected = state.selectedEdgeId === edge.id;
         const baseColor = edge.color || '#64748b';

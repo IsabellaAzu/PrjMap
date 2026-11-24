@@ -207,12 +207,12 @@
           }
         ],
         edges: [
-          { id: 'edge_1', source: 'node_1', sourceAnchor: 'bottom', target: 'node_2', targetAnchor: 'top', style: 'bezier', color: '#2563eb', arrow: true },
-          { id: 'edge_2', source: 'node_1', sourceAnchor: 'bottom', target: 'node_3', targetAnchor: 'top', style: 'bezier', color: '#059669', arrow: true },
-          { id: 'edge_3', source: 'node_1', sourceAnchor: 'bottom', target: 'node_4', targetAnchor: 'top', style: 'bezier', color: '#d97706', arrow: true },
+          { id: 'edge_1', source: 'node_1', sourceAnchor: 'bottom', target: 'node_2', targetAnchor: 'top', style: 'avoid', color: '#2563eb', arrow: true },
+          { id: 'edge_2', source: 'node_1', sourceAnchor: 'bottom', target: 'node_3', targetAnchor: 'top', style: 'avoid', color: '#059669', arrow: true },
+          { id: 'edge_3', source: 'node_1', sourceAnchor: 'bottom', target: 'node_4', targetAnchor: 'top', style: 'avoid', color: '#d97706', arrow: true },
           { id: 'edge_4', source: 'node_2', sourceAnchor: 'bottom', target: 'node_5', targetAnchor: 'top', style: 'straight', color: '#7c3aed', arrow: true },
-          { id: 'edge_5', source: 'node_3', sourceAnchor: 'bottom', target: 'node_6', targetAnchor: 'top', style: 'bezier', color: '#0891b2', arrow: true },
-          { id: 'edge_6', source: 'node_4', sourceAnchor: 'bottom', target: 'node_6', targetAnchor: 'right', style: 'bezier', color: '#e11d48', arrow: true }
+          { id: 'edge_5', source: 'node_3', sourceAnchor: 'bottom', target: 'node_6', targetAnchor: 'top', style: 'avoid', color: '#0891b2', arrow: true },
+          { id: 'edge_6', source: 'node_4', sourceAnchor: 'bottom', target: 'node_6', targetAnchor: 'right', style: 'avoid', color: '#e11d48', arrow: true }
         ]
       };
     }
