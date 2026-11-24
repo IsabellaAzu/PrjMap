@@ -214,7 +214,8 @@
             </div>
           </div>
           <div class="picker-footer-row">
-            <input id="picker-hex-input" type="text" class="picker-hex-input" placeholder="#059669" />
+            <input id="picker-hex-input" type="text" class="picker-hex-input" placeholder="#059669"
+              oninput="this.dispatchEvent(new Event('change', { bubbles: true }))" />
             <button type="button" id="btn-close-color-picker" class="picker-close-btn">閉じる</button>
           </div>
         </div>
