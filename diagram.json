@@ -1,0 +1,151 @@
+{
+  "app": "InMyMind",
+  "version": 1,
+  "exportedAt": "2026-11-24T15:30:07.701Z",
+  "viewport": {
+    "x": 80,
+    "y": 80,
+    "zoom": 0.92
+  },
+  "nodes": [
+    {
+      "id": "node_1",
+      "type": "roundRect",
+      "x": 360,
+      "y": 40,
+      "width": 240,
+      "height": 92,
+      "text": "新規Webサービス開発プロジェクト\n全体構成＆タスク俯瞰図",
+      "fill": "#eff6ff",
+      "stroke": "#2563eb"
+    },
+    {
+      "id": "node_2",
+      "type": "rect",
+      "x": 60,
+      "y": 220,
+      "width": 220,
+      "height": 110,
+      "text": "1. 要件定義・UI設計\n画面ワイヤーフレーム作成\nhttps://google.com/design-spec",
+      "fill": "#ffffff",
+      "stroke": "#64748b"
+    },
+    {
+      "id": "node_3",
+      "type": "rect",
+      "x": 370,
+      "y": 220,
+      "width": 220,
+      "height": 110,
+      "text": "2. フロントエンド実装\nオフライン対応＆ローカル保存\nhttps://github.com/",
+      "fill": "#f0fdf4",
+      "stroke": "#059669"
+    },
+    {
+      "id": "node_4",
+      "type": "diamond",
+      "x": 690,
+      "y": 215,
+      "width": 200,
+      "height": 120,
+      "text": "セキュリティ\nレビュー完了？",
+      "fill": "#fef9c3",
+      "stroke": "#d97706"
+    },
+    {
+      "id": "node_5",
+      "type": "sticky",
+      "x": 60,
+      "y": 410,
+      "width": 220,
+      "height": 105,
+      "text": "【メモ】共有ルール\nJSONファイルを共有フォルダへ格納してメンバーに展開する",
+      "fill": "#fef9c3",
+      "stroke": "#eab308"
+    },
+    {
+      "id": "node_6",
+      "type": "ellipse",
+      "x": 380,
+      "y": 415,
+      "width": 200,
+      "height": 95,
+      "text": "本番リリース\nマニュアル公開\nhttps://google.com/docs",
+      "fill": "#f3e8ff",
+      "stroke": "#7c3aed"
+    },
+    {
+      "id": "node_7",
+      "type": "text",
+      "x": 680,
+      "y": 425,
+      "width": 230,
+      "height": 75,
+      "text": "※図形をドラッグすると線も追随します。\n右上の検索窓からキーワード移動できます。",
+      "fill": "transparent",
+      "stroke": "transparent"
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "node_1",
+      "sourceAnchor": "bottom",
+      "target": "node_2",
+      "targetAnchor": "top",
+      "style": "bezier",
+      "color": "#2563eb",
+      "arrow": true
+    },
+    {
+      "id": "edge_2",
+      "source": "node_1",
+      "sourceAnchor": "bottom",
+      "target": "node_3",
+      "targetAnchor": "top",
+      "style": "bezier",
+      "color": "#059669",
+      "arrow": true
+    },
+    {
+      "id": "edge_3",
+      "source": "node_1",
+      "sourceAnchor": "bottom",
+      "target": "node_4",
+      "targetAnchor": "top",
+      "style": "bezier",
+      "color": "#d97706",
+      "arrow": true
+    },
+    {
+      "id": "edge_4",
+      "source": "node_2",
+      "sourceAnchor": "bottom",
+      "target": "node_5",
+      "targetAnchor": "top",
+      "style": "straight",
+      "color": "#7c3aed",
+      "arrow": true
+    },
+    {
+      "id": "edge_5",
+      "source": "node_3",
+      "sourceAnchor": "bottom",
+      "target": "node_6",
+      "targetAnchor": "top",
+      "style": "bezier",
+      "color": "#0891b2",
+      "arrow": true
+    },
+    {
+      "id": "edge_6",
+      "source": "node_4",
+      "sourceAnchor": "bottom",
+      "target": "node_6",
+      "targetAnchor": "right",
+      "style": "bezier",
+      "color": "#e11d48",
+      "arrow": true
+    }
+  ]
+}

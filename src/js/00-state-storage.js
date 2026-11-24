@@ -146,7 +146,7 @@
             y: 220,
             width: 220,
             height: 110,
-            text: '1. 要件定義・UI設計\n画面ワイヤーフレーム作成\nhttps://example.com/design-spec',
+            text: '1. 要件定義・UI設計\n画面ワイヤーフレーム作成\nhttps://google.com/design-spec',
             fill: '#ffffff',
             stroke: '#64748b'
           },
@@ -157,7 +157,7 @@
             y: 220,
             width: 220,
             height: 110,
-            text: '2. フロントエンド実装\nオフライン対応＆ローカル保存\nhttps://github.com/example/app',
+            text: '2. フロントエンド実装\nオフライン対応＆ローカル保存\nhttps://github.com/',
             fill: '#f0fdf4',
             stroke: '#059669'
           },
@@ -190,7 +190,7 @@
             y: 415,
             width: 200,
             height: 95,
-            text: '本番リリース\nマニュアル公開\nhttps://example.com/docs',
+            text: '本番リリース\nマニュアル公開\nhttps://google.com/docs',
             fill: '#f3e8ff',
             stroke: '#7c3aed'
           },
