@@ -1,4 +1,9 @@
     *,
+    :root {
+      --menu-item-hover-bg: #f1f5f9;
+      --menu-item-hover-color: #0f172a;
+    }
+
     *::before,
     *::after {
       box-sizing: border-box;
@@ -364,7 +369,8 @@
     }
 
     .tag-filter-option:hover {
-      background: #f8fafc;
+      background-color: var(--menu-item-hover-bg);
+      color: var(--menu-item-hover-color);
     }
 
     .tag-filter-option input {
@@ -435,7 +441,8 @@
     }
 
     .search-dropdown-item:hover {
-      background-color: #eff6ff;
+      background-color: var(--menu-item-hover-bg);
+      color: var(--menu-item-hover-color);
     }
 
     .search-item-text {

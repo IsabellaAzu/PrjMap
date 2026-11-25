@@ -69,8 +69,8 @@
     }
 
     .url-dots-btn:hover {
-      background-color: #e2e8f0;
-      color: #1e293b;
+      background-color: var(--menu-item-hover-bg);
+      color: var(--menu-item-hover-color);
     }
 
     /* URLコンテキストメニュー（縦3点ドットクリック時） */
@@ -117,8 +117,8 @@
     }
 
     .context-item:hover {
-      background-color: #f1f5f9;
-      color: #0f172a;
+      background-color: var(--menu-item-hover-bg);
+      color: var(--menu-item-hover-color);
     }
 
     .context-item.danger {
@@ -476,6 +476,16 @@
     .edge-endpoint-handle:hover {
       r: 10px;
       fill: #dbeafe;
+    }
+
+    .edge-bend-handle {
+      pointer-events: all;
+      cursor: move;
+    }
+
+    .edge-bend-handle:hover {
+      r: 8px;
+      fill: #ede9fe !important;
     }
 
     .rewiring-edge .anchor-handle {

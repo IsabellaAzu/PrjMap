@@ -76,6 +76,33 @@
       const offset = (index - (relatedEdges.length - 1) / 2) * spacing;
       if (horizontalSide) base.x += offset;
       else base.y += offset;
+      const centerX = node.x + node.width / 2;
+      const centerY = node.y + node.height / 2;
+      if (node.type === 'ellipse') {
+        const rx = Math.max(1, node.width / 2);
+        const ry = Math.max(1, node.height / 2);
+        if (horizontalSide) {
+          const dx = Math.max(-rx * 0.98, Math.min(rx * 0.98, base.x - centerX));
+          const yOffset = ry * Math.sqrt(Math.max(0, 1 - (dx * dx) / (rx * rx)));
+          base.y = centerY + (anchor === 'top' ? -yOffset : yOffset);
+        } else {
+          const dy = Math.max(-ry * 0.98, Math.min(ry * 0.98, base.y - centerY));
+          const xOffset = rx * Math.sqrt(Math.max(0, 1 - (dy * dy) / (ry * ry)));
+          base.x = centerX + (anchor === 'left' ? -xOffset : xOffset);
+        }
+      } else if (node.type === 'diamond') {
+        const rx = Math.max(1, node.width / 2);
+        const ry = Math.max(1, node.height / 2);
+        if (horizontalSide) {
+          const dx = Math.max(-rx * 0.98, Math.min(rx * 0.98, base.x - centerX));
+          const yOffset = ry * (1 - Math.abs(dx) / rx);
+          base.y = centerY + (anchor === 'top' ? -yOffset : yOffset);
+        } else {
+          const dy = Math.max(-ry * 0.98, Math.min(ry * 0.98, base.y - centerY));
+          const xOffset = rx * (1 - Math.abs(dy) / ry);
+          base.x = centerX + (anchor === 'left' ? -xOffset : xOffset);
+        }
+      }
       return base;
     }
 
@@ -130,7 +157,7 @@
       return points.map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`).join(' ');
     }
 
-    function buildBalancedEdgePath(p1, sourceAnchor, targetAnchor, p2, edge, usedSegments) {
+    function buildBalancedEdgePath(p1, sourceAnchor, targetAnchor, p2, edge, usedSegments, usedTurns) {
       if (getBaseEdgeStyle(edge.style || 'avoid') === 'straight') return null;
       const sourceVertical = sourceAnchor === 'top' || sourceAnchor === 'bottom';
       const targetVertical = targetAnchor === 'top' || targetAnchor === 'bottom';
@@ -156,12 +183,20 @@
           if (sourceVertical && !segment.horizontal) {
             const overlap = Math.min(Math.max(p1.y, p2.y), Math.max(segment.y1, segment.y2)) -
               Math.max(Math.min(p1.y, p2.y), Math.min(segment.y1, segment.y2));
-            return overlap > 4 && Math.abs(coordinate - segment.x) < 8;
+            return overlap > 4 && Math.abs(coordinate - segment.x) < 24;
           }
           if (!sourceVertical && segment.horizontal) {
             const overlap = Math.min(Math.max(p1.x, p2.x), Math.max(segment.x1, segment.x2)) -
               Math.max(Math.min(p1.x, p2.x), Math.min(segment.x1, segment.x2));
-            return overlap > 4 && Math.abs(coordinate - segment.y) < 8;
+            return overlap > 4 && Math.abs(coordinate - segment.y) < 24;
+          }
+          if (sourceVertical && segment.horizontal) {
+            return coordinate > Math.min(segment.x1, segment.x2) && coordinate < Math.max(segment.x1, segment.x2) &&
+              segment.y > Math.min(p1.y, p2.y) && segment.y < Math.max(p1.y, p2.y);
+          }
+          if (!sourceVertical && !segment.horizontal) {
+            return segment.x > Math.min(p1.x, p2.x) && segment.x < Math.max(p1.x, p2.x) &&
+              coordinate > Math.min(segment.y1, segment.y2) && coordinate < Math.max(segment.y1, segment.y2);
           }
           return false;
         });
@@ -220,14 +255,34 @@
                 const overlap = Math.min(Math.max(a.x, b.x), Math.max(segment.x1, segment.x2)) -
                   Math.max(Math.min(a.x, b.x), Math.min(segment.x1, segment.x2));
                 const gap = Math.abs(a.y - segment.y);
-                if (overlap > 4 && gap < 8) score += 50000 + (8 - gap) * 1000 + overlap * 10;
+                if (overlap > 4 && gap < 24) score += 10000000 + (24 - gap) * 1000 + overlap * 10;
               } else if (!horizontal && !segment.horizontal) {
                 const overlap = Math.min(Math.max(a.y, b.y), Math.max(segment.y1, segment.y2)) -
                   Math.max(Math.min(a.y, b.y), Math.min(segment.y1, segment.y2));
                 const gap = Math.abs(a.x - segment.x);
-                if (overlap > 4 && gap < 8) score += 50000 + (8 - gap) * 1000 + overlap * 10;
+                if (overlap > 4 && gap < 24) score += 10000000 + (24 - gap) * 1000 + overlap * 10;
+              } else if (horizontal && !segment.horizontal) {
+                const crosses = segment.x > Math.min(a.x, b.x) && segment.x < Math.max(a.x, b.x) &&
+                  a.y > Math.min(segment.y1, segment.y2) && a.y < Math.max(segment.y1, segment.y2);
+                if (crosses) score += 100000;
+              } else if (!horizontal && segment.horizontal) {
+                const crosses = segment.y > Math.min(a.y, b.y) && segment.y < Math.max(a.y, b.y) &&
+                  a.x > Math.min(segment.x1, segment.x2) && a.x < Math.max(segment.x1, segment.x2);
+                if (crosses) score += 100000;
               }
             }
+          }
+        }
+
+        for (let index = 1; index < points.length - 1; index++) {
+          const previous = points[index - 1];
+          const current = points[index];
+          const next = points[index + 1];
+          const incomingHorizontal = Math.abs(previous.y - current.y) < 0.01;
+          const outgoingHorizontal = Math.abs(current.y - next.y) < 0.01;
+          if (incomingHorizontal !== outgoingHorizontal && usedTurns.some(turn =>
+            Math.abs(turn.x - current.x) < 24 && Math.abs(turn.y - current.y) < 24)) {
+            score += 2000000;
           }
         }
 
@@ -308,12 +363,12 @@
                 const overlap = Math.min(Math.max(start.x, end.x), Math.max(segment.x1, segment.x2)) -
                   Math.max(Math.min(start.x, end.x), Math.min(segment.x1, segment.x2));
                 const gap = Math.abs(start.y - segment.y);
-                if (overlap > 8) score += gap < 12 ? 50000 + (12 - gap) * 1000 + overlap * 10 : 0;
+                if (overlap > 8) score += gap < 20 ? 10000000 + (20 - gap) * 1000 + overlap * 10 : 0;
               } else if (!horizontal && !segment.horizontal) {
                 const overlap = Math.min(Math.max(start.y, end.y), Math.max(segment.y1, segment.y2)) -
                   Math.max(Math.min(start.y, end.y), Math.min(segment.y1, segment.y2));
                 const gap = Math.abs(start.x - segment.x);
-                if (overlap > 8) score += gap < 12 ? 50000 + (12 - gap) * 1000 + overlap * 10 : 0;
+                if (overlap > 8) score += gap < 20 ? 10000000 + (20 - gap) * 1000 + overlap * 10 : 0;
               }
             }
           }
@@ -331,11 +386,150 @@
         }
       }
 
-      if (!bestRoute || bestScore >= 100000) return null;
+      if (!bestRoute || bestScore >= 1000000) return null;
       return {
         d: bestRoute.map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`).join(' '),
         points: bestRoute
       };
+    }
+
+    // Use a single straight segment when the connection faces along its axis
+    // and that segment has clear space. This runs before any lane or grid search.
+    function buildDirectEdgePath(p1, sourceAnchor, p2, targetAnchor, edge, usedSegments) {
+      const horizontal = Math.abs(p1.y - p2.y) < 0.01;
+      const vertical = Math.abs(p1.x - p2.x) < 0.01;
+      if (!horizontal && !vertical) return null;
+      const sourceFacesAlong = horizontal
+        ? (sourceAnchor === 'right' && p2.x > p1.x || sourceAnchor === 'left' && p2.x < p1.x)
+        : (sourceAnchor === 'bottom' && p2.y > p1.y || sourceAnchor === 'top' && p2.y < p1.y);
+      const targetFacesAlong = horizontal
+        ? (targetAnchor === 'left' && p1.x < p2.x || targetAnchor === 'right' && p1.x > p2.x)
+        : (targetAnchor === 'top' && p1.y < p2.y || targetAnchor === 'bottom' && p1.y > p2.y);
+      if (!sourceFacesAlong || !targetFacesAlong) return null;
+      const blocked = state.nodes.some(node => {
+        if (node.id === edge.source || node.id === edge.target) return false;
+        return horizontal
+          ? p1.y > node.y - 8 && p1.y < node.y + node.height + 8 &&
+            Math.max(p1.x, p2.x) > node.x - 8 && Math.min(p1.x, p2.x) < node.x + node.width + 8
+          : p1.x > node.x - 8 && p1.x < node.x + node.width + 8 &&
+            Math.max(p1.y, p2.y) > node.y - 8 && Math.min(p1.y, p2.y) < node.y + node.height + 8;
+      });
+      if (blocked) return null;
+      const occupied = usedSegments.some(segment => {
+        if (horizontal !== segment.horizontal) return false;
+        const overlap = horizontal
+          ? Math.min(Math.max(p1.x, p2.x), Math.max(segment.x1, segment.x2)) - Math.max(Math.min(p1.x, p2.x), Math.min(segment.x1, segment.x2))
+          : Math.min(Math.max(p1.y, p2.y), Math.max(segment.y1, segment.y2)) - Math.max(Math.min(p1.y, p2.y), Math.min(segment.y1, segment.y2));
+        const gap = horizontal ? Math.abs(p1.y - segment.y) : Math.abs(p1.x - segment.x);
+        return overlap > 8 && gap < 20;
+      });
+      if (occupied) return null;
+      return { d: `M ${p1.x} ${p1.y} L ${p2.x} ${p2.y}`, points: [p1, p2] };
+    }
+
+    function buildOrthogonalEdgePath(p1, sourceAnchor, p2, targetAnchor, edge, usedSegments, usedTurns) {
+      const stub = 20;
+      const direction = anchor => anchor === 'right' || anchor === 'bottom' ? 1 : -1;
+      const sourceVertical = sourceAnchor === 'top' || sourceAnchor === 'bottom';
+      const targetVertical = targetAnchor === 'top' || targetAnchor === 'bottom';
+      const sourceStub = sourceVertical
+        ? { x: p1.x, y: p1.y + direction(sourceAnchor) * stub }
+        : { x: p1.x + direction(sourceAnchor) * stub, y: p1.y };
+      const targetStub = targetVertical
+        ? { x: p2.x, y: p2.y + direction(targetAnchor) * stub }
+        : { x: p2.x + direction(targetAnchor) * stub, y: p2.y };
+
+      const xs = new Set([sourceStub.x, targetStub.x]);
+      const ys = new Set([sourceStub.y, targetStub.y]);
+      const addNear = (set, value) => {
+        for (const delta of [-48, -32, -16, 16, 32, 48]) set.add(Math.round(value + delta));
+      };
+      addNear(xs, sourceStub.x); addNear(xs, targetStub.x);
+      addNear(ys, sourceStub.y); addNear(ys, targetStub.y);
+      for (const node of state.nodes) {
+        if (node.id === edge.source || node.id === edge.target) continue;
+        for (const x of [node.x - 16, node.x + node.width + 16]) xs.add(x);
+        for (const y of [node.y - 16, node.y + node.height + 16]) ys.add(y);
+      }
+      for (const segment of usedSegments) {
+        if (segment.horizontal) addNear(ys, segment.y);
+        else addNear(xs, segment.x);
+      }
+
+      const simplify = points => {
+        const result = [];
+        for (const point of points) {
+          const previous = result[result.length - 1];
+          if (previous && Math.abs(previous.x - point.x) < 0.01 && Math.abs(previous.y - point.y) < 0.01) continue;
+          while (result.length >= 2) {
+            const a = result[result.length - 2];
+            const b = result[result.length - 1];
+            if ((Math.abs(a.x - b.x) < 0.01 && Math.abs(b.x - point.x) < 0.01) ||
+                (Math.abs(a.y - b.y) < 0.01 && Math.abs(b.y - point.y) < 0.01)) result.pop();
+            else break;
+          }
+          result.push(point);
+        }
+        return result;
+      };
+      const segmentBlocked = (a, b, index, count) => {
+        const horizontal = Math.abs(a.y - b.y) < 0.01;
+        return state.nodes.some(node => {
+          if ((index === 0 && node.id === edge.source) || (index === count - 1 && node.id === edge.target)) return false;
+          return horizontal
+            ? a.y > node.y - 8 && a.y < node.y + node.height + 8 && Math.max(a.x, b.x) > node.x - 8 && Math.min(a.x, b.x) < node.x + node.width + 8
+            : a.x > node.x - 8 && a.x < node.x + node.width + 8 && Math.max(a.y, b.y) > node.y - 8 && Math.min(a.y, b.y) < node.y + node.height + 8;
+        });
+      };
+      const overlapsUsed = (a, b) => {
+        const horizontal = Math.abs(a.y - b.y) < 0.01;
+        for (const segment of usedSegments) {
+          if (horizontal === segment.horizontal) {
+            const overlap = horizontal
+              ? Math.min(Math.max(a.x, b.x), Math.max(segment.x1, segment.x2)) - Math.max(Math.min(a.x, b.x), Math.min(segment.x1, segment.x2))
+              : Math.min(Math.max(a.y, b.y), Math.max(segment.y1, segment.y2)) - Math.max(Math.min(a.y, b.y), Math.min(segment.y1, segment.y2));
+            if (overlap > 6 && (horizontal ? Math.abs(a.y - segment.y) : Math.abs(a.x - segment.x)) < 16) return true;
+          } else {
+            const crossing = horizontal
+              ? segment.x > Math.min(a.x, b.x) && segment.x < Math.max(a.x, b.x) && a.y > Math.min(segment.y1, segment.y2) && a.y < Math.max(segment.y1, segment.y2)
+              : segment.y > Math.min(a.y, b.y) && segment.y < Math.max(a.y, b.y) && a.x > Math.min(segment.x1, segment.x2) && a.x < Math.max(segment.x1, segment.x2);
+            if (crossing) return true;
+          }
+        }
+        return false;
+      };
+
+      let best = null;
+      let bestCost = Infinity;
+      const xValues = [...xs];
+      const yValues = [...ys];
+      for (const x of xValues) for (const y of yValues) {
+        const points = simplify([p1, sourceStub, { x, y: sourceStub.y }, { x, y }, { x: targetStub.x, y }, targetStub, p2]);
+        if (points.length < 2) continue;
+        let blocked = false;
+        let cost = 0;
+        for (let i = 1; i < points.length; i++) {
+          const a = points[i - 1], b = points[i];
+          if (Math.abs(a.x - b.x) > 0.01 && Math.abs(a.y - b.y) > 0.01) { blocked = true; break; }
+          if (segmentBlocked(a, b, i - 1, points.length - 1) || overlapsUsed(a, b)) { blocked = true; break; }
+          cost += Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
+        }
+        if (blocked) continue;
+        const bends = Math.max(0, points.length - 2);
+        cost += bends * 42;
+        for (let i = 1; i < points.length - 1; i++) {
+          // Keep bends on separate lanes: sharing either coordinate makes
+          // different routes appear to turn together even when the other axis differs.
+          if (usedTurns.some(turn => Math.abs(turn.x - points[i].x) < 16 || Math.abs(turn.y - points[i].y) < 16)) {
+            blocked = true;
+            break;
+          }
+        }
+        if (blocked) continue;
+        if (cost < bestCost) { bestCost = cost; best = points; }
+      }
+      if (!best) return null;
+      return { points: best, d: best.map((point, i) => `${i ? 'L' : 'M'} ${point.x} ${point.y}`).join(' ') };
     }
 
     function findClosestAnchor(targetNode, worldX, worldY) {
@@ -532,7 +726,7 @@
       return d;
     }
 
-    function findObstacleAvoidingPath(p1, a1, p2, a2, nodes, srcNodeId = null, tgtNodeId = null) {
+    function findObstacleAvoidingPath(p1, a1, p2, a2, nodes, srcNodeId = null, tgtNodeId = null, usedSegments = [], usedTurns = []) {
       const STUB = 22;
       const PAD = 18;
       const OUTER_MARGIN = 64;
@@ -586,6 +780,20 @@
         xSet.add(Math.round(ob.right));
         ySet.add(Math.round(ob.top));
         ySet.add(Math.round(ob.bottom));
+      }
+      // Give the search explicit neighboring lanes around routes already placed.
+      for (const segment of usedSegments) {
+        if (segment.horizontal) {
+          for (const delta of [-24, -16, 16, 24]) ySet.add(Math.round(segment.y + delta));
+        } else {
+          for (const delta of [-24, -16, 16, 24]) xSet.add(Math.round(segment.x + delta));
+        }
+      }
+      for (const turn of usedTurns) {
+        for (const delta of [-24, -16, 16, 24]) {
+          xSet.add(Math.round(turn.x + delta));
+          ySet.add(Math.round(turn.y + delta));
+        }
       }
 
       // 隣接グリッドの中間ラインも追加して、空きスペースやノード間の空間を素直に抜けるようにする
@@ -723,8 +931,33 @@
           const segLen = Math.abs(x2 - x1) + Math.abs(y2 - y1);
           const overlap = computeSegmentObstacleOverlap(x1, y1, x2, y2, obstacles);
           const bendCost = (currDir !== 0 && currDir !== nextDir) ? BEND_PENALTY : 0;
+          let routeCost = 0;
+          let sharesOccupiedLane = false;
+          const horizontal = Math.abs(y1 - y2) < 0.01;
+          for (const segment of usedSegments) {
+            if (horizontal === segment.horizontal) {
+              const shared = horizontal
+                ? Math.min(Math.max(x1, x2), Math.max(segment.x1, segment.x2)) - Math.max(Math.min(x1, x2), Math.min(segment.x1, segment.x2))
+                : Math.min(Math.max(y1, y2), Math.max(segment.y1, segment.y2)) - Math.max(Math.min(y1, y2), Math.min(segment.y1, segment.y2));
+              const laneGap = horizontal ? Math.abs(y1 - segment.y) : Math.abs(x1 - segment.x);
+              // A route may cross another route, but it must never reuse its lane.
+              // A large score was insufficient: a long detour could still cost more.
+              if (shared > 4 && laneGap < 20) {
+                sharesOccupiedLane = true;
+                break;
+              }
+            } else {
+              const crosses = horizontal
+                ? segment.x > Math.min(x1, x2) && segment.x < Math.max(x1, x2) && y1 > Math.min(segment.y1, segment.y2) && y1 < Math.max(segment.y1, segment.y2)
+                : segment.y > Math.min(y1, y2) && segment.y < Math.max(y1, y2) && x1 > Math.min(segment.x1, segment.x2) && x1 < Math.max(segment.x1, segment.x2);
+              if (crosses) routeCost += 12000;
+            }
+          }
+          if (sharesOccupiedLane) continue;
+          if (currDir !== 0 && currDir !== nextDir && usedTurns.some(turn =>
+            Math.abs(turn.x - x1) < 16 || Math.abs(turn.y - y1) < 16)) routeCost += 24000;
 
-          const tentativeG = currG + segLen + bendCost + overlap * OBSTACLE_PENALTY;
+          const tentativeG = currG + segLen + bendCost + overlap * OBSTACLE_PENALTY + routeCost;
           if (tentativeG < gScore[nextState]) {
             gScore[nextState] = tentativeG;
             cameFrom[nextState] = curr;
@@ -754,6 +987,54 @@
       return fullPts.map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`).join(' ');
     }
 
+    function buildEditableEdgePath(p1, p2, edge) {
+      if (!Array.isArray(edge.routePoints) && Array.isArray(edge.bendPoints) && edge.bendPoints.length > 0) {
+        const sourceDirection = getAnchorDirection(edge.sourceAnchor || 'right');
+        const targetDirection = getAnchorDirection(edge.targetAnchor || 'left');
+        edge.routePoints = [
+          p1,
+          { x: p1.x + sourceDirection.dx * 20, y: p1.y + sourceDirection.dy * 20 },
+          ...edge.bendPoints.map(point => ({ x: point.x, y: point.y })),
+          { x: p2.x + targetDirection.dx * 20, y: p2.y + targetDirection.dy * 20 },
+          p2
+        ];
+        delete edge.bendPoints;
+      }
+      if (!Array.isArray(edge.routePoints) || edge.routePoints.length < 2) return null;
+      const raw = edge.routePoints
+        .filter(point => point && Number.isFinite(point.x) && Number.isFinite(point.y))
+        .map(point => ({ x: point.x, y: point.y }));
+      if (raw.length < 2) return null;
+      raw[0] = { x: p1.x, y: p1.y };
+      raw[raw.length - 1] = { x: p2.x, y: p2.y };
+      const points = [raw[0]];
+      for (let i = 1; i < raw.length; i++) {
+        const a = points[points.length - 1], b = raw[i];
+        if (Math.abs(a.x - b.x) > 0.01 && Math.abs(a.y - b.y) > 0.01) {
+          const prior = raw[i - 1];
+          const wasVertical = Math.abs(prior.x - b.x) < Math.abs(prior.y - b.y);
+          points.push(wasVertical ? { x: a.x, y: b.y } : { x: b.x, y: a.y });
+        }
+        points.push(b);
+      }
+      const simplified = [];
+      for (const point of points) {
+        const last = simplified[simplified.length - 1];
+        if (last && Math.abs(last.x - point.x) < 0.01 && Math.abs(last.y - point.y) < 0.01) continue;
+        while (simplified.length >= 2) {
+          const a = simplified[simplified.length - 2], b = simplified[simplified.length - 1];
+          if ((Math.abs(a.x - b.x) < 0.01 && Math.abs(b.x - point.x) < 0.01) ||
+              (Math.abs(a.y - b.y) < 0.01 && Math.abs(b.y - point.y) < 0.01)) simplified.pop();
+          else break;
+        }
+        simplified.push(point);
+      }
+      return {
+        points: simplified,
+        d: simplified.map((point, index) => `${index ? 'L' : 'M'} ${point.x} ${point.y}`).join(' ')
+      };
+    }
+
     function getBaseEdgeStyle(style = 'bezier') {
       if (!style) return 'bezier';
       return style.endsWith('-dashed') ? style.slice(0, -7) : style;
@@ -763,13 +1044,13 @@
       return typeof style === 'string' && style.endsWith('-dashed');
     }
 
-    function buildEdgePath(p1, a1, p2, a2, style = 'bezier', srcNodeId = null, tgtNodeId = null) {
+    function buildEdgePath(p1, a1, p2, a2, style = 'bezier', srcNodeId = null, tgtNodeId = null, usedSegments = [], usedTurns = []) {
       const baseStyle = getBaseEdgeStyle(style);
       if (baseStyle === 'straight') {
         return `M ${p1.x} ${p1.y} L ${p2.x} ${p2.y}`;
       }
       if (baseStyle === 'avoid' || baseStyle === 'bezier') {
-        return findObstacleAvoidingPath(p1, a1, p2, a2, state.nodes, srcNodeId, tgtNodeId);
+        return findObstacleAvoidingPath(p1, a1, p2, a2, state.nodes, srcNodeId, tgtNodeId, usedSegments, usedTurns);
       }
       const dist = Math.max(45, Math.hypot(p2.x - p1.x, p2.y - p1.y) * 0.4);
       const offset = (anchor) => {

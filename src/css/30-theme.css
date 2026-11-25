@@ -5,6 +5,11 @@
       color-scheme: dark;
     }
 
+    html[data-theme="dark"] {
+      --menu-item-hover-bg: #443522;
+      --menu-item-hover-color: #e8dcc8;
+    }
+
     html[data-theme="dark"] .app-header,
     html[data-theme="dark"] .property-bar,
     html[data-theme="dark"] .color-picker-popover,
@@ -19,6 +24,42 @@
       border-color: #584832;
     }
 
+    html[data-theme="dark"] .url-badge-item {
+      background-color: #302519;
+      border-color: #584832;
+    }
+
+    html[data-theme="dark"] .url-badge-item:hover {
+      background-color: var(--menu-item-hover-bg) !important;
+      border-color: #78603a;
+    }
+
+    html[data-theme="dark"] .url-link {
+      color: #93c5fd;
+    }
+
+    html[data-theme="dark"] .search-dropdown,
+    html[data-theme="dark"] .tag-filter-panel,
+    html[data-theme="dark"] .color-picker-popover,
+    html[data-theme="dark"] .url-context-menu,
+    html[data-theme="dark"] .node-context-menu {
+      background-color: #302519 !important;
+      color: #d8cdbb;
+    }
+
+    html[data-theme="dark"] .file-menu-select,
+    html[data-theme="dark"] .prop-select,
+    html[data-theme="dark"] .custom-picker-btn {
+      background-color: #302519 !important;
+      color: #d8cdbb;
+      border-color: #584832;
+    }
+
+    html[data-theme="dark"] select option {
+      background-color: #302519;
+      color: #d8cdbb;
+    }
+
     html[data-theme="dark"] .guide-chip {
       background-color: rgba(48, 37, 25, 0.97);
       color: #c9b99e;
@@ -27,10 +68,6 @@
 
     html[data-theme="dark"] .guide-list strong {
       color: #e6c27a;
-    }
-
-    html[data-theme="dark"] .guide-bulb-btn:hover {
-      background-color: #49391f;
     }
 
     html[data-theme="dark"] .guide-bulb-btn.active {
@@ -72,20 +109,25 @@
     }
 
     html[data-theme="dark"] .btn-secondary,
-    html[data-theme="dark"] .btn-icon:hover:not(:disabled),
-    html[data-theme="dark"] .tool-btn:hover,
-    html[data-theme="dark"] .tag-filter-option:hover,
-    html[data-theme="dark"] .context-item:hover,
-    html[data-theme="dark"] .search-dropdown-item:hover,
-    html[data-theme="dark"] .modal-close-btn:hover,
     html[data-theme="dark"] .picker-close-btn {
       background-color: #443522;
       color: #e8dcc8;
     }
 
-    html[data-theme="dark"] .btn-secondary:hover,
-    html[data-theme="dark"] .tool-btn:hover {
-      background-color: #51412b;
+    /* Dark mode uses one hover background for every button and menu row. */
+    html[data-theme="dark"] button:hover:not(:disabled):not(.swatch-btn),
+    html[data-theme="dark"] select:hover,
+    html[data-theme="dark"] .tag-filter-option:hover {
+      background-color: var(--menu-item-hover-bg) !important;
+    }
+
+    html[data-theme="dark"] .url-context-menu .context-item.danger,
+    html[data-theme="dark"] .url-context-menu .context-item.danger:hover {
+      color: #ff4d5e;
+    }
+
+    html[data-theme="dark"] .node-context-menu .context-item.danger:hover {
+      color: #ff4d5e;
     }
 
     html[data-theme="dark"] .search-input-box,
@@ -133,7 +175,7 @@
 
     html[data-theme="dark"] .modal-drop-area:hover,
     html[data-theme="dark"] .modal-drop-area.drag-over {
-      background-color: #3d301e;
+      background-color: var(--menu-item-hover-bg);
       border-color: #d4a44b;
     }
 
@@ -147,16 +189,38 @@
       accent-color: #d4a44b;
     }
 
+    html[data-theme="dark"] .object-opacity-control {
+      color: #d8cdbb;
+    }
+
+    html[data-theme="dark"] #object-opacity-value {
+      color: #f0e5d3;
+    }
+
+    html[data-theme="dark"] #btn-tag-filter {
+      background-color: #302519;
+      border-color: #584832;
+      color: #d8cdbb;
+    }
+
+    html[data-theme="dark"] #tag-filter-active-count {
+      color: #e6c27a;
+    }
+
+    html[data-theme="dark"] .tag-filter-reset {
+      color: #e6c27a;
+      border-radius: 5px;
+    }
+
+    html[data-theme="dark"] .tag-filter-node-count,
+    html[data-theme="dark"] .tag-filter-empty {
+      color: #aa9a80;
+    }
+
     html[data-theme="dark"] .node-tag-chip {
       background: #49391f;
       border-color: #78603a;
       color: #ead7b6;
-    }
-
-    html[data-theme="dark"] .picker-close-btn:hover,
-    html[data-theme="dark"] .url-dots-btn:hover {
-      background-color: #51412b;
-      color: #f0e5d3;
     }
 
     html[data-theme="dark"] .theme-toggle {
@@ -164,9 +228,6 @@
       font-size: 20px;
     }
 
-    html[data-theme="dark"] .theme-toggle:hover {
-      background-color: #443522;
-    }
 
     html[data-theme="dark"] #image-upload-modal p[style],
     html[data-theme="dark"] #image-upload-modal svg[style] {

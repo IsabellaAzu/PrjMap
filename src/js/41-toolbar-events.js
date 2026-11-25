@@ -151,6 +151,15 @@
       persistToLocalStorage();
     });
 
+    document.getElementById('btn-reset-edge-bends').addEventListener('click', () => {
+      const edge = state.edges.find(item => item.id === state.selectedEdgeId);
+      if (!edge || !edge.routePoints) return;
+      pushHistory();
+      delete edge.routePoints;
+      renderEdges();
+      persistToLocalStorage();
+    });
+
     document.querySelectorAll('#edge-color-palette [data-edge-color]').forEach(btn => {
       btn.addEventListener('click', () => {
         const edge = state.edges.find(ed => ed.id === state.selectedEdgeId);

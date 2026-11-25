@@ -79,31 +79,74 @@
       rebuildTagVisibilityCache();
       const nodeMap = new Map(state.nodes.map(n => [n.id, n]));
       const usedSegments = [];
+      const usedTurns = [];
       edgesContainer.innerHTML = '';
 
-      for (const edge of state.edges) {
+      const edgeRoutingOrder = state.edges.slice().sort((a, b) => {
+        const getRoutePriority = edge => {
+          const source = nodeMap.get(edge.source);
+          const target = nodeMap.get(edge.target);
+          if (!source || !target) return { direct: 2, length: 0 };
+          const sourceAnchor = edge.sourceAnchor || 'right';
+          const targetAnchor = edge.targetAnchor || 'left';
+          const sourcePoint = getEdgeAnchorPoint(source, edge, 'source');
+          const targetPoint = getEdgeAnchorPoint(target, edge, 'target');
+          const sourceVertical = sourceAnchor === 'top' || sourceAnchor === 'bottom';
+          const targetVertical = targetAnchor === 'top' || targetAnchor === 'bottom';
+          const sourceDirection = sourceAnchor === 'bottom' || sourceAnchor === 'right' ? 1 : -1;
+          const targetDirection = targetAnchor === 'bottom' || targetAnchor === 'right' ? 1 : -1;
+          const axisDelta = sourceVertical ? targetPoint.y - sourcePoint.y : targetPoint.x - sourcePoint.x;
+          const aligned = sourceVertical ? Math.abs(sourcePoint.x - targetPoint.x) <= 12 : Math.abs(sourcePoint.y - targetPoint.y) <= 12;
+          const direct = sourceVertical === targetVertical && sourceDirection !== targetDirection &&
+            axisDelta * sourceDirection > 0 && aligned;
+          return {
+            direct: direct ? 0 : 1,
+            length: Math.abs(targetPoint.x - sourcePoint.x) + Math.abs(targetPoint.y - sourcePoint.y)
+          };
+        };
+        const routeA = getRoutePriority(a);
+        const routeB = getRoutePriority(b);
+        return routeA.direct - routeB.direct || routeB.length - routeA.length || String(a.id).localeCompare(String(b.id));
+      });
+
+      for (const edge of edgeRoutingOrder) {
         const srcNode = nodeMap.get(edge.source);
         const tgtNode = nodeMap.get(edge.target);
         if (!srcNode || !tgtNode) continue;
         if (!isNodeVisibleByTags(srcNode) || !isNodeVisibleByTags(tgtNode)) continue;
 
-        const p1 = getEdgeAnchorPoint(srcNode, edge, 'source');
-        const p2 = getEdgeAnchorPoint(tgtNode, edge, 'target');
-        const separatedPath = buildBalancedEdgePath(
-          p1, edge.sourceAnchor || 'right', edge.targetAnchor || 'left', p2, edge, usedSegments
-        );
+        const sourceAnchor = edge.sourceAnchor || 'right';
+        const targetAnchor = edge.targetAnchor || 'left';
+        const routeEdge = edge;
+        const p1 = getEdgeAnchorPoint(srcNode, routeEdge, 'source');
+        const p2 = getEdgeAnchorPoint(tgtNode, routeEdge, 'target');
+        const manualPath = buildEditableEdgePath(p1, p2, edge);
+        const directPath = getBaseEdgeStyle(edge.style || 'avoid') === 'avoid'
+          ? buildDirectEdgePath(p1, sourceAnchor, p2, targetAnchor, routeEdge, usedSegments)
+          : null;
+        const separatedPath = manualPath || directPath || (getBaseEdgeStyle(edge.style || 'avoid') === 'avoid'
+          ? buildOrthogonalEdgePath(p1, sourceAnchor, p2, targetAnchor, routeEdge, usedSegments, usedTurns)
+          : null);
         const d = separatedPath
           ? separatedPath.d
-          : buildEdgePath(p1, edge.sourceAnchor, p2, edge.targetAnchor, edge.style || 'avoid', edge.source, edge.target);
-        const routePoints = separatedPath ? separatedPath.points : d.match(/-?\d+(?:\.\d+)?/g)?.map(Number).reduce((points, value, index, values) => {
+          : buildEdgePath(p1, sourceAnchor, p2, targetAnchor, edge.style || 'avoid', edge.source, edge.target, usedSegments, usedTurns);
+        const routePoints = separatedPath ? separatedPath.points : (/[CQ]/.test(d) ? [] : d.match(/-?\d+(?:\.\d+)?/g)?.map(Number).reduce((points, value, index, values) => {
           if (index % 2 === 0) points.push({ x: value, y: values[index + 1] });
           return points;
-        }, []) || [];
+        }, []) || []);
         for (let index = 1; index < routePoints.length; index++) {
           const start = routePoints[index - 1];
           const end = routePoints[index];
           if (Math.abs(start.y - end.y) < 0.01) usedSegments.push({ horizontal: true, y: start.y, x1: start.x, x2: end.x });
           else if (Math.abs(start.x - end.x) < 0.01) usedSegments.push({ horizontal: false, x: start.x, y1: start.y, y2: end.y });
+        }
+        for (let index = 1; index < routePoints.length - 1; index++) {
+          const previous = routePoints[index - 1];
+          const current = routePoints[index];
+          const next = routePoints[index + 1];
+          if ((Math.abs(previous.y - current.y) < 0.01) !== (Math.abs(current.y - next.y) < 0.01)) {
+            usedTurns.push(current);
+          }
         }
 
         const isSelected = state.selectedEdgeId === edge.id;
@@ -150,6 +193,48 @@
         g.appendChild(visPath);
 
         if (isSelected) {
+          const editablePoints = [];
+          for (const point of routePoints) {
+            const previous = editablePoints[editablePoints.length - 1];
+            if (previous && Math.abs(previous.x - point.x) < 0.01 && Math.abs(previous.y - point.y) < 0.01) continue;
+            while (editablePoints.length >= 2) {
+              const a = editablePoints[editablePoints.length - 2], b = editablePoints[editablePoints.length - 1];
+              if ((Math.abs(a.x - b.x) < 0.01 && Math.abs(b.x - point.x) < 0.01) ||
+                  (Math.abs(a.y - b.y) < 0.01 && Math.abs(b.y - point.y) < 0.01)) editablePoints.pop();
+              else break;
+            }
+            editablePoints.push({ x: point.x, y: point.y });
+          }
+          const bendHandles = [];
+          for (let index = 1; index < editablePoints.length - 1; index++) {
+            const previous = editablePoints[index - 1], current = editablePoints[index], next = editablePoints[index + 1];
+            if ((Math.abs(previous.y - current.y) < 0.01) !== (Math.abs(current.y - next.y) < 0.01)) {
+              bendHandles.push({ point: current, index });
+            }
+          }
+          if (bendHandles.length === 0 && editablePoints.length > 1) {
+            const first = editablePoints[0], last = editablePoints[editablePoints.length - 1];
+            bendHandles.push({ point: { x: (first.x + last.x) / 2, y: (first.y + last.y) / 2 }, index: -1 });
+          }
+          bendHandles.forEach(({ point, index }) => {
+            const handle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            handle.setAttribute('class', 'edge-bend-handle');
+            handle.setAttribute('cx', point.x);
+            handle.setAttribute('cy', point.y);
+            handle.setAttribute('r', '6');
+            handle.setAttribute('fill', '#ffffff');
+            handle.setAttribute('stroke', '#7c3aed');
+            handle.setAttribute('stroke-width', '2.5');
+            handle.setAttribute('aria-label', 'ドラッグして曲がり位置を変更。右クリックまたはShift+クリックで削除');
+            handle.setAttribute('title', 'ドラッグで移動 / 右クリックまたはShift+クリックで削除');
+            handle.addEventListener('pointerdown', event => {
+              if (event.shiftKey) removeEdgeRoutePoint(edge.id, index, editablePoints, event);
+              else startDraggingEdgeBend(edge.id, index, editablePoints, event);
+            });
+            handle.addEventListener('contextmenu', event => removeEdgeRoutePoint(edge.id, index, editablePoints, event));
+            g.appendChild(handle);
+          });
+
           [
             { endpoint: 'source', point: p1 },
             { endpoint: 'target', point: p2 }

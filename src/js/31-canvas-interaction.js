@@ -59,6 +59,35 @@
       };
     }
 
+    function startDraggingEdgeBend(edgeId, pointIndex, routePoints, e) {
+      if (e.button !== 0) return;
+      e.preventDefault();
+      e.stopPropagation();
+      interaction = {
+        mode: 'drag-edge-bend',
+        edgeId,
+        pointIndex,
+        startRoutePoints: routePoints.map(point => ({ x: point.x, y: point.y })),
+        beforeSnapshot: createSnapshot()
+      };
+    }
+
+    function removeEdgeRoutePoint(edgeId, pointIndex, routePoints, e) {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      if (pointIndex <= 0 || pointIndex >= routePoints.length - 1) return;
+      const edge = state.edges.find(item => item.id === edgeId);
+      if (!edge) return;
+      pushHistory();
+      edge.routePoints = routePoints
+        .filter((_, index) => index !== pointIndex)
+        .map(point => ({ x: point.x, y: point.y }));
+      renderEdges();
+      persistToLocalStorage();
+    }
+
     function startConnecting(sourceNodeId, sourceAnchor, e) {
       const srcNode = state.nodes.find(n => n.id === sourceNodeId);
       if (!srcNode) return;
@@ -219,6 +248,38 @@
         tempEdgePath.setAttribute('stroke-dasharray', '5,5');
         tempEdgePath.setAttribute('d', d);
         tempEdgePath.classList.remove('hidden');
+      } else if (interaction.mode === 'drag-edge-bend') {
+        const edge = state.edges.find(item => item.id === interaction.edgeId);
+        if (!edge) return;
+        const worldPoint = screenToWorld(e.clientX, e.clientY);
+        const points = interaction.startRoutePoints.map(point => ({ x: point.x, y: point.y }));
+        if (interaction.pointIndex < 0) {
+          const first = points[0], last = points[points.length - 1];
+          const sourceDirection = getAnchorDirection(edge.sourceAnchor || 'right');
+          const targetDirection = getAnchorDirection(edge.targetAnchor || 'left');
+          const stub = 20;
+          const sourceStub = { x: first.x + sourceDirection.dx * stub, y: first.y + sourceDirection.dy * stub };
+          const targetStub = { x: last.x + targetDirection.dx * stub, y: last.y + targetDirection.dy * stub };
+          edge.routePoints = [first, sourceStub, { x: worldPoint.x, y: sourceStub.y }, worldPoint,
+            { x: targetStub.x, y: worldPoint.y }, targetStub, last];
+        } else {
+          const index = interaction.pointIndex;
+          const previous = points[index - 1], current = points[index], next = points[index + 1];
+          const incomingHorizontal = Math.abs(previous.y - current.y) < 0.01;
+          const outgoingHorizontal = Math.abs(current.y - next.y) < 0.01;
+          current.x = worldPoint.x;
+          current.y = worldPoint.y;
+          if (index - 1 > 0) {
+            if (incomingHorizontal) previous.y = worldPoint.y;
+            else previous.x = worldPoint.x;
+          }
+          if (index + 1 < points.length - 1) {
+            if (outgoingHorizontal) next.y = worldPoint.y;
+            else next.x = worldPoint.x;
+          }
+          edge.routePoints = points;
+        }
+        renderEdges();
       }
     });
 
@@ -232,6 +293,8 @@
         if (interaction.beforeSnapshot && interaction.beforeSnapshot !== createSnapshot()) {
           pushHistory(interaction.beforeSnapshot);
         }
+        renderEdges();
+        renderMinimap();
         persistToLocalStorage();
       } else if (interaction.mode === 'marquee') {
         selectionMarquee.classList.add('hidden');
@@ -239,6 +302,12 @@
           selectNodes(interaction.marqueeSelectedIds);
         } else {
           clearSelection();
+        }
+      } else if (interaction.mode === 'drag-edge-bend') {
+        if (interaction.beforeSnapshot && interaction.beforeSnapshot !== createSnapshot()) {
+          pushHistory(interaction.beforeSnapshot);
+          renderEdges();
+          persistToLocalStorage();
         }
       } else if (interaction.mode === 'connect') {
         document.body.classList.remove('connecting-mode');
@@ -296,6 +365,7 @@
             edge.target = targetId;
             edge.targetAnchor = targetAnchor;
           }
+          delete edge.routePoints;
           selectEdge(edge.id);
           persistToLocalStorage();
           showToast('線の接続先を変更しました');
