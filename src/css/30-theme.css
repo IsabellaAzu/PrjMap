@@ -5,11 +5,6 @@
       color-scheme: dark;
     }
 
-    html[data-theme="dark"] {
-      --menu-item-hover-bg: #443522;
-      --menu-item-hover-color: #e8dcc8;
-    }
-
     html[data-theme="dark"] .app-header,
     html[data-theme="dark"] .property-bar,
     html[data-theme="dark"] .color-picker-popover,
@@ -30,7 +25,7 @@
     }
 
     html[data-theme="dark"] .url-badge-item:hover {
-      background-color: var(--menu-item-hover-bg) !important;
+      background-color: #443522 !important;
       border-color: #78603a;
     }
 
@@ -53,6 +48,10 @@
       background-color: #302519 !important;
       color: #d8cdbb;
       border-color: #584832;
+    }
+
+    html[data-theme="dark"] select {
+      color-scheme: dark;
     }
 
     html[data-theme="dark"] select option {
@@ -118,7 +117,18 @@
     html[data-theme="dark"] button:hover:not(:disabled):not(.swatch-btn),
     html[data-theme="dark"] select:hover,
     html[data-theme="dark"] .tag-filter-option:hover {
-      background-color: var(--menu-item-hover-bg) !important;
+      background-color: #443522 !important;
+      color: #e8dcc8 !important;
+    }
+
+    html[data-theme="dark"] .context-item.danger:hover,
+    html[data-theme="dark"] .btn-delete:hover {
+      color: #ff4d5e !important;
+    }
+
+    html[data-theme="dark"] .custom-picker-btn:hover,
+    html[data-theme="dark"] .custom-picker-btn.open {
+      box-shadow: 0 0 0 2px #443522, 0 0 0 3.5px #d4a44b;
     }
 
     html[data-theme="dark"] .url-context-menu .context-item.danger,
@@ -148,6 +158,10 @@
       color: #95846a;
     }
 
+    html[data-theme="dark"] .search-item-hint {
+      color: #93c5fd;
+    }
+
     html[data-theme="dark"] .left-toolbar,
     html[data-theme="dark"] .search-counter,
     html[data-theme="dark"] .tag-filter-count,
@@ -175,7 +189,7 @@
 
     html[data-theme="dark"] .modal-drop-area:hover,
     html[data-theme="dark"] .modal-drop-area.drag-over {
-      background-color: var(--menu-item-hover-bg);
+      background-color: #443522;
       border-color: #d4a44b;
     }
 
@@ -226,6 +240,23 @@
     html[data-theme="dark"] .theme-toggle {
       color: #e3b45a;
       font-size: 20px;
+    }
+
+    html[data-theme="dark"] .context-item:hover,
+    html[data-theme="dark"] .search-dropdown-item:hover,
+    html[data-theme="dark"] .tag-filter-option:hover,
+    html[data-theme="dark"] .url-dots-btn:hover,
+    html[data-theme="dark"] .url-badge-item:hover,
+    html[data-theme="dark"] button:hover:not(:disabled):not(.swatch-btn),
+    html[data-theme="dark"] select:hover,
+    html[data-theme="dark"] select option:hover {
+      background-color: #443522 !important;
+      color: #e8dcc8 !important;
+    }
+
+    html[data-theme="dark"] .context-item.danger:hover,
+    html[data-theme="dark"] .btn-delete:hover {
+      color: #ff4d5e !important;
     }
 
 

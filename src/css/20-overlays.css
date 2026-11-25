@@ -69,8 +69,8 @@
     }
 
     .url-dots-btn:hover {
-      background-color: var(--menu-item-hover-bg);
-      color: var(--menu-item-hover-color);
+      background-color: #f1f5f9;
+      color: #0f172a;
     }
 
     /* URLコンテキストメニュー（縦3点ドットクリック時） */
@@ -117,8 +117,8 @@
     }
 
     .context-item:hover {
-      background-color: var(--menu-item-hover-bg);
-      color: var(--menu-item-hover-color);
+      background-color: #f1f5f9;
+      color: #0f172a;
     }
 
     .context-item.danger {
