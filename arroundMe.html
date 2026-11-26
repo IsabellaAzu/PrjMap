@@ -529,6 +529,43 @@
       color: #2563eb;
     }
 
+    .tool-btn[aria-pressed="true"] {
+      background-color: #eff6ff;
+      color: #2563eb;
+      box-shadow: inset 0 0 0 1px #bfdbfe;
+    }
+
+    .handwriting-settings-panel {
+      position: absolute;
+      z-index: 31;
+      left: 68px;
+      top: 12px;
+      width: 146px;
+      padding: 8px;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      background: #fff;
+      color: #334155;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, .1);
+    }
+
+    .handwriting-settings-panel.hidden { display: none; }
+    .freehand-width-label { display: block; font-size: 11px; margin-bottom: 5px; }
+    #freehand-width { width: 100%; height: 30px; padding: 3px 7px; border: 1px solid #cbd5e1; border-radius: 6px; background: #fff; color: #334155; }
+    .freehand-colors { display: flex; align-items: center; gap: 7px; margin-top: 7px; }
+    .freehand-color, .freehand-custom-color {
+      width: 19px; height: 19px; border-radius: 50%; padding: 0;
+      border: 2px solid var(--freehand-color, #cbd5e1); background: var(--freehand-color, #fff);
+      cursor: pointer; flex: 0 0 19px;
+    }
+    .freehand-color.active { box-shadow: 0 0 0 2px #fff, 0 0 0 3.5px #2563eb; }
+    .freehand-custom-color { position: relative; display: inline-flex; align-items: center; justify-content: center; overflow: hidden; background: #f8fafc; border-color: #cbd5e1; color: #475569; font-size: 17px; font-weight: 500; }
+    .freehand-custom-color input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+    .freehand-node { background: transparent !important; border: 0 !important; overflow: visible !important; box-shadow: none !important; }
+    .freehand-svg { width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+    .freehand-mode, .freehand-mode * { cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath fill='%232563eb' stroke='white' stroke-width='1.4' d='m3 17.25 11.06-11.06 3.75 3.75L6.75 21H3zM19.7 8.1a1 1 0 0 0 0-1.4l-2.4-2.4a1 1 0 0 0-1.4 0l-1.4 1.4 3.75 3.75z'/%3E%3C/svg%3E") 2 20, crosshair !important; }
+    .freehand-mode .left-toolbar, .freehand-mode .left-toolbar * { cursor: pointer !important; }
+
 
     .swatch-btn.active {
       box-shadow: 0 0 0 2.5px #ffffff, 0 0 0 4px #2563eb;
@@ -1919,6 +1956,7 @@
     }
 
     html[data-theme="dark"] .left-toolbar,
+    html[data-theme="dark"] .handwriting-settings-panel,
     html[data-theme="dark"] .search-counter,
     html[data-theme="dark"] .tag-filter-count,
     html[data-theme="dark"] .modal-footer,
@@ -1926,6 +1964,29 @@
     html[data-theme="dark"] .modal-header {
       background-color: #302519;
       border-color: #584832;
+    }
+
+    html[data-theme="dark"] .handwriting-settings-panel {
+      background-color: #302519;
+      color: #d8cdbb;
+      border-color: #584832;
+    }
+
+    html[data-theme="dark"] #freehand-width {
+      background-color: #211b12;
+      color: #e5d9c6;
+      border-color: #66543a;
+    }
+
+    html[data-theme="dark"] .tool-btn[aria-pressed="true"] {
+      background-color: #443522;
+      color: #e6c27a;
+      box-shadow: inset 0 0 0 1px #78603a;
+    }
+
+    html[data-theme="dark"] .freehand-color:hover {
+      background-color: var(--freehand-color) !important;
+      color: #fff !important;
     }
 
     html[data-theme="dark"] .tag-filter-count {
@@ -2157,6 +2218,13 @@
         </svg>
       </button>
 
+      <button id="btn-freehand-tool" title="手書き描画モード" class="tool-btn" aria-pressed="false">
+        <svg class="icon-md" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 20c3-1 4-4 6-7l4-7a2 2 0 0 1 3 2l-4 7c-2 4-3 6-9 5Z" />
+          <path stroke-linecap="round" stroke-linejoin="round" d="m13 9 3 2" />
+        </svg>
+      </button>
+      
       <button id="btn-add-image" title="画像を挿入（クリックでアップロード / 画面へドラッグ＆ドロップでも可）" class="tool-btn">
         <svg class="icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <rect x="3" y="4" width="18" height="16" rx="3" />
@@ -2165,6 +2233,19 @@
         </svg>
       </button>
     </aside>
+
+    <div id="handwriting-settings-panel" class="handwriting-settings-panel hidden" aria-label="手書き設定">
+        <label class="freehand-width-label" for="freehand-width">線の太さ</label>
+        <input id="freehand-width" type="number" min="2" max="10" step="1" value="4" aria-label="線の太さ">
+        <div class="freehand-colors" aria-label="線の色">
+          <button type="button" class="freehand-color active" data-freehand-color="#2563eb" style="--freehand-color:#2563eb" title="青" aria-label="青"></button>
+          <button type="button" class="freehand-color" data-freehand-color="#059669" style="--freehand-color:#059669" title="緑" aria-label="緑"></button>
+          <button type="button" class="freehand-color" data-freehand-color="#d97706" style="--freehand-color:#d97706" title="オレンジ" aria-label="オレンジ"></button>
+          <button type="button" class="freehand-color" data-freehand-color="#7c3aed" style="--freehand-color:#7c3aed" title="紫" aria-label="紫"></button>
+          <button type="button" class="freehand-color" data-freehand-color="#dc2626" style="--freehand-color:#dc2626" title="赤" aria-label="赤"></button>
+          <button type="button" id="btn-toggle-freehand-picker" class="custom-picker-btn" title="詳細な線色を選択（カラーピッカー）" aria-label="線色を追加">+</button>
+        </div>
+    </div>
 
     <!-- 上部中央フローティングプロパティバー（選択中の図形／線のスタイル編集） -->
     <div id="property-bar" class="property-bar hidden">
@@ -4215,7 +4296,24 @@
         el.style.height = `${node.height}px`;
         el.style.opacity = String(node.opacity ?? 1);
 
-        if (node.type === 'image') {
+        if (node.type === 'freehand') {
+          el.classList.add('freehand-node');
+          el.style.backgroundColor = 'transparent';
+          const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+          svg.setAttribute('class', 'freehand-svg');
+          svg.setAttribute('viewBox', `0 0 ${Math.max(1, node.width)} ${Math.max(1, node.height)}`);
+          svg.setAttribute('preserveAspectRatio', 'none');
+          const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+          path.setAttribute('d', node.path || '');
+          path.setAttribute('fill', 'none');
+          path.setAttribute('stroke', node.stroke || '#2563eb');
+          path.setAttribute('stroke-width', String(node.strokeWidth || 4));
+          path.setAttribute('stroke-linecap', 'round');
+          path.setAttribute('stroke-linejoin', 'round');
+          path.setAttribute('vector-effect', 'non-scaling-stroke');
+          svg.appendChild(path);
+          el.appendChild(svg);
+        } else if (node.type === 'image') {
           el.classList.add('image-node');
           el.style.backgroundColor = 'transparent';
           if (node.stroke && node.stroke !== 'transparent') {
@@ -4272,7 +4370,7 @@
           }
         }
 
-        if (node.type !== 'image') {
+        if (node.type !== 'image' && node.type !== 'freehand') {
           const content = document.createElement('div');
           content.className = 'node-content';
           if (node.type === 'diamond') {
@@ -4350,7 +4448,7 @@
           el.appendChild(content);
         }
 
-        ['top', 'right', 'bottom', 'left'].forEach(pos => {
+        (node.type === 'freehand' ? [] : ['top', 'right', 'bottom', 'left']).forEach(pos => {
           const anchor = document.createElement('div');
           anchor.className = `anchor-handle anchor-${pos}`;
           anchor.title = 'ドラッグして別の図形に線を繋ぐ';
@@ -4368,7 +4466,7 @@
           e.stopPropagation();
           startResizingNode(node.id, e);
         });
-        el.appendChild(resizer);
+        if (node.type !== 'freehand') el.appendChild(resizer);
 
         let lastClickTime = 0;
         let lastClickPos = { x: 0, y: 0 };
@@ -4379,7 +4477,7 @@
 
           e.stopPropagation();
 
-          if (node.type !== 'image') {
+          if (node.type !== 'image' && node.type !== 'freehand') {
             const now = Date.now();
             const dist = Math.hypot(e.clientX - lastClickPos.x, e.clientY - lastClickPos.y);
             if (now - lastClickTime < 350 && dist < 12) {
@@ -4397,7 +4495,7 @@
         });
 
         el.addEventListener('dblclick', (e) => {
-          if (node.type === 'image') return;
+          if (node.type === 'image' || node.type === 'freehand') return;
           if (e.target.closest('.url-badge-item, .anchor-handle, .resize-handle, button, a')) return;
           e.stopPropagation();
           startEditingNode(node.id);
@@ -4930,6 +5028,8 @@
       if (!pickerState.activeKind) return;
       const curColor = pickerState.activeKind === 'edge'
         ? getCurrentSelectedEdgeColor()
+        : pickerState.activeKind === 'freehand'
+          ? (state.freehandColor || '#2563eb')
         : getCurrentSelectedColor(pickerState.activeKind);
       const rgba = parseColorToRgba(curColor && curColor !== 'transparent' ? curColor : '#2563eb');
       const hsv = rgbToHsv(rgba.r, rgba.g, rgba.b);
@@ -4990,6 +5090,14 @@
         return;
       }
 
+      if (pickerState.activeKind === 'freehand') {
+        state.freehandColor = cssColor === 'transparent' ? '#2563eb' : cssColor;
+        document.querySelectorAll('[data-freehand-color]').forEach(button => button.classList.remove('active'));
+        if (recordHist) recordColorHistory('stroke', state.freehandColor);
+        refreshPickerReadoutOnly();
+        return;
+      }
+
       const nodes = getSelectedTargetIds()
         .map(id => state.nodes.find(n => n.id === id))
         .filter(node => node && (pickerState.activeKind !== 'text' || node.type !== 'image'));
@@ -5020,6 +5128,7 @@
       const btnStroke = document.getElementById('btn-toggle-stroke-picker');
       const btnText = document.getElementById('btn-toggle-text-color-picker');
       const btnEdge = document.getElementById('btn-toggle-edge-picker');
+      const btnFreehand = document.getElementById('btn-toggle-freehand-picker');
 
       if (pickerState.activeKind === kind && pickerPanel && !pickerPanel.classList.contains('hidden')) {
         pickerState.activeKind = null;
@@ -5028,6 +5137,7 @@
         if (btnStroke) btnStroke.classList.remove('open');
         if (btnText) btnText.classList.remove('open');
         if (btnEdge) btnEdge.classList.remove('open');
+        if (btnFreehand) btnFreehand.classList.remove('open');
         return;
       }
 
@@ -5047,6 +5157,7 @@
       if (btnStroke) btnStroke.classList.toggle('open', kind === 'stroke');
       if (btnText) btnText.classList.toggle('open', kind === 'text');
       if (btnEdge) btnEdge.classList.toggle('open', kind === 'edge');
+      if (btnFreehand) btnFreehand.classList.toggle('open', kind === 'freehand');
       if (pickerPanel) pickerPanel.classList.remove('hidden');
       syncColorPickerWithCurrent(true);
     }
@@ -5151,6 +5262,10 @@
     document.getElementById('btn-toggle-edge-picker').addEventListener('click', () => {
       document.getElementById('edge-props')?.appendChild(pickerPanel);
       toggleColorPicker('edge');
+    });
+    document.getElementById('btn-toggle-freehand-picker').addEventListener('click', () => {
+      document.getElementById('handwriting-settings-panel')?.appendChild(pickerPanel);
+      toggleColorPicker('freehand');
     });
     document.getElementById('fill-none-btn').addEventListener('click', () => applyColorToSelected('fill', 'transparent'));
     document.getElementById('stroke-none-btn').addEventListener('click', () => applyColorToSelected('stroke', 'transparent'));
@@ -5965,7 +6080,49 @@
       document.body.classList.add('rewiring-edge');
     }
 
+    function freehandPath(points) {
+      if (points.length < 2) return `M ${points[0].x} ${points[0].y} l 0.01 0`;
+      let d = `M ${points[0].x} ${points[0].y}`;
+      for (let i = 1; i < points.length; i++) {
+        const prev = points[i - 1];
+        const cur = points[i];
+        const midX = (prev.x + cur.x) / 2;
+        const midY = (prev.y + cur.y) / 2;
+        d += ` Q ${prev.x} ${prev.y} ${midX} ${midY}`;
+      }
+      const last = points[points.length - 1];
+      return `${d} T ${last.x} ${last.y}`;
+    }
+
+    function makeFreehandSvgPath(points, color, width) {
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('class', 'freehand-preview');
+      path.setAttribute('fill', 'none');
+      path.setAttribute('stroke', color);
+      path.setAttribute('stroke-width', String(width));
+      path.setAttribute('stroke-linecap', 'round');
+      path.setAttribute('stroke-linejoin', 'round');
+      path.setAttribute('d', freehandPath(points));
+      path.style.pointerEvents = 'none';
+      path.style.zIndex = '30';
+      return { path };
+    }
+
     viewportEl.addEventListener('pointerdown', (e) => {
+      const drawing = document.body.classList.contains('freehand-mode');
+      if (drawing) {
+        e.preventDefault();
+        e.stopPropagation();
+        const point = screenToWorld(e.clientX, e.clientY);
+        const width = Number(document.getElementById('freehand-width').value) || 4;
+        const color = state.freehandColor || '#2563eb';
+        const points = [point];
+        const preview = makeFreehandSvgPath(points, color, width);
+        document.getElementById('edges-svg').appendChild(preview.path);
+        interaction = { mode: 'draw-freehand', points, width, color, preview };
+        viewportEl.setPointerCapture(e.pointerId);
+        return;
+      }
       if (e.target !== viewportEl && e.target !== worldEl && e.target.id !== 'edges-svg') return;
 
       const worldPos = screenToWorld(e.clientX, e.clientY);
@@ -6004,8 +6161,12 @@
 
     window.addEventListener('pointermove', (e) => {
       if (interaction.mode === 'none') return;
-
-      if (interaction.mode === 'pan') {
+      if (interaction.mode === 'draw-freehand') {
+        const point = screenToWorld(e.clientX, e.clientY);
+        const last = interaction.points[interaction.points.length - 1];
+        if (Math.hypot(point.x - last.x, point.y - last.y) >= 1.5) interaction.points.push(point);
+        interaction.preview.path.setAttribute('d', freehandPath(interaction.points));
+      } else if (interaction.mode === 'pan') {
         state.viewport.x = interaction.origX + (e.clientX - interaction.startX);
         state.viewport.y = interaction.origY + (e.clientY - interaction.startY);
         applyViewportTransform();
@@ -6131,7 +6292,34 @@
     window.addEventListener('pointerup', (e) => {
       if (interaction.mode === 'none') return;
 
-      if (interaction.mode === 'pan') {
+      if (interaction.mode === 'draw-freehand') {
+        const drawing = interaction;
+        drawing.preview.path.remove();
+        if (drawing.points.length > 0) {
+          const pad = drawing.width / 2 + 1;
+          const minX = Math.min(...drawing.points.map(point => point.x)) - pad;
+          const minY = Math.min(...drawing.points.map(point => point.y)) - pad;
+          const maxX = Math.max(...drawing.points.map(point => point.x)) + pad;
+          const maxY = Math.max(...drawing.points.map(point => point.y)) + pad;
+          const local = drawing.points.map(point => ({ x: point.x - minX, y: point.y - minY }));
+          const node = {
+            id: 'freehand_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+            type: 'freehand', x: minX, y: minY,
+            width: Math.max(1, maxX - minX), height: Math.max(1, maxY - minY),
+            path: freehandPath(local), stroke: drawing.color, strokeWidth: drawing.width,
+            opacity: 1, tags: []
+          };
+          pushHistory();
+          state.nodes.push(node);
+          state.selectedNodeId = node.id;
+          state.selectedNodeIds = new Set([node.id]);
+          state.selectedEdgeId = null;
+          renderNodes();
+          renderEdges();
+          updatePropertyBar();
+          persistToLocalStorage();
+        }
+      } else if (interaction.mode === 'pan') {
         viewportEl.classList.remove('panning');
         persistToLocalStorage();
       } else if (interaction.mode === 'drag-node' || interaction.mode === 'resize-node') {
@@ -6645,6 +6833,84 @@
       btn.addEventListener('click', () => {
         addNode(btn.dataset.addShape);
       });
+    });
+
+    const freehandButton = document.getElementById('btn-freehand-tool');
+    const handwritingSettingsPanel = document.getElementById('handwriting-settings-panel');
+    const freehandWidth = document.getElementById('freehand-width');
+    let minimapHiddenForHandwritingPanel = false;
+    if (freehandButton) {
+      freehandButton.addEventListener('click', () => {
+        const enabled = !document.body.classList.contains('freehand-mode');
+        document.body.classList.toggle('freehand-mode', enabled);
+        freehandButton.setAttribute('aria-pressed', String(enabled));
+        handwritingSettingsPanel.classList.toggle('hidden', !enabled);
+        if (enabled) {
+          positionHandwritingSettingsPanel();
+        } else if (minimapHiddenForHandwritingPanel) {
+          setMinimapVisible(true);
+          minimapHiddenForHandwritingPanel = false;
+        }
+      });
+      freehandWidth.addEventListener('change', () => {
+        freehandWidth.value = String(Math.min(10, Math.max(2, Number(freehandWidth.value) || 2)));
+      });
+      document.querySelectorAll('[data-freehand-color]').forEach(button => {
+        button.addEventListener('click', () => {
+          state.freehandColor = button.dataset.freehandColor;
+          document.querySelectorAll('[data-freehand-color]').forEach(item => item.classList.toggle('active', item === button));
+        });
+      });
+      state.freehandColor = '#2563eb';
+    }
+
+    function positionHandwritingSettingsPanel() {
+      if (!handwritingSettingsPanel) return;
+      const workspace = document.querySelector('.workspace');
+      const toolbar = document.querySelector('.left-toolbar');
+      const trigger = document.getElementById('btn-freehand-tool');
+      if (!workspace || !toolbar || !trigger) return;
+      const workspaceRect = workspace.getBoundingClientRect();
+      const toolbarRect = toolbar.getBoundingClientRect();
+      const triggerRect = trigger.getBoundingClientRect();
+      const panelWidth = handwritingSettingsPanel.offsetWidth;
+      const panelHeight = handwritingSettingsPanel.offsetHeight;
+      const workspaceWidth = workspaceRect.width;
+      const workspaceHeight = workspaceRect.height;
+      const clampLeft = value => Math.max(8, Math.min(value, workspaceWidth - panelWidth - 8));
+      const clampTop = value => Math.max(8, Math.min(value, workspaceHeight - panelHeight - 8));
+      const intersects = (left, top, rect) => rect &&
+        left + panelWidth + workspaceRect.left > rect.left &&
+        left + workspaceRect.left < rect.right &&
+        top + panelHeight + workspaceRect.top > rect.top &&
+        top + workspaceRect.top < rect.bottom;
+      const minimap = document.getElementById('minimap-wrapper');
+      const minimapRect = minimap && !minimap.classList.contains('hidden') ? minimap.getBoundingClientRect() : null;
+      const rightOfToolbar = toolbarRect.right - workspaceRect.left + 8;
+      const besidePencil = triggerRect.top - workspaceRect.top;
+      const belowMinimap = minimapRect ? minimapRect.bottom - workspaceRect.top + 8 : besidePencil;
+      const leftOfMinimap = minimapRect ? minimapRect.left - workspaceRect.left - panelWidth - 8 : rightOfToolbar;
+      const candidates = [
+        [rightOfToolbar, besidePencil],
+        [rightOfToolbar, belowMinimap],
+        [leftOfMinimap, besidePencil],
+        [rightOfToolbar, minimapRect ? minimapRect.top - workspaceRect.top - panelHeight - 8 : workspaceHeight - panelHeight - 8],
+        [8, workspaceHeight - panelHeight - 8]
+      ];
+      let placement = candidates
+        .map(([left, top]) => [clampLeft(left), clampTop(top)])
+        .find(([left, top]) => !intersects(left, top, minimapRect));
+      if (!placement && minimapRect) {
+        setMinimapVisible(false);
+        minimapHiddenForHandwritingPanel = true;
+        placement = [clampLeft(rightOfToolbar), clampTop(besidePencil)];
+      }
+      const [left, top] = placement || [clampLeft(rightOfToolbar), clampTop(besidePencil)];
+      handwritingSettingsPanel.style.left = `${left}px`;
+      handwritingSettingsPanel.style.top = `${top}px`;
+    }
+    window.addEventListener('resize', () => {
+      if (!handwritingSettingsPanel.classList.contains('hidden')) positionHandwritingSettingsPanel();
     });
 
     function resetToSample() {

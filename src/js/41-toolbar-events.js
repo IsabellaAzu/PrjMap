@@ -45,6 +45,84 @@
       });
     });
 
+    const freehandButton = document.getElementById('btn-freehand-tool');
+    const handwritingSettingsPanel = document.getElementById('handwriting-settings-panel');
+    const freehandWidth = document.getElementById('freehand-width');
+    let minimapHiddenForHandwritingPanel = false;
+    if (freehandButton) {
+      freehandButton.addEventListener('click', () => {
+        const enabled = !document.body.classList.contains('freehand-mode');
+        document.body.classList.toggle('freehand-mode', enabled);
+        freehandButton.setAttribute('aria-pressed', String(enabled));
+        handwritingSettingsPanel.classList.toggle('hidden', !enabled);
+        if (enabled) {
+          positionHandwritingSettingsPanel();
+        } else if (minimapHiddenForHandwritingPanel) {
+          setMinimapVisible(true);
+          minimapHiddenForHandwritingPanel = false;
+        }
+      });
+      freehandWidth.addEventListener('change', () => {
+        freehandWidth.value = String(Math.min(10, Math.max(2, Number(freehandWidth.value) || 2)));
+      });
+      document.querySelectorAll('[data-freehand-color]').forEach(button => {
+        button.addEventListener('click', () => {
+          state.freehandColor = button.dataset.freehandColor;
+          document.querySelectorAll('[data-freehand-color]').forEach(item => item.classList.toggle('active', item === button));
+        });
+      });
+      state.freehandColor = '#2563eb';
+    }
+
+    function positionHandwritingSettingsPanel() {
+      if (!handwritingSettingsPanel) return;
+      const workspace = document.querySelector('.workspace');
+      const toolbar = document.querySelector('.left-toolbar');
+      const trigger = document.getElementById('btn-freehand-tool');
+      if (!workspace || !toolbar || !trigger) return;
+      const workspaceRect = workspace.getBoundingClientRect();
+      const toolbarRect = toolbar.getBoundingClientRect();
+      const triggerRect = trigger.getBoundingClientRect();
+      const panelWidth = handwritingSettingsPanel.offsetWidth;
+      const panelHeight = handwritingSettingsPanel.offsetHeight;
+      const workspaceWidth = workspaceRect.width;
+      const workspaceHeight = workspaceRect.height;
+      const clampLeft = value => Math.max(8, Math.min(value, workspaceWidth - panelWidth - 8));
+      const clampTop = value => Math.max(8, Math.min(value, workspaceHeight - panelHeight - 8));
+      const intersects = (left, top, rect) => rect &&
+        left + panelWidth + workspaceRect.left > rect.left &&
+        left + workspaceRect.left < rect.right &&
+        top + panelHeight + workspaceRect.top > rect.top &&
+        top + workspaceRect.top < rect.bottom;
+      const minimap = document.getElementById('minimap-wrapper');
+      const minimapRect = minimap && !minimap.classList.contains('hidden') ? minimap.getBoundingClientRect() : null;
+      const rightOfToolbar = toolbarRect.right - workspaceRect.left + 8;
+      const besidePencil = triggerRect.top - workspaceRect.top;
+      const belowMinimap = minimapRect ? minimapRect.bottom - workspaceRect.top + 8 : besidePencil;
+      const leftOfMinimap = minimapRect ? minimapRect.left - workspaceRect.left - panelWidth - 8 : rightOfToolbar;
+      const candidates = [
+        [rightOfToolbar, besidePencil],
+        [rightOfToolbar, belowMinimap],
+        [leftOfMinimap, besidePencil],
+        [rightOfToolbar, minimapRect ? minimapRect.top - workspaceRect.top - panelHeight - 8 : workspaceHeight - panelHeight - 8],
+        [8, workspaceHeight - panelHeight - 8]
+      ];
+      let placement = candidates
+        .map(([left, top]) => [clampLeft(left), clampTop(top)])
+        .find(([left, top]) => !intersects(left, top, minimapRect));
+      if (!placement && minimapRect) {
+        setMinimapVisible(false);
+        minimapHiddenForHandwritingPanel = true;
+        placement = [clampLeft(rightOfToolbar), clampTop(besidePencil)];
+      }
+      const [left, top] = placement || [clampLeft(rightOfToolbar), clampTop(besidePencil)];
+      handwritingSettingsPanel.style.left = `${left}px`;
+      handwritingSettingsPanel.style.top = `${top}px`;
+    }
+    window.addEventListener('resize', () => {
+      if (!handwritingSettingsPanel.classList.contains('hidden')) positionHandwritingSettingsPanel();
+    });
+
     function resetToSample() {
       pushHistory();
       const sample = getSampleData();

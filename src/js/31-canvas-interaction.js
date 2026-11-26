@@ -120,7 +120,49 @@
       document.body.classList.add('rewiring-edge');
     }
 
+    function freehandPath(points) {
+      if (points.length < 2) return `M ${points[0].x} ${points[0].y} l 0.01 0`;
+      let d = `M ${points[0].x} ${points[0].y}`;
+      for (let i = 1; i < points.length; i++) {
+        const prev = points[i - 1];
+        const cur = points[i];
+        const midX = (prev.x + cur.x) / 2;
+        const midY = (prev.y + cur.y) / 2;
+        d += ` Q ${prev.x} ${prev.y} ${midX} ${midY}`;
+      }
+      const last = points[points.length - 1];
+      return `${d} T ${last.x} ${last.y}`;
+    }
+
+    function makeFreehandSvgPath(points, color, width) {
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('class', 'freehand-preview');
+      path.setAttribute('fill', 'none');
+      path.setAttribute('stroke', color);
+      path.setAttribute('stroke-width', String(width));
+      path.setAttribute('stroke-linecap', 'round');
+      path.setAttribute('stroke-linejoin', 'round');
+      path.setAttribute('d', freehandPath(points));
+      path.style.pointerEvents = 'none';
+      path.style.zIndex = '30';
+      return { path };
+    }
+
     viewportEl.addEventListener('pointerdown', (e) => {
+      const drawing = document.body.classList.contains('freehand-mode');
+      if (drawing) {
+        e.preventDefault();
+        e.stopPropagation();
+        const point = screenToWorld(e.clientX, e.clientY);
+        const width = Number(document.getElementById('freehand-width').value) || 4;
+        const color = state.freehandColor || '#2563eb';
+        const points = [point];
+        const preview = makeFreehandSvgPath(points, color, width);
+        document.getElementById('edges-svg').appendChild(preview.path);
+        interaction = { mode: 'draw-freehand', points, width, color, preview };
+        viewportEl.setPointerCapture(e.pointerId);
+        return;
+      }
       if (e.target !== viewportEl && e.target !== worldEl && e.target.id !== 'edges-svg') return;
 
       const worldPos = screenToWorld(e.clientX, e.clientY);
@@ -159,8 +201,12 @@
 
     window.addEventListener('pointermove', (e) => {
       if (interaction.mode === 'none') return;
-
-      if (interaction.mode === 'pan') {
+      if (interaction.mode === 'draw-freehand') {
+        const point = screenToWorld(e.clientX, e.clientY);
+        const last = interaction.points[interaction.points.length - 1];
+        if (Math.hypot(point.x - last.x, point.y - last.y) >= 1.5) interaction.points.push(point);
+        interaction.preview.path.setAttribute('d', freehandPath(interaction.points));
+      } else if (interaction.mode === 'pan') {
         state.viewport.x = interaction.origX + (e.clientX - interaction.startX);
         state.viewport.y = interaction.origY + (e.clientY - interaction.startY);
         applyViewportTransform();
@@ -286,7 +332,34 @@
     window.addEventListener('pointerup', (e) => {
       if (interaction.mode === 'none') return;
 
-      if (interaction.mode === 'pan') {
+      if (interaction.mode === 'draw-freehand') {
+        const drawing = interaction;
+        drawing.preview.path.remove();
+        if (drawing.points.length > 0) {
+          const pad = drawing.width / 2 + 1;
+          const minX = Math.min(...drawing.points.map(point => point.x)) - pad;
+          const minY = Math.min(...drawing.points.map(point => point.y)) - pad;
+          const maxX = Math.max(...drawing.points.map(point => point.x)) + pad;
+          const maxY = Math.max(...drawing.points.map(point => point.y)) + pad;
+          const local = drawing.points.map(point => ({ x: point.x - minX, y: point.y - minY }));
+          const node = {
+            id: 'freehand_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+            type: 'freehand', x: minX, y: minY,
+            width: Math.max(1, maxX - minX), height: Math.max(1, maxY - minY),
+            path: freehandPath(local), stroke: drawing.color, strokeWidth: drawing.width,
+            opacity: 1, tags: []
+          };
+          pushHistory();
+          state.nodes.push(node);
+          state.selectedNodeId = node.id;
+          state.selectedNodeIds = new Set([node.id]);
+          state.selectedEdgeId = null;
+          renderNodes();
+          renderEdges();
+          updatePropertyBar();
+          persistToLocalStorage();
+        }
+      } else if (interaction.mode === 'pan') {
         viewportEl.classList.remove('panning');
         persistToLocalStorage();
       } else if (interaction.mode === 'drag-node' || interaction.mode === 'resize-node') {

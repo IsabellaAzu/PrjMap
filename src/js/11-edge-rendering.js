@@ -279,7 +279,24 @@
         el.style.height = `${node.height}px`;
         el.style.opacity = String(node.opacity ?? 1);
 
-        if (node.type === 'image') {
+        if (node.type === 'freehand') {
+          el.classList.add('freehand-node');
+          el.style.backgroundColor = 'transparent';
+          const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+          svg.setAttribute('class', 'freehand-svg');
+          svg.setAttribute('viewBox', `0 0 ${Math.max(1, node.width)} ${Math.max(1, node.height)}`);
+          svg.setAttribute('preserveAspectRatio', 'none');
+          const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+          path.setAttribute('d', node.path || '');
+          path.setAttribute('fill', 'none');
+          path.setAttribute('stroke', node.stroke || '#2563eb');
+          path.setAttribute('stroke-width', String(node.strokeWidth || 4));
+          path.setAttribute('stroke-linecap', 'round');
+          path.setAttribute('stroke-linejoin', 'round');
+          path.setAttribute('vector-effect', 'non-scaling-stroke');
+          svg.appendChild(path);
+          el.appendChild(svg);
+        } else if (node.type === 'image') {
           el.classList.add('image-node');
           el.style.backgroundColor = 'transparent';
           if (node.stroke && node.stroke !== 'transparent') {
@@ -336,7 +353,7 @@
           }
         }
 
-        if (node.type !== 'image') {
+        if (node.type !== 'image' && node.type !== 'freehand') {
           const content = document.createElement('div');
           content.className = 'node-content';
           if (node.type === 'diamond') {
@@ -414,7 +431,7 @@
           el.appendChild(content);
         }
 
-        ['top', 'right', 'bottom', 'left'].forEach(pos => {
+        (node.type === 'freehand' ? [] : ['top', 'right', 'bottom', 'left']).forEach(pos => {
           const anchor = document.createElement('div');
           anchor.className = `anchor-handle anchor-${pos}`;
           anchor.title = 'ドラッグして別の図形に線を繋ぐ';
@@ -432,7 +449,7 @@
           e.stopPropagation();
           startResizingNode(node.id, e);
         });
-        el.appendChild(resizer);
+        if (node.type !== 'freehand') el.appendChild(resizer);
 
         let lastClickTime = 0;
         let lastClickPos = { x: 0, y: 0 };
@@ -443,7 +460,7 @@
 
           e.stopPropagation();
 
-          if (node.type !== 'image') {
+          if (node.type !== 'image' && node.type !== 'freehand') {
             const now = Date.now();
             const dist = Math.hypot(e.clientX - lastClickPos.x, e.clientY - lastClickPos.y);
             if (now - lastClickTime < 350 && dist < 12) {
@@ -461,7 +478,7 @@
         });
 
         el.addEventListener('dblclick', (e) => {
-          if (node.type === 'image') return;
+          if (node.type === 'image' || node.type === 'freehand') return;
           if (e.target.closest('.url-badge-item, .anchor-handle, .resize-handle, button, a')) return;
           e.stopPropagation();
           startEditingNode(node.id);

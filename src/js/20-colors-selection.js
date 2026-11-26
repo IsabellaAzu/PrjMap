@@ -494,6 +494,8 @@
       if (!pickerState.activeKind) return;
       const curColor = pickerState.activeKind === 'edge'
         ? getCurrentSelectedEdgeColor()
+        : pickerState.activeKind === 'freehand'
+          ? (state.freehandColor || '#2563eb')
         : getCurrentSelectedColor(pickerState.activeKind);
       const rgba = parseColorToRgba(curColor && curColor !== 'transparent' ? curColor : '#2563eb');
       const hsv = rgbToHsv(rgba.r, rgba.g, rgba.b);
@@ -554,6 +556,14 @@
         return;
       }
 
+      if (pickerState.activeKind === 'freehand') {
+        state.freehandColor = cssColor === 'transparent' ? '#2563eb' : cssColor;
+        document.querySelectorAll('[data-freehand-color]').forEach(button => button.classList.remove('active'));
+        if (recordHist) recordColorHistory('stroke', state.freehandColor);
+        refreshPickerReadoutOnly();
+        return;
+      }
+
       const nodes = getSelectedTargetIds()
         .map(id => state.nodes.find(n => n.id === id))
         .filter(node => node && (pickerState.activeKind !== 'text' || node.type !== 'image'));
@@ -584,6 +594,7 @@
       const btnStroke = document.getElementById('btn-toggle-stroke-picker');
       const btnText = document.getElementById('btn-toggle-text-color-picker');
       const btnEdge = document.getElementById('btn-toggle-edge-picker');
+      const btnFreehand = document.getElementById('btn-toggle-freehand-picker');
 
       if (pickerState.activeKind === kind && pickerPanel && !pickerPanel.classList.contains('hidden')) {
         pickerState.activeKind = null;
@@ -592,6 +603,7 @@
         if (btnStroke) btnStroke.classList.remove('open');
         if (btnText) btnText.classList.remove('open');
         if (btnEdge) btnEdge.classList.remove('open');
+        if (btnFreehand) btnFreehand.classList.remove('open');
         return;
       }
 
@@ -611,6 +623,7 @@
       if (btnStroke) btnStroke.classList.toggle('open', kind === 'stroke');
       if (btnText) btnText.classList.toggle('open', kind === 'text');
       if (btnEdge) btnEdge.classList.toggle('open', kind === 'edge');
+      if (btnFreehand) btnFreehand.classList.toggle('open', kind === 'freehand');
       if (pickerPanel) pickerPanel.classList.remove('hidden');
       syncColorPickerWithCurrent(true);
     }
@@ -715,6 +728,10 @@
     document.getElementById('btn-toggle-edge-picker').addEventListener('click', () => {
       document.getElementById('edge-props')?.appendChild(pickerPanel);
       toggleColorPicker('edge');
+    });
+    document.getElementById('btn-toggle-freehand-picker').addEventListener('click', () => {
+      document.getElementById('handwriting-settings-panel')?.appendChild(pickerPanel);
+      toggleColorPicker('freehand');
     });
     document.getElementById('fill-none-btn').addEventListener('click', () => applyColorToSelected('fill', 'transparent'));
     document.getElementById('stroke-none-btn').addEventListener('click', () => applyColorToSelected('stroke', 'transparent'));
