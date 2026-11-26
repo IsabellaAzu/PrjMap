@@ -5050,7 +5050,7 @@
       }
       pickerState.s = hsv.s;
       pickerState.v = hsv.v;
-      pickerState.a = pickerState.activeKind === 'text'
+      pickerState.a = ['text', 'fill', 'stroke'].includes(pickerState.activeKind)
         ? 1
         : (curColor === 'transparent' ? 0 : Math.round(rgba.a * 10) / 10);
       if (resetSession) {
@@ -5074,14 +5074,14 @@
         pickerReadout.textContent = `${Math.round(pickerState.a * 100)}%`;
       }
       if (pickerHexInput && document.activeElement !== pickerHexInput) {
-        pickerHexInput.value = cssColor;
+        pickerHexInput.value = rgbaToCss(rgb.r, rgb.g, rgb.b, 1);
       }
     }
 
     function commitPickerColor(recordHist = false) {
       if (!pickerState.activeKind) return;
       const rgb = hsvToRgb(pickerState.h, pickerState.s, pickerState.v);
-      const alpha = pickerState.activeKind === 'text' ? 1 : pickerState.a;
+      const alpha = ['text', 'fill', 'stroke'].includes(pickerState.activeKind) ? 1 : pickerState.a;
       const cssColor = alpha <= 0.01 ? 'transparent' : rgbaToCss(rgb.r, rgb.g, rgb.b, alpha);
 
       if (pickerState.activeKind === 'edge') {
@@ -5155,10 +5155,11 @@
 
       pickerState.activeKind = kind;
       if (pickerAlphaSlider) {
-        pickerAlphaSlider.classList.toggle('hidden', kind === 'text');
-        pickerAlphaSlider.disabled = kind === 'text';
+        const alphaEnabled = !['text', 'fill', 'stroke'].includes(kind);
+        pickerAlphaSlider.classList.toggle('hidden', !alphaEnabled);
+        pickerAlphaSlider.disabled = !alphaEnabled;
       }
-      if (pickerReadout) pickerReadout.classList.toggle('hidden', kind === 'text');
+      if (pickerReadout) pickerReadout.classList.toggle('hidden', ['text', 'fill', 'stroke'].includes(kind));
       if (pickerTargetLabel) {
         if (kind === 'fill') pickerTargetLabel.textContent = '塗り — カラー選択';
         else if (kind === 'stroke') pickerTargetLabel.textContent = '枠線 — カラー選択';
