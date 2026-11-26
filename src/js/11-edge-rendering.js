@@ -75,11 +75,14 @@
       return safeId;
     }
 
+    const renderedEdgePathCache = new Map();
+
     function renderEdges() {
       rebuildTagVisibilityCache();
       const nodeMap = new Map(state.nodes.map(n => [n.id, n]));
       const usedSegments = [];
       const usedTurns = [];
+      renderedEdgePathCache.clear();
       edgesContainer.innerHTML = '';
 
       const edgeRoutingOrder = state.edges.slice().sort((a, b) => {
@@ -131,6 +134,7 @@
         const d = separatedPath
           ? separatedPath.d
           : buildEdgePath(p1, sourceAnchor, p2, targetAnchor, edge.style || 'avoid', edge.source, edge.target, usedSegments, usedTurns);
+        renderedEdgePathCache.set(edge.id, d);
         const routePoints = separatedPath ? separatedPath.points : (/[CQ]/.test(d) ? [] : d.match(/-?\d+(?:\.\d+)?/g)?.map(Number).reduce((points, value, index, values) => {
           if (index % 2 === 0) points.push({ x: value, y: values[index + 1] });
           return points;

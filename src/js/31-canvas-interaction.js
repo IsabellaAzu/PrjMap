@@ -575,25 +575,111 @@
         if (!s || !t) continue;
         minimapCtx.strokeStyle = e.color || '#94a3b8';
         minimapCtx.setLineDash(isDashedEdgeStyle(e.style) ? [3, 3] : []);
-        minimapCtx.beginPath();
-        minimapCtx.moveTo((s.x + s.width / 2 - minX) * scale + offsetX, (s.y + s.height / 2 - minY) * scale + offsetY);
-        minimapCtx.lineTo((t.x + t.width / 2 - minX) * scale + offsetX, (t.y + t.height / 2 - minY) * scale + offsetY);
-        minimapCtx.stroke();
+        const route = renderedEdgePathCache.get(e.id);
+        try {
+          minimapCtx.save();
+          minimapCtx.translate(offsetX - minX * scale, offsetY - minY * scale);
+          minimapCtx.scale(scale, scale);
+          minimapCtx.lineWidth = Math.max(0.65 / scale, 2.2);
+          minimapCtx.lineCap = 'round';
+          minimapCtx.lineJoin = 'round';
+          if (route) {
+            minimapCtx.stroke(new Path2D(route));
+          } else {
+            minimapCtx.beginPath();
+            minimapCtx.moveTo(s.x + s.width / 2, s.y + s.height / 2);
+            minimapCtx.lineTo(t.x + t.width / 2, t.y + t.height / 2);
+            minimapCtx.stroke();
+          }
+          minimapCtx.restore();
+        } catch (_) {
+          minimapCtx.restore();
+        }
+
+        if (e.arrow !== false) {
+          const tip = getEdgeAnchorPoint(t, e, 'target');
+          const centerX = t.x + t.width / 2;
+          const centerY = t.y + t.height / 2;
+          const length = Math.hypot(centerX - tip.x, centerY - tip.y) || 1;
+          const ux = (centerX - tip.x) / length;
+          const uy = (centerY - tip.y) / length;
+          const tx = (tip.x - minX) * scale + offsetX;
+          const ty = (tip.y - minY) * scale + offsetY;
+          const arrowLength = 4;
+          const arrowHalfWidth = 2.6;
+          minimapCtx.fillStyle = e.color || '#94a3b8';
+          minimapCtx.beginPath();
+          minimapCtx.moveTo(tx + ux * arrowLength, ty + uy * arrowLength);
+          minimapCtx.lineTo(tx - uy * arrowHalfWidth, ty + ux * arrowHalfWidth);
+          minimapCtx.lineTo(tx + uy * arrowHalfWidth, ty - ux * arrowHalfWidth);
+          minimapCtx.closePath();
+          minimapCtx.fill();
+        }
       }
       minimapCtx.setLineDash([]);
 
-      for (const n of state.nodes) {
+      for (const n of visibleNodes) {
         const nx = (n.x - minX) * scale + offsetX;
         const ny = (n.y - minY) * scale + offsetY;
-        const nw = Math.max(4, n.width * scale);
-        const nh = Math.max(3, n.height * scale);
-
-        minimapCtx.fillStyle = n.id === state.selectedNodeId ? '#2563eb' : (n.fill && n.fill !== 'transparent' ? n.fill : '#e2e8f0');
-        minimapCtx.strokeStyle = n.id === state.selectedNodeId ? '#1d4ed8' : '#64748b';
-        minimapCtx.lineWidth = 1;
+        const nw = Math.max(0.5, n.width * scale);
+        const nh = Math.max(0.5, n.height * scale);
+        const selected = state.selectedNodeIds.has(n.id) || n.id === state.selectedNodeId;
+        const hasFill = n.fill && n.fill !== 'transparent' && n.type !== 'freehand' && n.type !== 'text';
+        const hasStroke = n.stroke && n.stroke !== 'transparent';
+        minimapCtx.fillStyle = n.fill || '#ffffff';
+        minimapCtx.strokeStyle = selected ? '#2563eb' : (hasStroke ? n.stroke : '#64748b');
+        minimapCtx.lineWidth = selected ? 1.5 : Math.max(0.6, (n.type === 'freehand' ? (n.strokeWidth || 4) : 2) * scale);
         minimapCtx.globalAlpha = n.opacity ?? 1;
-        minimapCtx.fillRect(nx, ny, nw, nh);
-        minimapCtx.strokeRect(nx, ny, nw, nh);
+        minimapCtx.beginPath();
+        if (n.type === 'freehand') {
+          try {
+            minimapCtx.save();
+            minimapCtx.translate(nx, ny);
+            minimapCtx.scale(scale, scale);
+            minimapCtx.strokeStyle = n.stroke || '#2563eb';
+            minimapCtx.lineWidth = Math.max(0.5, n.strokeWidth || 4);
+            minimapCtx.lineCap = 'round';
+            minimapCtx.lineJoin = 'round';
+            minimapCtx.stroke(new Path2D(n.path || ''));
+            minimapCtx.restore();
+          } catch (_) {
+            minimapCtx.restore();
+          }
+        } else if (n.type === 'ellipse') {
+          minimapCtx.ellipse(nx + nw / 2, ny + nh / 2, nw / 2, nh / 2, 0, 0, Math.PI * 2);
+          if (hasFill) minimapCtx.fill();
+          if (hasStroke || selected) minimapCtx.stroke();
+        } else if (n.type === 'diamond') {
+          minimapCtx.moveTo(nx + nw / 2, ny);
+          minimapCtx.lineTo(nx + nw, ny + nh / 2);
+          minimapCtx.lineTo(nx + nw / 2, ny + nh);
+          minimapCtx.lineTo(nx, ny + nh / 2);
+          minimapCtx.closePath();
+          if (hasFill) minimapCtx.fill();
+          if (hasStroke || selected) minimapCtx.stroke();
+        } else if (n.type === 'text') {
+          minimapCtx.strokeStyle = selected ? '#2563eb' : (n.textColor || '#1e293b');
+          minimapCtx.lineWidth = Math.max(1, 2 * scale);
+          minimapCtx.moveTo(nx + nw * 0.08, ny + nh / 2);
+          minimapCtx.lineTo(nx + nw * 0.92, ny + nh / 2);
+          minimapCtx.stroke();
+        } else {
+          if (n.type === 'roundRect' || n.type === 'sticky') {
+            const radius = n.type === 'sticky' ? 4 : 14;
+            if (typeof minimapCtx.roundRect === 'function') {
+              const radii = n.type === 'sticky'
+                ? [radius * scale, radius * scale, 16 * scale, radius * scale]
+                : radius * scale;
+              minimapCtx.roundRect(nx, ny, nw, nh, radii);
+            } else {
+              minimapCtx.rect(nx, ny, nw, nh);
+            }
+          } else {
+            minimapCtx.rect(nx, ny, nw, nh);
+          }
+          if (hasFill) minimapCtx.fill();
+          if (hasStroke || selected) minimapCtx.stroke();
+        }
         minimapCtx.globalAlpha = 1;
       }
 
