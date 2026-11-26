@@ -4644,18 +4644,16 @@
     try {
       const savedHist = JSON.parse(localStorage.getItem(COLOR_HISTORY_KEY) || 'null');
       if (savedHist) {
-        if (Array.isArray(savedHist.fill) && savedHist.fill.length > 0) {
-          colorHistory.fill = savedHist.fill.slice(0, 3);
-        }
-        if (Array.isArray(savedHist.stroke) && savedHist.stroke.length > 0) {
-          colorHistory.stroke = savedHist.stroke.slice(0, 3);
-        }
-        if (Array.isArray(savedHist.text) && savedHist.text.length > 0) {
-          colorHistory.text = savedHist.text.slice(0, 3).map(getOpaqueColor);
-        }
-        if (Array.isArray(savedHist.edge) && savedHist.edge.length > 0) {
-          colorHistory.edge = savedHist.edge.slice(0, 3);
-        }
+        ['fill', 'stroke', 'text', 'edge'].forEach(kind => {
+          const savedColors = Array.isArray(savedHist[kind]) ? savedHist[kind]
+            : Array.isArray(savedHist.all) ? savedHist.all
+              : Array.isArray(savedHist.colors) ? savedHist.colors
+                : null;
+          if (savedColors && savedColors.length > 0) {
+            const normalized = kind === 'text' ? savedColors.map(getOpaqueColor) : savedColors;
+            colorHistory[kind] = normalized.slice(0, 3);
+          }
+        });
       }
     } catch (_) {}
 
