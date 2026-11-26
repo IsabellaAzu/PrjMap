@@ -215,7 +215,17 @@
             <div id="text-color-active-slot" class="color-slot-group" title="選択中オブジェクトの現在の文字色"></div>
             <button type="button" id="btn-toggle-text-color-picker" class="custom-picker-btn"
               title="詳細な文字色を選択（カラーピッカー）">+</button>
+            <div class="text-format-controls" id="text-format-controls">
+              <label class="font-size-control" id="font-size-control" for="node-font-size">
+                <span>文字サイズ</span>
+                <input id="node-font-size" type="number" min="8" max="32" step="1" value="14" aria-label="文字サイズ">
+              </label>
+              <button type="button" id="btn-toggle-bold" class="bold-toggle-btn" aria-pressed="false" title="太字切り替え">B</button>
+            </div>
           </div>
+        </div>
+
+        <div class="prop-row object-opacity-row">
           <div class="object-opacity-control">
             <label for="object-opacity-slider">全体透明度</label>
             <input id="object-opacity-slider" type="range" min="10" max="100" step="10" value="100" aria-label="オブジェクトの透明度" />

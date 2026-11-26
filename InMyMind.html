@@ -800,6 +800,56 @@
       flex: 0 0 auto;
     }
 
+    .font-size-control {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: #64748b;
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
+    .font-size-control.hidden { display: none; }
+
+    .text-format-controls {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .text-format-controls.hidden { display: none; }
+
+    .bold-toggle-btn {
+      width: 28px;
+      height: 28px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      background: #fff;
+      color: #334155;
+      font-size: 15px;
+      font-weight: 700;
+      line-height: 1;
+      padding: 0;
+    }
+
+    .bold-toggle-btn[aria-pressed="true"] {
+      background: #eff6ff;
+      border-color: #93c5fd;
+      color: #1d4ed8;
+    }
+
+    #node-font-size {
+      width: 58px;
+      height: 28px;
+      padding: 2px 5px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      background: #fff;
+      color: #334155;
+    }
+
+    .object-opacity-row { width: 100%; }
+
     .object-opacity-control {
       display: grid;
       grid-template-columns: auto minmax(48px, 1fr) auto;
@@ -824,6 +874,8 @@
       .color-opacity-row .color-slot-group {
         gap: 4px;
       }
+
+      .font-size-control { gap: 4px; }
 
       .object-opacity-control {
         gap: 4px;
@@ -1984,6 +2036,28 @@
       border-color: #66543a;
     }
 
+    html[data-theme="dark"] #node-font-size {
+      background-color: #211b12;
+      color: #e5d9c6;
+      border-color: #66543a;
+    }
+
+    html[data-theme="dark"] .font-size-control {
+      color: #d8cdbb;
+    }
+
+    html[data-theme="dark"] .bold-toggle-btn {
+      background: #302519;
+      border-color: #66543a;
+      color: #d8cdbb;
+    }
+
+    html[data-theme="dark"] .bold-toggle-btn[aria-pressed="true"] {
+      background: #443522;
+      border-color: #a7823d;
+      color: #f0d28e;
+    }
+
     html[data-theme="dark"] .tool-btn[aria-pressed="true"] {
       background-color: #443522;
       color: #e6c27a;
@@ -2297,7 +2371,17 @@
             <div id="text-color-active-slot" class="color-slot-group" title="選択中オブジェクトの現在の文字色"></div>
             <button type="button" id="btn-toggle-text-color-picker" class="custom-picker-btn"
               title="詳細な文字色を選択（カラーピッカー）">+</button>
+            <div class="text-format-controls" id="text-format-controls">
+              <label class="font-size-control" id="font-size-control" for="node-font-size">
+                <span>文字サイズ</span>
+                <input id="node-font-size" type="number" min="8" max="32" step="1" value="14" aria-label="文字サイズ">
+              </label>
+              <button type="button" id="btn-toggle-bold" class="bold-toggle-btn" aria-pressed="false" title="太字切り替え">B</button>
+            </div>
           </div>
+        </div>
+
+        <div class="prop-row object-opacity-row">
           <div class="object-opacity-control">
             <label for="object-opacity-slider">全体透明度</label>
             <input id="object-opacity-slider" type="range" min="10" max="100" step="10" value="100" aria-label="オブジェクトの透明度" />
@@ -4385,6 +4469,7 @@
         if (node.type !== 'image' && node.type !== 'freehand') {
           const content = document.createElement('div');
           content.className = 'node-content';
+          content.style.fontSize = `${node.fontSize || 14}px`;
           if (node.type === 'diamond') {
             content.style.padding = '16px 26px';
           }
@@ -4394,6 +4479,8 @@
             textarea.className = 'node-textarea';
             textarea.value = node.text || '';
             textarea.placeholder = 'テキストやURLを入力...';
+            textarea.style.fontSize = `${node.fontSize || 14}px`;
+            if (node.bold) textarea.style.fontWeight = '700';
             if (node.textColor) textarea.style.color = node.textColor;
             textarea.addEventListener('pointerdown', (e) => e.stopPropagation());
             textarea.addEventListener('keydown', (e) => {
@@ -4415,6 +4502,7 @@
             textDiv.className = 'node-text-display';
             const displayText = getTextWithoutUrls(node.text);
             textDiv.textContent = displayText || '';
+            if (node.bold) textDiv.style.fontWeight = '700';
             if (node.textColor) textDiv.style.color = node.textColor;
             if (displayText) {
               content.appendChild(textDiv);
@@ -4767,6 +4855,7 @@
       renderNodes();
       renderColorSlots();
       syncObjectOpacityControl();
+      syncTextSizeControl();
       syncColorPickerWithCurrent(false);
       persistToLocalStorage();
     }
@@ -4895,6 +4984,7 @@
       }
       if (textDefaultBtn) textDefaultBtn.classList.toggle('active', currentText === '#1e293b');
       syncObjectOpacityControl();
+      syncTextSizeControl();
     }
 
     function syncObjectOpacityControl() {
@@ -4907,6 +4997,46 @@
       const percent = Math.max(10, Math.round((selectedNode?.opacity ?? 1) * 10) * 10);
       slider.value = String(percent);
       if (value) value.value = `${percent}%`;
+    }
+
+    function syncTextSizeControl() {
+      const control = document.getElementById('text-format-controls');
+      const input = document.getElementById('node-font-size');
+      const boldButton = document.getElementById('btn-toggle-bold');
+      if (!control || !input || !boldButton) return;
+      const nodes = getSelectedTargetIds()
+        .map(id => state.nodes.find(node => node.id === id))
+        .filter(node => node && node.type !== 'image' && node.type !== 'freehand');
+      control.classList.toggle('hidden', nodes.length === 0);
+      if (nodes.length > 0) {
+        input.value = String(Math.max(8, Math.min(32, nodes[0].fontSize || 14)));
+        boldButton.setAttribute('aria-pressed', String(!!nodes[0].bold));
+      }
+    }
+
+    let textSizeHistoryStarted = false;
+    function applySelectedTextSize(commit = false) {
+      const input = document.getElementById('node-font-size');
+      if (!input || input.value === '') return;
+      const size = Math.max(8, Math.min(32, Math.round(Number(input.value) || 14)));
+      input.value = String(size);
+      const nodes = getSelectedTargetIds()
+        .map(id => state.nodes.find(node => node.id === id))
+        .filter(node => node && node.type !== 'image' && node.type !== 'freehand');
+      const updates = nodes.filter(node => (node.fontSize || 14) !== size);
+      if (updates.length > 0) {
+        if (!textSizeHistoryStarted) {
+          pushHistory();
+          textSizeHistoryStarted = true;
+        }
+        updates.forEach(node => {
+          if (size === 14) delete node.fontSize;
+          else node.fontSize = size;
+        });
+        renderNodes();
+        persistToLocalStorage();
+      }
+      if (commit) textSizeHistoryStarted = false;
     }
 
     let objectOpacityHistoryStarted = false;
@@ -5231,6 +5361,27 @@
     const objectOpacitySlider = document.getElementById('object-opacity-slider');
     objectOpacitySlider?.addEventListener('input', () => applyObjectOpacityFromSlider(false));
     objectOpacitySlider?.addEventListener('change', () => applyObjectOpacityFromSlider(true));
+    const nodeFontSizeInput = document.getElementById('node-font-size');
+    nodeFontSizeInput?.addEventListener('input', () => applySelectedTextSize(false));
+    nodeFontSizeInput?.addEventListener('change', () => applySelectedTextSize(true));
+
+    document.getElementById('btn-toggle-bold')?.addEventListener('click', () => {
+      const nodes = getSelectedTargetIds()
+        .map(id => state.nodes.find(node => node.id === id))
+        .filter(node => node && node.type !== 'image' && node.type !== 'freehand');
+      if (nodes.length === 0) return;
+      const makeBold = !nodes.every(node => !!node.bold);
+      const updates = nodes.filter(node => !!node.bold !== makeBold);
+      if (updates.length === 0) return;
+      pushHistory();
+      updates.forEach(node => {
+        if (makeBold) node.bold = true;
+        else delete node.bold;
+      });
+      renderNodes();
+      syncTextSizeControl();
+      persistToLocalStorage();
+    });
 
     function applyPickerHexInput() {
       if (!pickerHexInput) return;

@@ -221,6 +221,7 @@
       renderNodes();
       renderColorSlots();
       syncObjectOpacityControl();
+      syncTextSizeControl();
       syncColorPickerWithCurrent(false);
       persistToLocalStorage();
     }
@@ -349,6 +350,7 @@
       }
       if (textDefaultBtn) textDefaultBtn.classList.toggle('active', currentText === '#1e293b');
       syncObjectOpacityControl();
+      syncTextSizeControl();
     }
 
     function syncObjectOpacityControl() {
@@ -361,6 +363,46 @@
       const percent = Math.max(10, Math.round((selectedNode?.opacity ?? 1) * 10) * 10);
       slider.value = String(percent);
       if (value) value.value = `${percent}%`;
+    }
+
+    function syncTextSizeControl() {
+      const control = document.getElementById('text-format-controls');
+      const input = document.getElementById('node-font-size');
+      const boldButton = document.getElementById('btn-toggle-bold');
+      if (!control || !input || !boldButton) return;
+      const nodes = getSelectedTargetIds()
+        .map(id => state.nodes.find(node => node.id === id))
+        .filter(node => node && node.type !== 'image' && node.type !== 'freehand');
+      control.classList.toggle('hidden', nodes.length === 0);
+      if (nodes.length > 0) {
+        input.value = String(Math.max(8, Math.min(32, nodes[0].fontSize || 14)));
+        boldButton.setAttribute('aria-pressed', String(!!nodes[0].bold));
+      }
+    }
+
+    let textSizeHistoryStarted = false;
+    function applySelectedTextSize(commit = false) {
+      const input = document.getElementById('node-font-size');
+      if (!input || input.value === '') return;
+      const size = Math.max(8, Math.min(32, Math.round(Number(input.value) || 14)));
+      input.value = String(size);
+      const nodes = getSelectedTargetIds()
+        .map(id => state.nodes.find(node => node.id === id))
+        .filter(node => node && node.type !== 'image' && node.type !== 'freehand');
+      const updates = nodes.filter(node => (node.fontSize || 14) !== size);
+      if (updates.length > 0) {
+        if (!textSizeHistoryStarted) {
+          pushHistory();
+          textSizeHistoryStarted = true;
+        }
+        updates.forEach(node => {
+          if (size === 14) delete node.fontSize;
+          else node.fontSize = size;
+        });
+        renderNodes();
+        persistToLocalStorage();
+      }
+      if (commit) textSizeHistoryStarted = false;
     }
 
     let objectOpacityHistoryStarted = false;
@@ -685,6 +727,27 @@
     const objectOpacitySlider = document.getElementById('object-opacity-slider');
     objectOpacitySlider?.addEventListener('input', () => applyObjectOpacityFromSlider(false));
     objectOpacitySlider?.addEventListener('change', () => applyObjectOpacityFromSlider(true));
+    const nodeFontSizeInput = document.getElementById('node-font-size');
+    nodeFontSizeInput?.addEventListener('input', () => applySelectedTextSize(false));
+    nodeFontSizeInput?.addEventListener('change', () => applySelectedTextSize(true));
+
+    document.getElementById('btn-toggle-bold')?.addEventListener('click', () => {
+      const nodes = getSelectedTargetIds()
+        .map(id => state.nodes.find(node => node.id === id))
+        .filter(node => node && node.type !== 'image' && node.type !== 'freehand');
+      if (nodes.length === 0) return;
+      const makeBold = !nodes.every(node => !!node.bold);
+      const updates = nodes.filter(node => !!node.bold !== makeBold);
+      if (updates.length === 0) return;
+      pushHistory();
+      updates.forEach(node => {
+        if (makeBold) node.bold = true;
+        else delete node.bold;
+      });
+      renderNodes();
+      syncTextSizeControl();
+      persistToLocalStorage();
+    });
 
     function applyPickerHexInput() {
       if (!pickerHexInput) return;

@@ -191,6 +191,28 @@
       border-color: #66543a;
     }
 
+    html[data-theme="dark"] #node-font-size {
+      background-color: #211b12;
+      color: #e5d9c6;
+      border-color: #66543a;
+    }
+
+    html[data-theme="dark"] .font-size-control {
+      color: #d8cdbb;
+    }
+
+    html[data-theme="dark"] .bold-toggle-btn {
+      background: #302519;
+      border-color: #66543a;
+      color: #d8cdbb;
+    }
+
+    html[data-theme="dark"] .bold-toggle-btn[aria-pressed="true"] {
+      background: #443522;
+      border-color: #a7823d;
+      color: #f0d28e;
+    }
+
     html[data-theme="dark"] .tool-btn[aria-pressed="true"] {
       background-color: #443522;
       color: #e6c27a;

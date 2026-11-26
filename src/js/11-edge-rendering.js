@@ -356,6 +356,7 @@
         if (node.type !== 'image' && node.type !== 'freehand') {
           const content = document.createElement('div');
           content.className = 'node-content';
+          content.style.fontSize = `${node.fontSize || 14}px`;
           if (node.type === 'diamond') {
             content.style.padding = '16px 26px';
           }
@@ -365,6 +366,8 @@
             textarea.className = 'node-textarea';
             textarea.value = node.text || '';
             textarea.placeholder = 'テキストやURLを入力...';
+            textarea.style.fontSize = `${node.fontSize || 14}px`;
+            if (node.bold) textarea.style.fontWeight = '700';
             if (node.textColor) textarea.style.color = node.textColor;
             textarea.addEventListener('pointerdown', (e) => e.stopPropagation());
             textarea.addEventListener('keydown', (e) => {
@@ -386,6 +389,7 @@
             textDiv.className = 'node-text-display';
             const displayText = getTextWithoutUrls(node.text);
             textDiv.textContent = displayText || '';
+            if (node.bold) textDiv.style.fontWeight = '700';
             if (node.textColor) textDiv.style.color = node.textColor;
             if (displayText) {
               content.appendChild(textDiv);
