@@ -6,7 +6,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 SOURCE = ROOT / "src"
-OUTPUT = ROOT / "arroundMe.html"
+OUTPUT = ROOT / "InMyMind.html"
 
 
 def main() -> None:
