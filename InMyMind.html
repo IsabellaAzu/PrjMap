@@ -7284,6 +7284,32 @@
       const isMod = e.ctrlKey || e.metaKey;
       const key = e.key.toLowerCase();
 
+      if (!isMod && !document.body.classList.contains('freehand-mode') &&
+          ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+        const selectedIds = new Set(state.selectedNodeIds);
+        if (state.selectedNodeId) selectedIds.add(state.selectedNodeId);
+        if (selectedIds.size === 0) return;
+        e.preventDefault();
+        const step = e.shiftKey ? 10 : 1;
+        const dx = e.key === 'ArrowLeft' ? -step : e.key === 'ArrowRight' ? step : 0;
+        const dy = e.key === 'ArrowUp' ? -step : e.key === 'ArrowDown' ? step : 0;
+        const before = createSnapshot();
+        selectedIds.forEach(id => {
+          const node = state.nodes.find(item => item.id === id);
+          if (node) {
+            node.x += dx;
+            node.y += dy;
+          }
+        });
+        pushHistory(before);
+        renderNodes();
+        renderEdges();
+        updatePropertyBar();
+        renderMinimap();
+        persistToLocalStorage();
+        return;
+      }
+
       if (isMod && key === 'c') {
         const selection = window.getSelection();
         if (selection && selection.toString().length > 0) return;
