@@ -120,11 +120,12 @@
         const routeEdge = edge;
         const p1 = getEdgeAnchorPoint(srcNode, routeEdge, 'source');
         const p2 = getEdgeAnchorPoint(tgtNode, routeEdge, 'target');
-        const manualPath = buildEditableEdgePath(p1, p2, edge);
+        const isAvoidStyle = getBaseEdgeStyle(edge.style || 'avoid') === 'avoid';
+        const manualPath = isAvoidStyle ? buildEditableEdgePath(p1, p2, edge) : null;
         const directPath = getBaseEdgeStyle(edge.style || 'avoid') === 'avoid'
           ? buildDirectEdgePath(p1, sourceAnchor, p2, targetAnchor, routeEdge, usedSegments)
           : null;
-        const separatedPath = manualPath || directPath || (getBaseEdgeStyle(edge.style || 'avoid') === 'avoid'
+        const separatedPath = manualPath || directPath || (isAvoidStyle
           ? buildOrthogonalEdgePath(p1, sourceAnchor, p2, targetAnchor, routeEdge, usedSegments, usedTurns)
           : null);
         const d = separatedPath

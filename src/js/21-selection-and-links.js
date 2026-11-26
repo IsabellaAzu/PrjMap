@@ -40,7 +40,7 @@
           if (pickerState.activeKind === 'edge' && pickerPanel && !pickerPanel.classList.contains('hidden')) {
             syncColorPickerWithCurrent(true);
           }
-          document.getElementById('edge-style-select').value = edge.style === 'bezier' ? 'avoid' : (edge.style || 'avoid');
+          document.getElementById('edge-style-select').value = edge.style || 'avoid';
           document.getElementById('edge-arrow-check').checked = edge.arrow !== false;
         }
       } else {

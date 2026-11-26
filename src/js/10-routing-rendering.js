@@ -1049,7 +1049,7 @@
       if (baseStyle === 'straight') {
         return `M ${p1.x} ${p1.y} L ${p2.x} ${p2.y}`;
       }
-      if (baseStyle === 'avoid' || baseStyle === 'bezier') {
+      if (baseStyle === 'avoid') {
         return findObstacleAvoidingPath(p1, a1, p2, a2, state.nodes, srcNodeId, tgtNodeId, usedSegments, usedTurns);
       }
       const dist = Math.max(45, Math.hypot(p2.x - p1.x, p2.y - p1.y) * 0.4);

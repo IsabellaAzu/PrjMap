@@ -138,6 +138,7 @@
       if (!edge || edge.style === e.target.value) return;
       pushHistory();
       edge.style = e.target.value;
+      delete edge.routePoints;
       renderEdges();
       persistToLocalStorage();
     });
