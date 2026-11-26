@@ -46,6 +46,7 @@
     });
 
     const freehandButton = document.getElementById('btn-freehand-tool');
+    const selectToolButton = document.getElementById('btn-select-tool');
     const handwritingSettingsPanel = document.getElementById('handwriting-settings-panel');
     const freehandWidth = document.getElementById('freehand-width');
     let minimapHiddenForHandwritingPanel = false;
@@ -54,6 +55,7 @@
         const enabled = !document.body.classList.contains('freehand-mode');
         document.body.classList.toggle('freehand-mode', enabled);
         freehandButton.setAttribute('aria-pressed', String(enabled));
+        selectToolButton.setAttribute('aria-pressed', String(!enabled));
         handwritingSettingsPanel.classList.toggle('hidden', !enabled);
         if (enabled) {
           positionHandwritingSettingsPanel();
@@ -72,6 +74,18 @@
         });
       });
       state.freehandColor = '#2563eb';
+    }
+    if (selectToolButton) {
+      selectToolButton.addEventListener('click', () => {
+        document.body.classList.remove('freehand-mode');
+        freehandButton.setAttribute('aria-pressed', 'false');
+        selectToolButton.setAttribute('aria-pressed', 'true');
+        handwritingSettingsPanel.classList.add('hidden');
+        if (minimapHiddenForHandwritingPanel) {
+          setMinimapVisible(true);
+          minimapHiddenForHandwritingPanel = false;
+        }
+      });
     }
 
     function positionHandwritingSettingsPanel() {

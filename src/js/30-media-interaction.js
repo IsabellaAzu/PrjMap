@@ -25,6 +25,9 @@
         fill: p.fill,
         stroke: p.stroke
       };
+      if (type === 'text' && document.documentElement.dataset.theme === 'dark') {
+        newNode.textColor = '#ffffff';
+      }
 
       state.nodes.push(newNode);
       state.selectedNodeId = newNode.id;

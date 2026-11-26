@@ -151,6 +151,12 @@
       border-color: #66543a;
     }
 
+    html[data-theme="dark"] .node-textarea {
+      background: #302519;
+      color: #ffffff;
+      caret-color: #ffffff;
+    }
+
     html[data-theme="dark"] .search-input::placeholder,
     html[data-theme="dark"] .node-tag-input::placeholder,
     html[data-theme="dark"] .modal-input::placeholder,

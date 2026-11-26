@@ -1944,6 +1944,12 @@
       border-color: #66543a;
     }
 
+    html[data-theme="dark"] .node-textarea {
+      background: #302519;
+      color: #ffffff;
+      caret-color: #ffffff;
+    }
+
     html[data-theme="dark"] .search-input::placeholder,
     html[data-theme="dark"] .node-tag-input::placeholder,
     html[data-theme="dark"] .modal-input::placeholder,
@@ -2180,6 +2186,12 @@
     <!-- 左側フローティングツールバー：図形・テキスト追加 -->
     <aside class="left-toolbar">
       <div class="toolbar-heading">追加</div>
+
+      <button id="btn-select-tool" title="オブジェクトを選択・移動" class="tool-btn" aria-pressed="true">
+        <svg class="icon-md" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v18M3 12h18M12 3l-3 3m3-3 3 3m-3 15-3-3m3 3 3-3M3 12l3-3m-3 3 3 3m15-3-3-3m3 3-3 3" />
+        </svg>
+      </button>
 
       <button data-add-shape="rect" title="四角形を追加" class="tool-btn">
         <svg class="icon-md" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -5678,6 +5690,9 @@
         fill: p.fill,
         stroke: p.stroke
       };
+      if (type === 'text' && document.documentElement.dataset.theme === 'dark') {
+        newNode.textColor = '#ffffff';
+      }
 
       state.nodes.push(newNode);
       state.selectedNodeId = newNode.id;
@@ -6151,7 +6166,7 @@
         };
         viewportEl.classList.add('panning');
       }
-    });
+    }, true);
 
     viewportEl.addEventListener('dblclick', (e) => {
       if (e.target !== viewportEl && e.target !== worldEl && e.target.id !== 'edges-svg') return;
@@ -6311,8 +6326,8 @@
           };
           pushHistory();
           state.nodes.push(node);
-          state.selectedNodeId = node.id;
-          state.selectedNodeIds = new Set([node.id]);
+          state.selectedNodeId = null;
+          state.selectedNodeIds.clear();
           state.selectedEdgeId = null;
           renderNodes();
           renderEdges();
@@ -6836,6 +6851,7 @@
     });
 
     const freehandButton = document.getElementById('btn-freehand-tool');
+    const selectToolButton = document.getElementById('btn-select-tool');
     const handwritingSettingsPanel = document.getElementById('handwriting-settings-panel');
     const freehandWidth = document.getElementById('freehand-width');
     let minimapHiddenForHandwritingPanel = false;
@@ -6844,6 +6860,7 @@
         const enabled = !document.body.classList.contains('freehand-mode');
         document.body.classList.toggle('freehand-mode', enabled);
         freehandButton.setAttribute('aria-pressed', String(enabled));
+        selectToolButton.setAttribute('aria-pressed', String(!enabled));
         handwritingSettingsPanel.classList.toggle('hidden', !enabled);
         if (enabled) {
           positionHandwritingSettingsPanel();
@@ -6862,6 +6879,18 @@
         });
       });
       state.freehandColor = '#2563eb';
+    }
+    if (selectToolButton) {
+      selectToolButton.addEventListener('click', () => {
+        document.body.classList.remove('freehand-mode');
+        freehandButton.setAttribute('aria-pressed', 'false');
+        selectToolButton.setAttribute('aria-pressed', 'true');
+        handwritingSettingsPanel.classList.add('hidden');
+        if (minimapHiddenForHandwritingPanel) {
+          setMinimapVisible(true);
+          minimapHiddenForHandwritingPanel = false;
+        }
+      });
     }
 
     function positionHandwritingSettingsPanel() {

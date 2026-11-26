@@ -191,7 +191,7 @@
         };
         viewportEl.classList.add('panning');
       }
-    });
+    }, true);
 
     viewportEl.addEventListener('dblclick', (e) => {
       if (e.target !== viewportEl && e.target !== worldEl && e.target.id !== 'edges-svg') return;
@@ -351,8 +351,8 @@
           };
           pushHistory();
           state.nodes.push(node);
-          state.selectedNodeId = node.id;
-          state.selectedNodeIds = new Set([node.id]);
+          state.selectedNodeId = null;
+          state.selectedNodeIds.clear();
           state.selectedEdgeId = null;
           renderNodes();
           renderEdges();
