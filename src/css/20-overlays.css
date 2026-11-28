@@ -382,6 +382,17 @@
       top: calc(50% - 6px);
     }
 
+    .anchor-top-25, .anchor-bottom-25 { left: calc(25% - 6px); }
+    .anchor-top-50, .anchor-bottom-50 { left: calc(50% - 6px); }
+    .anchor-top-75, .anchor-bottom-75 { left: calc(75% - 6px); }
+    .anchor-top-25, .anchor-top-50, .anchor-top-75 { top: -6px; }
+    .anchor-bottom-25, .anchor-bottom-50, .anchor-bottom-75 { bottom: -6px; }
+    .anchor-left-25, .anchor-right-25 { top: calc(25% - 6px); }
+    .anchor-left-50, .anchor-right-50 { top: calc(50% - 6px); }
+    .anchor-left-75, .anchor-right-75 { top: calc(75% - 6px); }
+    .anchor-left-25, .anchor-left-50, .anchor-left-75 { left: -6px; }
+    .anchor-right-25, .anchor-right-50, .anchor-right-75 { right: -6px; }
+
     /* リサイズハンドル（右下） */
     .resize-handle {
       position: absolute;

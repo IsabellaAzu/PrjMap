@@ -41,19 +41,65 @@
       };
     }
 
-    function getAnchorPoint(node, anchor = 'right') {
-      switch (anchor) {
-        case 'top': return { x: node.x + node.width / 2, y: node.y };
-        case 'bottom': return { x: node.x + node.width / 2, y: node.y + node.height };
-        case 'left': return { x: node.x, y: node.y + node.height / 2 };
-        case 'right':
-        default: return { x: node.x + node.width, y: node.y + node.height / 2 };
+    function parseAnchor(anchor = 'right') {
+      const match = String(anchor).match(/^(top|right|bottom|left)(?:-(25|50|75))?$/);
+      return match ? { side: match[1], fraction: match[2] ? Number(match[2]) / 100 : 0.5, fixed: !!match[2] }
+        : { side: 'right', fraction: 0.5, fixed: false };
+    }
+
+    function isVerticalAnchor(anchor) {
+      const side = parseAnchor(anchor).side;
+      return side === 'top' || side === 'bottom';
+    }
+
+    function getAnchorSide(anchor) {
+      return parseAnchor(anchor).side;
+    }
+
+    function getShapeBoundaryPoint(node, side, x, y) {
+      const centerX = node.x + node.width / 2;
+      const centerY = node.y + node.height / 2;
+      if (node.type === 'ellipse') {
+        const rx = Math.max(1, node.width / 2);
+        const ry = Math.max(1, node.height / 2);
+        if (side === 'top' || side === 'bottom') {
+          const dx = Math.max(-rx * 0.98, Math.min(rx * 0.98, x - centerX));
+          const yOffset = ry * Math.sqrt(Math.max(0, 1 - (dx * dx) / (rx * rx)));
+          return { x, y: centerY + (side === 'top' ? -yOffset : yOffset) };
+        }
+        const dy = Math.max(-ry * 0.98, Math.min(ry * 0.98, y - centerY));
+        const xOffset = rx * Math.sqrt(Math.max(0, 1 - (dy * dy) / (ry * ry)));
+        return { x: centerX + (side === 'left' ? -xOffset : xOffset), y };
       }
+      if (node.type === 'diamond') {
+        const rx = Math.max(1, node.width / 2);
+        const ry = Math.max(1, node.height / 2);
+        if (side === 'top' || side === 'bottom') {
+          const dx = Math.max(-rx, Math.min(rx, x - centerX));
+          const yOffset = ry * (1 - Math.abs(dx) / rx);
+          return { x, y: centerY + (side === 'top' ? -yOffset : yOffset) };
+        }
+        const dy = Math.max(-ry, Math.min(ry, y - centerY));
+        const xOffset = rx * (1 - Math.abs(dy) / ry);
+        return { x: centerX + (side === 'left' ? -xOffset : xOffset), y };
+      }
+      return { x, y };
+    }
+
+    function getAnchorPoint(node, anchor = 'right') {
+      const { side, fraction } = parseAnchor(anchor);
+      let point;
+      if (side === 'top') point = { x: node.x + node.width * fraction, y: node.y };
+      else if (side === 'bottom') point = { x: node.x + node.width * fraction, y: node.y + node.height };
+      else if (side === 'left') point = { x: node.x, y: node.y + node.height * fraction };
+      else point = { x: node.x + node.width, y: node.y + node.height * fraction };
+      return getShapeBoundaryPoint(node, side, point.x, point.y);
     }
 
     function getEdgeAnchorPoint(node, edge, endpoint) {
       const anchorKey = `${endpoint}Anchor`;
       const anchor = edge[anchorKey] || (endpoint === 'source' ? 'right' : 'left');
+      const { side, fixed } = parseAnchor(anchor);
       const base = getAnchorPoint(node, anchor);
       const relatedEdges = state.edges
         .filter(candidate =>
@@ -62,48 +108,21 @@
         .sort((a, b) => {
           const peerA = state.nodes.find(item => item.id === (a.source === node.id ? a.target : a.source));
           const peerB = state.nodes.find(item => item.id === (b.source === node.id ? b.target : b.source));
-          const horizontalSide = anchor === 'top' || anchor === 'bottom';
+          const horizontalSide = side === 'top' || side === 'bottom';
           const coordinateA = peerA ? (horizontalSide ? peerA.x + peerA.width / 2 : peerA.y + peerA.height / 2) : 0;
           const coordinateB = peerB ? (horizontalSide ? peerB.x + peerB.width / 2 : peerB.y + peerB.height / 2) : 0;
           return coordinateA - coordinateB || String(a.id).localeCompare(String(b.id));
         });
-      if (relatedEdges.length < 2) return base;
+      if (relatedEdges.length < 2 || fixed) return base;
 
       const index = relatedEdges.findIndex(candidate => candidate.id === edge.id);
-      const horizontalSide = anchor === 'top' || anchor === 'bottom';
+      const horizontalSide = side === 'top' || side === 'bottom';
       const available = (horizontalSide ? node.width : node.height) - 16;
       const spacing = Math.max(2, Math.min(8, available / (relatedEdges.length - 1)));
       const offset = (index - (relatedEdges.length - 1) / 2) * spacing;
       if (horizontalSide) base.x += offset;
       else base.y += offset;
-      const centerX = node.x + node.width / 2;
-      const centerY = node.y + node.height / 2;
-      if (node.type === 'ellipse') {
-        const rx = Math.max(1, node.width / 2);
-        const ry = Math.max(1, node.height / 2);
-        if (horizontalSide) {
-          const dx = Math.max(-rx * 0.98, Math.min(rx * 0.98, base.x - centerX));
-          const yOffset = ry * Math.sqrt(Math.max(0, 1 - (dx * dx) / (rx * rx)));
-          base.y = centerY + (anchor === 'top' ? -yOffset : yOffset);
-        } else {
-          const dy = Math.max(-ry * 0.98, Math.min(ry * 0.98, base.y - centerY));
-          const xOffset = rx * Math.sqrt(Math.max(0, 1 - (dy * dy) / (ry * ry)));
-          base.x = centerX + (anchor === 'left' ? -xOffset : xOffset);
-        }
-      } else if (node.type === 'diamond') {
-        const rx = Math.max(1, node.width / 2);
-        const ry = Math.max(1, node.height / 2);
-        if (horizontalSide) {
-          const dx = Math.max(-rx * 0.98, Math.min(rx * 0.98, base.x - centerX));
-          const yOffset = ry * (1 - Math.abs(dx) / rx);
-          base.y = centerY + (anchor === 'top' ? -yOffset : yOffset);
-        } else {
-          const dy = Math.max(-ry * 0.98, Math.min(ry * 0.98, base.y - centerY));
-          const xOffset = rx * (1 - Math.abs(dy) / ry);
-          base.x = centerX + (anchor === 'left' ? -xOffset : xOffset);
-        }
-      }
-      return base;
+      return getShapeBoundaryPoint(node, side, base.x, base.y);
     }
 
     function buildFanOutEdgePath(p1, anchor, p2, edge) {
@@ -115,7 +134,7 @@
         .sort((a, b) => {
           const targetA = state.nodes.find(node => node.id === a.target);
           const targetB = state.nodes.find(node => node.id === b.target);
-          const horizontalSide = anchor === 'top' || anchor === 'bottom';
+          const horizontalSide = isVerticalAnchor(anchor);
           const positionA = targetA ? (horizontalSide ? targetA.x + targetA.width / 2 : targetA.y + targetA.height / 2) : 0;
           const positionB = targetB ? (horizontalSide ? targetB.x + targetB.width / 2 : targetB.y + targetB.height / 2) : 0;
           return positionA - positionB || String(a.id).localeCompare(String(b.id));
@@ -123,8 +142,8 @@
       if (sameSideEdges.length < 2) return null;
 
       const rank = sameSideEdges.findIndex(candidate => candidate.id === edge.id);
-      const verticalSide = anchor === 'top' || anchor === 'bottom';
-      const direction = anchor === 'bottom' || anchor === 'right' ? 1 : -1;
+      const verticalSide = isVerticalAnchor(anchor);
+      const direction = ['bottom', 'right'].includes(getAnchorSide(anchor)) ? 1 : -1;
       const span = verticalSide ? Math.abs(p2.y - p1.y) : Math.abs(p2.x - p1.x);
       if (span < 72) return null;
       const spacing = Math.min(44, (span - 48) / (sameSideEdges.length - 1));
@@ -159,10 +178,10 @@
 
     function buildBalancedEdgePath(p1, sourceAnchor, targetAnchor, p2, edge, usedSegments, usedTurns) {
       if (getBaseEdgeStyle(edge.style || 'avoid') === 'straight') return null;
-      const sourceVertical = sourceAnchor === 'top' || sourceAnchor === 'bottom';
-      const targetVertical = targetAnchor === 'top' || targetAnchor === 'bottom';
-      const sourceDirection = sourceAnchor === 'bottom' || sourceAnchor === 'right' ? 1 : -1;
-      const targetDirection = targetAnchor === 'bottom' || targetAnchor === 'right' ? 1 : -1;
+      const sourceVertical = isVerticalAnchor(sourceAnchor);
+      const targetVertical = isVerticalAnchor(targetAnchor);
+      const sourceDirection = ['bottom', 'right'].includes(getAnchorSide(sourceAnchor)) ? 1 : -1;
+      const targetDirection = ['bottom', 'right'].includes(getAnchorSide(targetAnchor)) ? 1 : -1;
       const axisDelta = sourceVertical ? p2.y - p1.y : p2.x - p1.x;
       const span = Math.abs(axisDelta);
       const alignedPorts = sourceVertical ? Math.abs(p1.x - p2.x) <= 12 : Math.abs(p1.y - p2.y) <= 12;
@@ -306,9 +325,9 @@
 
     function buildNonOverlappingEdgePath(p1, anchor, targetAnchor, p2, edge, usedSegments) {
       if (getBaseEdgeStyle(edge.style || 'avoid') === 'straight') return null;
-      const verticalSide = anchor === 'top' || anchor === 'bottom';
+      const verticalSide = isVerticalAnchor(anchor);
       if (!verticalSide && anchor !== 'left' && anchor !== 'right') return null;
-      const direction = anchor === 'bottom' || anchor === 'right' ? 1 : -1;
+      const direction = ['bottom', 'right'].includes(getAnchorSide(anchor)) ? 1 : -1;
       const axisDelta = verticalSide ? p2.y - p1.y : p2.x - p1.x;
       const span = Math.abs(axisDelta);
 
@@ -400,11 +419,11 @@
       const vertical = Math.abs(p1.x - p2.x) < 0.01;
       if (!horizontal && !vertical) return null;
       const sourceFacesAlong = horizontal
-        ? (sourceAnchor === 'right' && p2.x > p1.x || sourceAnchor === 'left' && p2.x < p1.x)
-        : (sourceAnchor === 'bottom' && p2.y > p1.y || sourceAnchor === 'top' && p2.y < p1.y);
+        ? (getAnchorSide(sourceAnchor) === 'right' && p2.x > p1.x || getAnchorSide(sourceAnchor) === 'left' && p2.x < p1.x)
+        : (getAnchorSide(sourceAnchor) === 'bottom' && p2.y > p1.y || getAnchorSide(sourceAnchor) === 'top' && p2.y < p1.y);
       const targetFacesAlong = horizontal
-        ? (targetAnchor === 'left' && p1.x < p2.x || targetAnchor === 'right' && p1.x > p2.x)
-        : (targetAnchor === 'top' && p1.y < p2.y || targetAnchor === 'bottom' && p1.y > p2.y);
+        ? (getAnchorSide(targetAnchor) === 'left' && p1.x < p2.x || getAnchorSide(targetAnchor) === 'right' && p1.x > p2.x)
+        : (getAnchorSide(targetAnchor) === 'top' && p1.y < p2.y || getAnchorSide(targetAnchor) === 'bottom' && p1.y > p2.y);
       if (!sourceFacesAlong || !targetFacesAlong) return null;
       const blocked = state.nodes.some(node => {
         if (node.id === edge.source || node.id === edge.target) return false;
@@ -429,9 +448,9 @@
 
     function buildOrthogonalEdgePath(p1, sourceAnchor, p2, targetAnchor, edge, usedSegments, usedTurns) {
       const stub = 20;
-      const direction = anchor => anchor === 'right' || anchor === 'bottom' ? 1 : -1;
-      const sourceVertical = sourceAnchor === 'top' || sourceAnchor === 'bottom';
-      const targetVertical = targetAnchor === 'top' || targetAnchor === 'bottom';
+      const direction = anchor => ['right', 'bottom'].includes(getAnchorSide(anchor)) ? 1 : -1;
+      const sourceVertical = isVerticalAnchor(sourceAnchor);
+      const targetVertical = isVerticalAnchor(targetAnchor);
       const sourceStub = sourceVertical
         ? { x: p1.x, y: p1.y + direction(sourceAnchor) * stub }
         : { x: p1.x + direction(sourceAnchor) * stub, y: p1.y };
@@ -533,7 +552,8 @@
     }
 
     function findClosestAnchor(targetNode, worldX, worldY) {
-      const anchors = ['top', 'right', 'bottom', 'left'];
+      const anchors = ['top', 'right', 'bottom', 'left'].flatMap(side =>
+        [25, 50, 75].map(position => `${side}-${position}`));
       let bestAnchor = 'left';
       let minDist = Infinity;
       for (const a of anchors) {
@@ -549,7 +569,7 @@
 
     // ===== A* グリッド経路探索（障害物・枠を自動迂回する直交ルーティング） =====
     function getAnchorDirection(anchor) {
-      switch (anchor) {
+      switch (getAnchorSide(anchor)) {
         case 'top': return { dx: 0, dy: -1 };
         case 'bottom': return { dx: 0, dy: 1 };
         case 'left': return { dx: -1, dy: 0 };
@@ -1054,7 +1074,7 @@
       }
       const dist = Math.max(45, Math.hypot(p2.x - p1.x, p2.y - p1.y) * 0.4);
       const offset = (anchor) => {
-        switch (anchor) {
+        switch (getAnchorSide(anchor)) {
           case 'top': return { dx: 0, dy: -dist };
           case 'bottom': return { dx: 0, dy: dist };
           case 'left': return { dx: -dist, dy: 0 };

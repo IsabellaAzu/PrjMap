@@ -94,10 +94,10 @@
           const targetAnchor = edge.targetAnchor || 'left';
           const sourcePoint = getEdgeAnchorPoint(source, edge, 'source');
           const targetPoint = getEdgeAnchorPoint(target, edge, 'target');
-          const sourceVertical = sourceAnchor === 'top' || sourceAnchor === 'bottom';
-          const targetVertical = targetAnchor === 'top' || targetAnchor === 'bottom';
-          const sourceDirection = sourceAnchor === 'bottom' || sourceAnchor === 'right' ? 1 : -1;
-          const targetDirection = targetAnchor === 'bottom' || targetAnchor === 'right' ? 1 : -1;
+          const sourceVertical = isVerticalAnchor(sourceAnchor);
+          const targetVertical = isVerticalAnchor(targetAnchor);
+          const sourceDirection = ['bottom', 'right'].includes(getAnchorSide(sourceAnchor)) ? 1 : -1;
+          const targetDirection = ['bottom', 'right'].includes(getAnchorSide(targetAnchor)) ? 1 : -1;
           const axisDelta = sourceVertical ? targetPoint.y - sourcePoint.y : targetPoint.x - sourcePoint.x;
           const aligned = sourceVertical ? Math.abs(sourcePoint.x - targetPoint.x) <= 12 : Math.abs(sourcePoint.y - targetPoint.y) <= 12;
           const direct = sourceVertical === targetVertical && sourceDirection !== targetDirection &&
@@ -439,16 +439,21 @@
           el.appendChild(content);
         }
 
-        (node.type === 'freehand' ? [] : ['top', 'right', 'bottom', 'left']).forEach(pos => {
-          const anchor = document.createElement('div');
-          anchor.className = `anchor-handle anchor-${pos}`;
-          anchor.title = 'ドラッグして別の図形に線を繋ぐ';
-          anchor.addEventListener('pointerdown', (e) => {
-            e.stopPropagation();
-            startConnecting(node.id, pos, e);
+        if (node.type !== 'freehand') {
+          ['top', 'right', 'bottom', 'left'].forEach(side => {
+            [25, 50, 75].forEach(position => {
+              const anchorName = `${side}-${position}`;
+              const anchor = document.createElement('div');
+              anchor.className = `anchor-handle anchor-${side} anchor-${side}-${position}`;
+              anchor.title = `辺の${position}%位置から接続`;
+              anchor.addEventListener('pointerdown', (e) => {
+                e.stopPropagation();
+                startConnecting(node.id, anchorName, e);
+              });
+              el.appendChild(anchor);
+            });
           });
-          el.appendChild(anchor);
-        });
+        }
 
         const resizer = document.createElement('div');
         resizer.className = 'resize-handle';
