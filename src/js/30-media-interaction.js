@@ -8,6 +8,7 @@
         roundRect: { w: 190, h: 90, fill: '#eff6ff', stroke: '#2563eb', text: '新しいステップ' },
         ellipse: { w: 170, h: 100, fill: '#f0fdf4', stroke: '#059669', text: '開始 / 終了' },
         diamond: { w: 170, h: 110, fill: '#fef9c3', stroke: '#d97706', text: '条件分岐？' },
+        database: { w: 170, h: 120, fill: '#eff6ff', stroke: '#2563eb', text: 'データベース' },
         sticky: { w: 180, h: 110, fill: '#fef9c3', stroke: '#eab308', text: '付箋メモ' },
         text: { w: 200, h: 64, fill: 'transparent', stroke: 'transparent', text: 'テキストを入力' }
       };

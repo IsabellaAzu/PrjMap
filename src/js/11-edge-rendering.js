@@ -332,6 +332,32 @@
           poly.setAttribute('vector-effect', 'non-scaling-stroke');
           svgBg.appendChild(poly);
           el.appendChild(svgBg);
+        } else if (node.type === 'database') {
+          el.style.backgroundColor = 'transparent';
+          const svgBg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+          svgBg.setAttribute('viewBox', '0 0 100 100');
+          svgBg.setAttribute('preserveAspectRatio', 'none');
+          svgBg.setAttribute('class', 'diamond-bg');
+          const fill = node.fill === 'transparent' ? 'none' : (node.fill || '#eff6ff');
+          const stroke = node.stroke === 'transparent' ? 'none' : (node.stroke || '#2563eb');
+          const body = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+          body.setAttribute('d', 'M3 16 C3 8 97 8 97 16 L97 84 C97 100 3 100 3 84 Z');
+          body.setAttribute('fill', fill);
+          body.setAttribute('stroke', stroke);
+          body.setAttribute('stroke-width', '2.5');
+          body.setAttribute('vector-effect', 'non-scaling-stroke');
+          const top = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+          top.setAttribute('cx', '50');
+          top.setAttribute('cy', '16');
+          top.setAttribute('rx', '47');
+          top.setAttribute('ry', '13');
+          top.setAttribute('fill', fill);
+          top.setAttribute('stroke', stroke);
+          top.setAttribute('stroke-width', '2.5');
+          top.setAttribute('vector-effect', 'non-scaling-stroke');
+          svgBg.appendChild(body);
+          svgBg.appendChild(top);
+          el.appendChild(svgBg);
         } else {
           el.style.backgroundColor = node.fill || '#ffffff';
           if (node.stroke && node.stroke !== 'transparent') {
@@ -363,6 +389,8 @@
           content.style.fontSize = `${node.fontSize || 14}px`;
           if (node.type === 'diamond') {
             content.style.padding = '16px 26px';
+          } else if (node.type === 'database') {
+            content.style.padding = '24px 14px';
           }
 
           if (isEditing) {

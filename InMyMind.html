@@ -2295,6 +2295,13 @@
         </svg>
       </button>
 
+      <button data-add-shape="database" title="データベース図形を追加" class="tool-btn">
+        <svg class="icon-md" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <ellipse cx="12" cy="5" rx="8" ry="3" />
+          <path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3" />
+        </svg>
+      </button>
+
       <button data-add-shape="sticky" title="付箋メモを追加" class="tool-btn">
         <svg class="icon-md" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" d="M4 4h16v11l-5 5H4V4Z" />
@@ -4469,6 +4476,32 @@
           poly.setAttribute('vector-effect', 'non-scaling-stroke');
           svgBg.appendChild(poly);
           el.appendChild(svgBg);
+        } else if (node.type === 'database') {
+          el.style.backgroundColor = 'transparent';
+          const svgBg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+          svgBg.setAttribute('viewBox', '0 0 100 100');
+          svgBg.setAttribute('preserveAspectRatio', 'none');
+          svgBg.setAttribute('class', 'diamond-bg');
+          const fill = node.fill === 'transparent' ? 'none' : (node.fill || '#eff6ff');
+          const stroke = node.stroke === 'transparent' ? 'none' : (node.stroke || '#2563eb');
+          const body = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+          body.setAttribute('d', 'M3 16 C3 8 97 8 97 16 L97 84 C97 100 3 100 3 84 Z');
+          body.setAttribute('fill', fill);
+          body.setAttribute('stroke', stroke);
+          body.setAttribute('stroke-width', '2.5');
+          body.setAttribute('vector-effect', 'non-scaling-stroke');
+          const top = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+          top.setAttribute('cx', '50');
+          top.setAttribute('cy', '16');
+          top.setAttribute('rx', '47');
+          top.setAttribute('ry', '13');
+          top.setAttribute('fill', fill);
+          top.setAttribute('stroke', stroke);
+          top.setAttribute('stroke-width', '2.5');
+          top.setAttribute('vector-effect', 'non-scaling-stroke');
+          svgBg.appendChild(body);
+          svgBg.appendChild(top);
+          el.appendChild(svgBg);
         } else {
           el.style.backgroundColor = node.fill || '#ffffff';
           if (node.stroke && node.stroke !== 'transparent') {
@@ -4500,6 +4533,8 @@
           content.style.fontSize = `${node.fontSize || 14}px`;
           if (node.type === 'diamond') {
             content.style.padding = '16px 26px';
+          } else if (node.type === 'database') {
+            content.style.padding = '24px 14px';
           }
 
           if (isEditing) {
@@ -5780,6 +5815,7 @@
         roundRect: { w: 190, h: 90, fill: '#eff6ff', stroke: '#2563eb', text: '新しいステップ' },
         ellipse: { w: 170, h: 100, fill: '#f0fdf4', stroke: '#059669', text: '開始 / 終了' },
         diamond: { w: 170, h: 110, fill: '#fef9c3', stroke: '#d97706', text: '条件分岐？' },
+        database: { w: 170, h: 120, fill: '#eff6ff', stroke: '#2563eb', text: 'データベース' },
         sticky: { w: 180, h: 110, fill: '#fef9c3', stroke: '#eab308', text: '付箋メモ' },
         text: { w: 200, h: 64, fill: 'transparent', stroke: 'transparent', text: 'テキストを入力' }
       };
