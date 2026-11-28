@@ -6,6 +6,10 @@
         edgeProps.classList.add('hidden');
         renderColorSlots();
         renderNodeTagEditor();
+        const alignmentControls = document.getElementById('alignment-controls');
+        if (alignmentControls) {
+          alignmentControls.classList.toggle('hidden', state.selectedNodeIds.size < 2);
+        }
         if (pickerState.activeKind && pickerPanel && !pickerPanel.classList.contains('hidden')) {
           syncColorPickerWithCurrent(true);
         }

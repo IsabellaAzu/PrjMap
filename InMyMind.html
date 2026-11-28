@@ -1599,6 +1599,26 @@
     .anchor-left-25, .anchor-left-50, .anchor-left-75 { left: -6px; }
     .anchor-right-25, .anchor-right-50, .anchor-right-75 { right: -6px; }
 
+    .alignment-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-right: 8px;
+      padding-right: 8px;
+      border-right: 1px solid #e2e8f0;
+    }
+    .alignment-controls button {
+      min-height: 28px;
+      padding: 3px 7px;
+      border: 1px solid #cbd5e1;
+      border-radius: 5px;
+      background: #fff;
+      color: #334155;
+      font-size: 11px;
+      cursor: pointer;
+    }
+    .alignment-controls button:hover { background: #eff6ff; border-color: #93c5fd; }
+
     /* リサイズハンドル（四隅） */
     .resize-handle {
       position: absolute;
@@ -2427,6 +2447,16 @@
 
         <div class="prop-row">
           <div class="prop-row-main">
+            <div id="alignment-controls" class="alignment-controls hidden" role="group" aria-label="複数図形の整列と均等配置">
+              <button type="button" data-align="left" title="左揃え">左</button>
+              <button type="button" data-align="center-x" title="左右中央揃え">左右中央</button>
+              <button type="button" data-align="right" title="右揃え">右</button>
+              <button type="button" data-align="top" title="上揃え">上</button>
+              <button type="button" data-align="center-y" title="上下中央揃え">上下中央</button>
+              <button type="button" data-align="bottom" title="下揃え">下</button>
+              <button type="button" data-align="distribute-x" title="水平方向に均等配置（3個以上）">横均等</button>
+              <button type="button" data-align="distribute-y" title="垂直方向に均等配置（3個以上）">縦均等</button>
+            </div>
             <!-- グループ化／解除ボタン -->
             <button id="btn-group-nodes" class="btn-secondary hidden" style="padding: 4px 8px;"
               title="選択中の図形をグループ化 (Ctrl+G / Cmd+G)">
@@ -5450,6 +5480,10 @@
         edgeProps.classList.add('hidden');
         renderColorSlots();
         renderNodeTagEditor();
+        const alignmentControls = document.getElementById('alignment-controls');
+        if (alignmentControls) {
+          alignmentControls.classList.toggle('hidden', state.selectedNodeIds.size < 2);
+        }
         if (pickerState.activeKind && pickerPanel && !pickerPanel.classList.contains('hidden')) {
           syncColorPickerWithCurrent(true);
         }
@@ -7098,6 +7132,58 @@
     });
 
     // ツールバー・ボタンイベント登録
+    document.querySelectorAll('[data-align]').forEach(button => {
+      button.addEventListener('click', () => {
+        const selected = state.nodes.filter(node => state.selectedNodeIds.has(node.id));
+        const action = button.dataset.align;
+        if (selected.length < 2) return;
+        if ((action === 'distribute-x' || action === 'distribute-y') && selected.length < 3) {
+          showToast('均等配置には図形を3つ以上選択してください');
+          return;
+        }
+
+        pushHistory();
+        const sortBy = (key, startKey) => [...selected].sort((a, b) => a[startKey] - b[startKey]);
+        if (action === 'left') {
+          const edge = Math.min(...selected.map(node => node.x));
+          selected.forEach(node => { node.x = edge; });
+        } else if (action === 'right') {
+          const edge = Math.max(...selected.map(node => node.x + node.width));
+          selected.forEach(node => { node.x = edge - node.width; });
+        } else if (action === 'center-x') {
+          const center = (Math.min(...selected.map(node => node.x)) + Math.max(...selected.map(node => node.x + node.width))) / 2;
+          selected.forEach(node => { node.x = Math.round(center - node.width / 2); });
+        } else if (action === 'top') {
+          const edge = Math.min(...selected.map(node => node.y));
+          selected.forEach(node => { node.y = edge; });
+        } else if (action === 'bottom') {
+          const edge = Math.max(...selected.map(node => node.y + node.height));
+          selected.forEach(node => { node.y = edge - node.height; });
+        } else if (action === 'center-y') {
+          const center = (Math.min(...selected.map(node => node.y)) + Math.max(...selected.map(node => node.y + node.height))) / 2;
+          selected.forEach(node => { node.y = Math.round(center - node.height / 2); });
+        } else if (action === 'distribute-x' || action === 'distribute-y') {
+          const horizontal = action === 'distribute-x';
+          const startKey = horizontal ? 'x' : 'y';
+          const sizeKey = horizontal ? 'width' : 'height';
+          const ordered = sortBy(startKey, startKey);
+          const first = ordered[0];
+          const last = ordered[ordered.length - 1];
+          const span = last[startKey] + last[sizeKey] - first[startKey];
+          const totalSize = ordered.reduce((sum, node) => sum + node[sizeKey], 0);
+          const gap = (span - totalSize) / (ordered.length - 1);
+          let cursor = first[startKey];
+          ordered.forEach(node => {
+            node[startKey] = Math.round(cursor);
+            cursor += node[sizeKey] + gap;
+          });
+        }
+        renderNodes();
+        renderEdges();
+        renderMinimap();
+      });
+    });
+
     document.querySelectorAll('[data-add-shape]').forEach(btn => {
       btn.addEventListener('click', () => {
         addNode(btn.dataset.addShape);

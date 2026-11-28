@@ -39,6 +39,58 @@
     });
 
     // ツールバー・ボタンイベント登録
+    document.querySelectorAll('[data-align]').forEach(button => {
+      button.addEventListener('click', () => {
+        const selected = state.nodes.filter(node => state.selectedNodeIds.has(node.id));
+        const action = button.dataset.align;
+        if (selected.length < 2) return;
+        if ((action === 'distribute-x' || action === 'distribute-y') && selected.length < 3) {
+          showToast('均等配置には図形を3つ以上選択してください');
+          return;
+        }
+
+        pushHistory();
+        const sortBy = (key, startKey) => [...selected].sort((a, b) => a[startKey] - b[startKey]);
+        if (action === 'left') {
+          const edge = Math.min(...selected.map(node => node.x));
+          selected.forEach(node => { node.x = edge; });
+        } else if (action === 'right') {
+          const edge = Math.max(...selected.map(node => node.x + node.width));
+          selected.forEach(node => { node.x = edge - node.width; });
+        } else if (action === 'center-x') {
+          const center = (Math.min(...selected.map(node => node.x)) + Math.max(...selected.map(node => node.x + node.width))) / 2;
+          selected.forEach(node => { node.x = Math.round(center - node.width / 2); });
+        } else if (action === 'top') {
+          const edge = Math.min(...selected.map(node => node.y));
+          selected.forEach(node => { node.y = edge; });
+        } else if (action === 'bottom') {
+          const edge = Math.max(...selected.map(node => node.y + node.height));
+          selected.forEach(node => { node.y = edge - node.height; });
+        } else if (action === 'center-y') {
+          const center = (Math.min(...selected.map(node => node.y)) + Math.max(...selected.map(node => node.y + node.height))) / 2;
+          selected.forEach(node => { node.y = Math.round(center - node.height / 2); });
+        } else if (action === 'distribute-x' || action === 'distribute-y') {
+          const horizontal = action === 'distribute-x';
+          const startKey = horizontal ? 'x' : 'y';
+          const sizeKey = horizontal ? 'width' : 'height';
+          const ordered = sortBy(startKey, startKey);
+          const first = ordered[0];
+          const last = ordered[ordered.length - 1];
+          const span = last[startKey] + last[sizeKey] - first[startKey];
+          const totalSize = ordered.reduce((sum, node) => sum + node[sizeKey], 0);
+          const gap = (span - totalSize) / (ordered.length - 1);
+          let cursor = first[startKey];
+          ordered.forEach(node => {
+            node[startKey] = Math.round(cursor);
+            cursor += node[sizeKey] + gap;
+          });
+        }
+        renderNodes();
+        renderEdges();
+        renderMinimap();
+      });
+    });
+
     document.querySelectorAll('[data-add-shape]').forEach(btn => {
       btn.addEventListener('click', () => {
         addNode(btn.dataset.addShape);
