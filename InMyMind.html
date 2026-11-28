@@ -1599,21 +1599,23 @@
     .anchor-left-25, .anchor-left-50, .anchor-left-75 { left: -6px; }
     .anchor-right-25, .anchor-right-50, .anchor-right-75 { right: -6px; }
 
-    /* リサイズハンドル（右下） */
+    /* リサイズハンドル（四隅） */
     .resize-handle {
       position: absolute;
-      right: -5px;
-      bottom: -5px;
       width: 12px;
       height: 12px;
       background-color: #2563eb;
       border: 2px solid #ffffff;
       border-radius: 3px;
-      cursor: nwse-resize;
       z-index: 31;
       opacity: 0;
       transition: opacity 0.15s;
     }
+
+    .resize-nw { left: -5px; top: -5px; cursor: nwse-resize; }
+    .resize-ne { right: -5px; top: -5px; cursor: nesw-resize; }
+    .resize-sw { left: -5px; bottom: -5px; cursor: nesw-resize; }
+    .resize-se { right: -5px; bottom: -5px; cursor: nwse-resize; }
 
     .diagram-node.selected .resize-handle,
     .diagram-node:hover .resize-handle {
@@ -4627,14 +4629,19 @@
           });
         }
 
-        const resizer = document.createElement('div');
-        resizer.className = 'resize-handle';
-        resizer.title = 'ドラッグしてサイズ変更';
-        resizer.addEventListener('pointerdown', (e) => {
-          e.stopPropagation();
-          startResizingNode(node.id, e);
-        });
-        if (node.type !== 'freehand') el.appendChild(resizer);
+        if (node.type !== 'freehand') {
+          ['nw', 'ne', 'sw', 'se'].forEach(corner => {
+            const resizer = document.createElement('div');
+            resizer.className = `resize-handle resize-${corner}`;
+            resizer.dataset.corner = corner;
+            resizer.title = 'ドラッグしてサイズ変更';
+            resizer.addEventListener('pointerdown', (e) => {
+              e.stopPropagation();
+              startResizingNode(node.id, e, corner);
+            });
+            el.appendChild(resizer);
+          });
+        }
 
         let lastClickTime = 0;
         let lastClickPos = { x: 0, y: 0 };
@@ -6163,7 +6170,7 @@
       };
     }
 
-    function startResizingNode(nodeId, e) {
+    function startResizingNode(nodeId, e, corner = 'se') {
       const node = state.nodes.find(n => n.id === nodeId);
       if (!node) return;
       interaction = {
@@ -6172,6 +6179,9 @@
         startY: e.clientY,
         origW: node.width,
         origH: node.height,
+        origX: node.x,
+        origY: node.y,
+        corner,
         targetNodeId: nodeId,
         beforeSnapshot: createSnapshot()
       };
@@ -6380,13 +6390,21 @@
         if (!node) return;
         const dx = (e.clientX - interaction.startX) / state.viewport.zoom;
         const dy = (e.clientY - interaction.startY) / state.viewport.zoom;
-        node.width = Math.max(40, Math.round(interaction.origW + dx));
-        node.height = Math.max(30, Math.round(interaction.origH + dy));
+        const fromLeft = interaction.corner.includes('w');
+        const fromTop = interaction.corner.includes('n');
+        const widthDelta = fromLeft ? -dx : dx;
+        const heightDelta = fromTop ? -dy : dy;
+        node.width = Math.max(40, Math.round(interaction.origW + widthDelta));
+        node.height = Math.max(30, Math.round(interaction.origH + heightDelta));
+        node.x = interaction.origX + (fromLeft ? interaction.origW - node.width : 0);
+        node.y = interaction.origY + (fromTop ? interaction.origH - node.height : 0);
 
         const nodeEl = nodesContainer.querySelector(`[data-node-id="${node.id}"]`);
         if (nodeEl) {
           nodeEl.style.width = `${node.width}px`;
           nodeEl.style.height = `${node.height}px`;
+          nodeEl.style.left = `${node.x}px`;
+          nodeEl.style.top = `${node.y}px`;
         }
         renderEdges();
         renderMinimap();

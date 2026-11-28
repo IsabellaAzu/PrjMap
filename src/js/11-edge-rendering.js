@@ -483,14 +483,19 @@
           });
         }
 
-        const resizer = document.createElement('div');
-        resizer.className = 'resize-handle';
-        resizer.title = 'ドラッグしてサイズ変更';
-        resizer.addEventListener('pointerdown', (e) => {
-          e.stopPropagation();
-          startResizingNode(node.id, e);
-        });
-        if (node.type !== 'freehand') el.appendChild(resizer);
+        if (node.type !== 'freehand') {
+          ['nw', 'ne', 'sw', 'se'].forEach(corner => {
+            const resizer = document.createElement('div');
+            resizer.className = `resize-handle resize-${corner}`;
+            resizer.dataset.corner = corner;
+            resizer.title = 'ドラッグしてサイズ変更';
+            resizer.addEventListener('pointerdown', (e) => {
+              e.stopPropagation();
+              startResizingNode(node.id, e, corner);
+            });
+            el.appendChild(resizer);
+          });
+        }
 
         let lastClickTime = 0;
         let lastClickPos = { x: 0, y: 0 };

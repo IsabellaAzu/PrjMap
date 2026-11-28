@@ -45,7 +45,7 @@
       };
     }
 
-    function startResizingNode(nodeId, e) {
+    function startResizingNode(nodeId, e, corner = 'se') {
       const node = state.nodes.find(n => n.id === nodeId);
       if (!node) return;
       interaction = {
@@ -54,6 +54,9 @@
         startY: e.clientY,
         origW: node.width,
         origH: node.height,
+        origX: node.x,
+        origY: node.y,
+        corner,
         targetNodeId: nodeId,
         beforeSnapshot: createSnapshot()
       };
@@ -262,13 +265,21 @@
         if (!node) return;
         const dx = (e.clientX - interaction.startX) / state.viewport.zoom;
         const dy = (e.clientY - interaction.startY) / state.viewport.zoom;
-        node.width = Math.max(40, Math.round(interaction.origW + dx));
-        node.height = Math.max(30, Math.round(interaction.origH + dy));
+        const fromLeft = interaction.corner.includes('w');
+        const fromTop = interaction.corner.includes('n');
+        const widthDelta = fromLeft ? -dx : dx;
+        const heightDelta = fromTop ? -dy : dy;
+        node.width = Math.max(40, Math.round(interaction.origW + widthDelta));
+        node.height = Math.max(30, Math.round(interaction.origH + heightDelta));
+        node.x = interaction.origX + (fromLeft ? interaction.origW - node.width : 0);
+        node.y = interaction.origY + (fromTop ? interaction.origH - node.height : 0);
 
         const nodeEl = nodesContainer.querySelector(`[data-node-id="${node.id}"]`);
         if (nodeEl) {
           nodeEl.style.width = `${node.width}px`;
           nodeEl.style.height = `${node.height}px`;
+          nodeEl.style.left = `${node.x}px`;
+          nodeEl.style.top = `${node.y}px`;
         }
         renderEdges();
         renderMinimap();
