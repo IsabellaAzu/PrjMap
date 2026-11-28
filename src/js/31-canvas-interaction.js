@@ -452,6 +452,13 @@
 
     viewportEl.addEventListener('wheel', (e) => {
       e.preventDefault();
+      if (!e.ctrlKey && !e.metaKey) {
+        state.viewport.x -= e.deltaX;
+        state.viewport.y -= e.deltaY;
+        applyViewportTransform();
+        return;
+      }
+
       const rect = viewportEl.getBoundingClientRect();
       const mouseX = e.clientX - rect.left;
       const mouseY = e.clientY - rect.top;

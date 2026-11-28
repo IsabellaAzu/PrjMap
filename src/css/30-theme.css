@@ -114,9 +114,14 @@
     }
 
     /* Dark mode uses one hover background for every button and menu row. */
+    html[data-theme="dark"] .context-item:hover,
+    html[data-theme="dark"] .search-dropdown-item:hover,
+    html[data-theme="dark"] .tag-filter-option:hover,
+    html[data-theme="dark"] .url-dots-btn:hover,
+    html[data-theme="dark"] .url-badge-item:hover,
     html[data-theme="dark"] button:hover:not(:disabled):not(.swatch-btn),
     html[data-theme="dark"] select:hover,
-    html[data-theme="dark"] .tag-filter-option:hover {
+    html[data-theme="dark"] select option:hover {
       background-color: #443522 !important;
       color: #e8dcc8 !important;
     }
@@ -292,18 +297,6 @@
     html[data-theme="dark"] .theme-toggle {
       color: #e3b45a;
       font-size: 20px;
-    }
-
-    html[data-theme="dark"] .context-item:hover,
-    html[data-theme="dark"] .search-dropdown-item:hover,
-    html[data-theme="dark"] .tag-filter-option:hover,
-    html[data-theme="dark"] .url-dots-btn:hover,
-    html[data-theme="dark"] .url-badge-item:hover,
-    html[data-theme="dark"] button:hover:not(:disabled):not(.swatch-btn),
-    html[data-theme="dark"] select:hover,
-    html[data-theme="dark"] select option:hover {
-      background-color: #443522 !important;
-      color: #e8dcc8 !important;
     }
 
     html[data-theme="dark"] .context-item.danger:hover,

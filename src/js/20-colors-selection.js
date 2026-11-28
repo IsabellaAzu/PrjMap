@@ -249,103 +249,52 @@
       return btn;
     }
 
+    function renderColorHistorySlots(kind, containerId) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+      container.innerHTML = '';
+      for (let index = 0; index < 3; index++) {
+        const color = colorHistory[kind][index];
+        if (color) {
+          container.appendChild(createColorSwatchEl(color, kind, false));
+          continue;
+        }
+        const emptySlot = document.createElement('span');
+        emptySlot.className = 'swatch-btn';
+        emptySlot.style.background = '#f8fafc';
+        emptySlot.style.border = '1px dashed #cbd5e1';
+        emptySlot.style.cursor = 'default';
+        emptySlot.style.boxShadow = 'none';
+        container.appendChild(emptySlot);
+      }
+    }
+
+    function renderActiveColorSlot(kind, containerId, color) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+      container.innerHTML = '';
+      if (color && color !== 'transparent') {
+        container.appendChild(createColorSwatchEl(color, kind, true));
+      }
+    }
+
     function renderColorSlots() {
       const currentFill = getCurrentSelectedColor('fill');
       const currentStroke = getCurrentSelectedColor('stroke');
       const currentText = getCurrentSelectedColor('text');
 
-      const fillHistEl = document.getElementById('fill-history-slots');
-      const fillActiveEl = document.getElementById('fill-active-slot');
+      renderColorHistorySlots('fill', 'fill-history-slots');
+      renderActiveColorSlot('fill', 'fill-active-slot', currentFill);
+      renderColorHistorySlots('stroke', 'stroke-history-slots');
+      renderActiveColorSlot('stroke', 'stroke-active-slot', currentStroke);
+      renderColorHistorySlots('text', 'text-color-history-slots');
+      renderActiveColorSlot('text', 'text-color-active-slot', currentText);
+
       const fillNoneBtn = document.getElementById('fill-none-btn');
-
-      if (fillHistEl) {
-        fillHistEl.innerHTML = '';
-        for (let i = 0; i < 3; i++) {
-          const histColor = colorHistory.fill[i];
-          if (histColor) {
-            fillHistEl.appendChild(createColorSwatchEl(histColor, 'fill', false));
-          } else {
-            const emptySlot = document.createElement('span');
-            emptySlot.className = 'swatch-btn';
-            emptySlot.style.background = '#f8fafc';
-            emptySlot.style.border = '1px dashed #cbd5e1';
-            emptySlot.style.cursor = 'default';
-            emptySlot.style.boxShadow = 'none';
-            fillHistEl.appendChild(emptySlot);
-          }
-        }
-      }
-
-      if (fillActiveEl) {
-        fillActiveEl.innerHTML = '';
-        if (currentFill && currentFill !== 'transparent') {
-          fillActiveEl.appendChild(createColorSwatchEl(currentFill, 'fill', true));
-        }
-      }
-
-      if (fillNoneBtn) {
-        fillNoneBtn.classList.toggle('active', currentFill === 'transparent');
-      }
-
-      const strokeHistEl = document.getElementById('stroke-history-slots');
-      const strokeActiveEl = document.getElementById('stroke-active-slot');
       const strokeNoneBtn = document.getElementById('stroke-none-btn');
-
-      if (strokeHistEl) {
-        strokeHistEl.innerHTML = '';
-        for (let i = 0; i < 3; i++) {
-          const histColor = colorHistory.stroke[i];
-          if (histColor) {
-            strokeHistEl.appendChild(createColorSwatchEl(histColor, 'stroke', false));
-          } else {
-            const emptySlot = document.createElement('span');
-            emptySlot.className = 'swatch-btn';
-            emptySlot.style.background = '#f8fafc';
-            emptySlot.style.border = '1px dashed #cbd5e1';
-            emptySlot.style.cursor = 'default';
-            emptySlot.style.boxShadow = 'none';
-            strokeHistEl.appendChild(emptySlot);
-          }
-        }
-      }
-
-      if (strokeActiveEl) {
-        strokeActiveEl.innerHTML = '';
-        if (currentStroke && currentStroke !== 'transparent') {
-          strokeActiveEl.appendChild(createColorSwatchEl(currentStroke, 'stroke', true));
-        }
-      }
-
-      if (strokeNoneBtn) {
-        strokeNoneBtn.classList.toggle('active', currentStroke === 'transparent');
-      }
-
-      const textHistEl = document.getElementById('text-color-history-slots');
-      const textActiveEl = document.getElementById('text-color-active-slot');
       const textDefaultBtn = document.getElementById('text-color-default-btn');
-      if (textHistEl) {
-        textHistEl.innerHTML = '';
-        for (let i = 0; i < 3; i++) {
-          const histColor = colorHistory.text[i];
-          if (histColor) {
-            textHistEl.appendChild(createColorSwatchEl(histColor, 'text', false));
-          } else {
-            const emptySlot = document.createElement('span');
-            emptySlot.className = 'swatch-btn';
-            emptySlot.style.background = '#f8fafc';
-            emptySlot.style.border = '1px dashed #cbd5e1';
-            emptySlot.style.cursor = 'default';
-            emptySlot.style.boxShadow = 'none';
-            textHistEl.appendChild(emptySlot);
-          }
-        }
-      }
-      if (textActiveEl) {
-        textActiveEl.innerHTML = '';
-        if (currentText && currentText !== 'transparent') {
-          textActiveEl.appendChild(createColorSwatchEl(currentText, 'text', true));
-        }
-      }
+      if (fillNoneBtn) fillNoneBtn.classList.toggle('active', currentFill === 'transparent');
+      if (strokeNoneBtn) strokeNoneBtn.classList.toggle('active', currentStroke === 'transparent');
       if (textDefaultBtn) textDefaultBtn.classList.toggle('active', currentText === '#1e293b');
       syncObjectOpacityControl();
       syncTextSizeControl();
@@ -436,33 +385,8 @@
 
     function renderEdgeColorSlots() {
       const currentEdge = getCurrentSelectedEdgeColor();
-      const edgeHistEl = document.getElementById('edge-history-slots');
-      const edgeActiveEl = document.getElementById('edge-active-slot');
-
-      if (edgeHistEl) {
-        edgeHistEl.innerHTML = '';
-        for (let i = 0; i < 3; i++) {
-          const histColor = colorHistory.edge[i];
-          if (histColor) {
-            edgeHistEl.appendChild(createColorSwatchEl(histColor, 'edge', false));
-          } else {
-            const emptySlot = document.createElement('span');
-            emptySlot.className = 'swatch-btn';
-            emptySlot.style.background = '#f8fafc';
-            emptySlot.style.border = '1px dashed #cbd5e1';
-            emptySlot.style.cursor = 'default';
-            emptySlot.style.boxShadow = 'none';
-            edgeHistEl.appendChild(emptySlot);
-          }
-        }
-      }
-
-      if (edgeActiveEl) {
-        edgeActiveEl.innerHTML = '';
-        if (currentEdge) {
-          edgeActiveEl.appendChild(createColorSwatchEl(currentEdge, 'edge', true));
-        }
-      }
+      renderColorHistorySlots('edge', 'edge-history-slots');
+      renderActiveColorSlot('edge', 'edge-active-slot', currentEdge);
     }
 
     // カスタムカラーピッカー（SVグラデーション＋色相スライダー＋不透明度スライダー）
