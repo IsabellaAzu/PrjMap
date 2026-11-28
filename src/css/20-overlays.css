@@ -395,26 +395,26 @@
 
     .alignment-controls {
       display: flex;
+      order: 1;
+      flex-basis: 100%;
       flex-wrap: wrap;
       gap: 4px;
-      margin-right: 8px;
-      padding-right: 8px;
-      border-right: 1px solid #e2e8f0;
+      margin: 2px 0 0;
     }
     .alignment-controls button {
       width: 30px;
       height: 30px;
       padding: 3px;
-      border: 1px solid #cbd5e1;
-      border-radius: 5px;
-      background: #fff;
+      border: none;
+      border-radius: 8px;
+      background: #f1f5f9;
       color: #334155;
       cursor: pointer;
     }
-    .alignment-controls button:hover { background: #eff6ff; border-color: #93c5fd; }
-    .alignment-controls svg { display: block; width: 22px; height: 22px; fill: none; stroke: #111827; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
-    .alignment-controls svg .align-guide { stroke: #111827; stroke-width: 1.6; stroke-dasharray: 2 2; }
-    .alignment-controls svg .align-arrow { stroke: #111827; }
+    .alignment-controls button:hover { background: #e2e8f0; }
+    .alignment-controls svg { display: block; width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+    .alignment-controls svg .align-guide { stroke: currentColor; stroke-width: 1.6; stroke-dasharray: 2 2; }
+    .alignment-controls svg .align-arrow { stroke: currentColor; }
 
     /* リサイズハンドル（四隅） */
     .resize-handle {

@@ -207,15 +207,18 @@
     }
 
     html[data-theme="dark"] .bold-toggle-btn {
-      background: #302519;
-      border-color: #66543a;
-      color: #d8cdbb;
+      background: #443522;
+      color: #e8dcc8;
     }
 
     html[data-theme="dark"] .bold-toggle-btn[aria-pressed="true"] {
-      background: #443522;
-      border-color: #a7823d;
+      background: #59452b;
       color: #f0d28e;
+    }
+
+    html[data-theme="dark"] .alignment-controls button {
+      background: #443522;
+      color: #e8dcc8;
     }
 
     html[data-theme="dark"] .tool-btn[aria-pressed="true"] {
